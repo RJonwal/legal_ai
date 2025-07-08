@@ -7,21 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { 
-  Upload, 
-  Calendar, 
-  History, 
-  Search, 
-  Lightbulb, 
-  FolderOpen, 
-  BarChart3, 
-  UserCheck, 
-  Gavel,
-  CloudUpload,
-  AlertTriangle,
-  AlertCircle,
-  Info
-} from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Upload, FolderPlus, Calendar, Scale, Brain, FileCheck, BarChart3, Users, Gavel, History, Search, Lightbulb, FolderOpen, UserCheck, CloudUpload, AlertTriangle, AlertCircle, Info } from "lucide-react";
 
 interface FunctionModalProps {
   isOpen: boolean;
@@ -34,13 +23,34 @@ interface FunctionModalProps {
 export function FunctionModal({ isOpen, functionId, caseId, onClose, onDocumentGenerate }: FunctionModalProps) {
   const [contractText, setContractText] = useState("");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState("upload");
+  const [depositionInputs, setDepositionInputs] = useState({
+    witnessName: "",
+    keyTopics: "",
+    specialInstructions: "",
+    depositionType: "fact-witness"
+  });
+  const [courtPrepInputs, setCourtPrepInputs] = useState({
+    hearingType: "",
+    keyArguments: "",
+    anticipatedQuestions: "",
+    evidenceList: "",
+    opposingCounsel: ""
+  });
+
+  const { data: currentCase } = useQuery({
+    queryKey: ['/api/cases', caseId],
+    enabled: isOpen && !!caseId,
+  });
 
   const { data: caseDocuments } = useQuery({
     queryKey: ['/api/cases', caseId, 'documents'],
     enabled: isOpen && functionId === 'case-documents',
   });
 
-  const { data: timelineEvents } = useQuery({
+  const { data: timelineEvents = [] } = useQuery({
     queryKey: ['/api/cases', caseId, 'timeline'],
     enabled: isOpen && functionId === 'timeline',
   });

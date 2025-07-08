@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { CaseSidebar } from "@/components/sidebar/case-sidebar";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { DocumentCanvas } from "@/components/canvas/document-canvas";
-import { FunctionModal } from "@/components/modals/function-modal";
+import { EnhancedFunctionModal } from "@/components/modals/enhanced-function-modal";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export default function LegalAssistant() {
@@ -72,7 +72,7 @@ export default function LegalAssistant() {
         </ResizablePanel>
       </ResizablePanelGroup>
 
-      <FunctionModal
+      <EnhancedFunctionModal
         isOpen={!!modalFunction}
         functionId={modalFunction || ''}
         caseId={currentCaseId}

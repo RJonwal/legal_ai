@@ -80,9 +80,9 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className="flex-1 flex flex-col bg-white h-full">
       {/* Chat Header */}
-      <div className="p-4 border-b border-gray-200 bg-white">
+      <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
@@ -104,20 +104,22 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
         </div>
       </div>
 
-      {/* Messages */}
-      <MessageList 
-        messages={messages} 
-        isLoading={sendMessageMutation.isPending}
-      />
+      {/* Messages - Takes all available space */}
+      <div className="flex-1 overflow-hidden">
+        <MessageList 
+          messages={messages} 
+          isLoading={sendMessageMutation.isPending}
+        />
+      </div>
 
-
-
-      {/* Chat Input */}
-      <ChatInput 
-        onSendMessage={handleSendMessage}
-        onFunctionClick={handleFunctionClick}
-        disabled={sendMessageMutation.isPending}
-      />
+      {/* Chat Input - Fixed at bottom */}
+      <div className="flex-shrink-0 bg-white border-t border-gray-200">
+        <ChatInput 
+          onSendMessage={handleSendMessage}
+          onFunctionClick={handleFunctionClick}
+          disabled={sendMessageMutation.isPending}
+        />
+      </div>
     </div>
   );
 }
