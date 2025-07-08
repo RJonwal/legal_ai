@@ -21,9 +21,10 @@ interface FunctionModalProps {
   caseId: number;
   onClose: () => void;
   onDocumentGenerate?: (document: any) => void;
+  onSendMessage?: (message: string) => void;
 }
 
-export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onDocumentGenerate }: FunctionModalProps) {
+export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onDocumentGenerate, onSendMessage }: FunctionModalProps) {
   const [contractText, setContractText] = useState("");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
@@ -81,6 +82,10 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
 
   const getModalInfo = (functionId: string) => {
     const modalInfo = {
+      'case-strategy': {
+        title: 'AI Case Strategy Analysis',
+        description: 'Comprehensive strategic analysis with AI-powered recommendations for motions, filings, and next steps'
+      },
       'upload-document': {
         title: 'Upload Case Documents',
         description: 'Upload and analyze documents for this case. Supported formats: PDF, DOC, DOCX, TXT'
@@ -123,6 +128,138 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
 
   const getModalContent = () => {
     switch (functionId) {
+      case 'case-strategy':
+        return (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+              <h3 className="font-medium text-purple-900 mb-2">AI Case Strategy Analysis for {currentCase?.title}</h3>
+              <p className="text-sm text-purple-700">
+                Comprehensive strategic analysis of your case with AI-powered recommendations for motions, filings, and next steps.
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              <Card className="border-purple-200 bg-purple-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <Brain className="h-5 w-5 text-purple-600" />
+                    <span className="font-medium text-purple-900">Strategic Assessment</span>
+                  </div>
+                  <div className="text-sm text-purple-800 space-y-2">
+                    <p>• <strong>Case Strength:</strong> Strong position based on clear contract breach</p>
+                    <p>• <strong>Key Vulnerabilities:</strong> Potential mitigation defense by defendant</p>
+                    <p>• <strong>Settlement Likelihood:</strong> High (75%) - defendant likely to settle</p>
+                    <p>• <strong>Estimated Timeline:</strong> 6-8 months to resolution</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-blue-200 bg-blue-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <Scale className="h-5 w-5 text-blue-600" />
+                    <span className="font-medium text-blue-900">Immediate Actions Required</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleGenerateDocument('Breach Notice Letter')}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Breach Notice
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleGenerateDocument('Discovery Request')}
+                      variant="outline"
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      Discovery Request
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleGenerateDocument('Settlement Demand Letter')}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Settlement Demand
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleGenerateDocument('Protective Order Motion')}
+                      variant="outline"
+                    >
+                      <Gavel className="h-4 w-4 mr-2" />
+                      Protective Order
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <FileCheck className="h-5 w-5 text-green-600" />
+                    <span className="font-medium text-green-900">Document Preparation</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleGenerateDocument('Motion for Summary Judgment')}
+                      variant="outline"
+                    >
+                      Summary Judgment
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleGenerateDocument('Motion to Compel')}
+                      variant="outline"
+                    >
+                      Motion to Compel
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleGenerateDocument('Preliminary Injunction Motion')}
+                      variant="outline"
+                    >
+                      Injunction Motion
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleGenerateDocument('Answer to Counterclaim')}
+                      variant="outline"
+                    >
+                      Answer Counterclaim
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="flex space-x-2">
+              <Button 
+                onClick={() => {
+                  onClose();
+                  onSendMessage?.('Analyze the entire case and provide a comprehensive strategic roadmap with all necessary motions, filings, and deadlines. Include specific recommendations for settlement negotiations and trial preparation.');
+                }}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                Full Strategy Analysis
+              </Button>
+              <Button 
+                onClick={() => handleGenerateDocument('Complete Case Strategy Report')}
+                variant="outline"
+                className="flex-1"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Strategy Report
+              </Button>
+            </div>
+          </div>
+        );
+
       case 'evidence-analysis':
         return (
           <div className="space-y-4">
@@ -688,6 +825,146 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
               disabled={!courtPrepInputs.hearingType || !courtPrepInputs.keyArguments}
             >
               Generate Complete Court Package
+            </Button>
+          </div>
+        );
+
+      case 'upload-document':
+        return (
+          <div className="space-y-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium text-blue-900 mb-2">Upload Documents for {currentCase?.title}</h3>
+              <p className="text-sm text-blue-700">
+                Upload case documents, evidence, and other files. Supports PDF, DOC, DOCX, TXT, JPG, PNG.
+              </p>
+            </div>
+            
+            <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center">
+              <Upload className="mx-auto h-16 w-16 text-blue-400 mb-4" />
+              <p className="text-lg font-medium text-blue-900 mb-2">Drop files here or click to browse</p>
+              <p className="text-sm text-blue-600 mb-4">PDF, DOC, DOCX, TXT, JPG, PNG (Max 10MB each)</p>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <CloudUpload className="h-4 w-4 mr-2" />
+                Choose Files to Upload
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <FileText className="h-5 w-5 text-blue-500" />
+                    <span className="font-medium">Quick Actions</span>
+                  </div>
+                  <div className="space-y-2">
+                    <Button size="sm" variant="outline" className="w-full justify-start">
+                      <FileCheck className="h-4 w-4 mr-2" />
+                      Scan for Duplicates
+                    </Button>
+                    <Button size="sm" variant="outline" className="w-full justify-start">
+                      <Search className="h-4 w-4 mr-2" />
+                      Auto-Categorize
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <FolderOpen className="h-5 w-5 text-blue-500" />
+                    <span className="font-medium">Recent Uploads</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Contract_Amendment.pdf</p>
+                    <p>Evidence_Photos.zip</p>
+                    <p>Correspondence.docx</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Button 
+              onClick={() => handleGenerateDocument('Document Upload Summary')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Generate Upload Summary Report
+            </Button>
+          </div>
+        );
+
+      case 'calendar':
+        return (
+          <div className="space-y-4">
+            <div className="bg-red-50 p-4 rounded-lg">
+              <h3 className="font-medium text-red-900 mb-2">Calendar & Deadlines for {currentCase?.title}</h3>
+              <p className="text-sm text-red-700">
+                Track important dates, court deadlines, and filing requirements for this case.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    <Badge variant="destructive">URGENT</Badge>
+                  </div>
+                  <div className="font-medium text-red-900">Discovery Deadline</div>
+                  <div className="text-sm text-red-700">March 30, 2024 - All discovery must be completed</div>
+                  <div className="text-xs text-red-600 mt-1">7 days remaining</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Calendar className="h-5 w-5 text-yellow-500" />
+                    <Badge variant="outline">SCHEDULED</Badge>
+                  </div>
+                  <div className="font-medium text-yellow-900">Settlement Conference</div>
+                  <div className="text-sm text-yellow-700">April 15, 2024 - Court-ordered settlement conference</div>
+                  <div className="text-xs text-yellow-600 mt-1">23 days remaining</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-blue-200 bg-blue-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Gavel className="h-5 w-5 text-blue-500" />
+                    <Badge variant="outline">UPCOMING</Badge>
+                  </div>
+                  <div className="font-medium text-blue-900">Trial Date</div>
+                  <div className="text-sm text-blue-700">June 1, 2024 - Jury trial scheduled</div>
+                  <div className="text-xs text-blue-600 mt-1">70 days remaining</div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="flex space-x-2">
+              <Button 
+                onClick={() => handleGenerateDocument('Case Calendar Summary')}
+                variant="outline"
+                className="flex-1"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Calendar Summary
+              </Button>
+              <Button 
+                onClick={() => handleGenerateDocument('Deadline Tracking Checklist')}
+                variant="outline"
+                className="flex-1"
+              >
+                <FileCheck className="h-4 w-4 mr-2" />
+                Deadline Checklist
+              </Button>
+            </div>
+            
+            <Button 
+              onClick={() => handleGenerateDocument('Comprehensive Case Schedule')}
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+            >
+              Generate Complete Case Schedule
             </Button>
           </div>
         );

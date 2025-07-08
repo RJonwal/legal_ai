@@ -13,7 +13,8 @@ import {
   FolderOpen, 
   BarChart3, 
   UserCheck, 
-  Gavel 
+  Gavel,
+  Brain
 } from "lucide-react";
 
 interface ChatInputProps {
@@ -41,6 +42,7 @@ export function ChatInput({ onSendMessage, onFunctionClick, disabled }: ChatInpu
   };
 
   const caseActions = [
+    { id: 'case-strategy', label: 'Case Strategy', icon: Brain },
     { id: 'upload-document', label: 'Upload Document', icon: Upload },
     { id: 'calendar', label: 'Calendar & Deadlines', icon: Calendar },
     { id: 'timeline', label: 'Case Timeline', icon: History },

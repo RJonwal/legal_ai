@@ -78,6 +78,10 @@ export default function LegalAssistant() {
         caseId={currentCaseId}
         onClose={closeModal}
         onDocumentGenerate={handleDocumentGenerate}
+        onSendMessage={(message) => {
+          // Handle sending message to chat
+          console.log('Strategy message:', message);
+        }}
       />
     </div>
   );
