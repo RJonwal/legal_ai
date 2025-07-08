@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +76,48 @@ export function FunctionModal({ isOpen, functionId, caseId, onClose, onDocumentG
       onClose();
     },
   });
+
+  const getModalInfo = (functionId: string) => {
+    const modalInfo = {
+      'upload-document': {
+        title: 'Upload Case Documents',
+        description: 'Upload and analyze documents for this case. Supported formats: PDF, DOC, DOCX, TXT'
+      },
+      'calendar': {
+        title: 'Case Calendar & Deadlines',
+        description: 'View upcoming deadlines, court dates, and important case milestones'
+      },
+      'timeline': {
+        title: 'Case Timeline',
+        description: 'Review chronological events and milestones for this case'
+      },
+      'evidence-analysis': {
+        title: 'Evidence Analysis',
+        description: 'Analyze contracts, documents, and evidence for legal issues and opportunities'
+      },
+      'next-best-action': {
+        title: 'Strategic Recommendations',
+        description: 'Get AI-powered recommendations for next steps and case strategy'
+      },
+      'case-documents': {
+        title: 'Case Documents',
+        description: 'View, generate, and manage all documents associated with this case'
+      },
+      'case-analytics': {
+        title: 'Case Analytics',
+        description: 'View case progress, financial impact, and key performance metrics'
+      },
+      'deposition-prep': {
+        title: 'Deposition Preparation',
+        description: 'Prepare for depositions with witness lists, key questions, and strategy notes'
+      },
+      'court-prep': {
+        title: 'Court Preparation',
+        description: 'Prepare for court appearances with arguments, evidence, and procedural guidance'
+      }
+    };
+    return modalInfo[functionId as keyof typeof modalInfo] || { title: 'Case Action', description: 'Perform case-related actions' };
+  };
 
   const getModalContent = () => {
     switch (functionId) {
@@ -404,26 +446,14 @@ export function FunctionModal({ isOpen, functionId, caseId, onClose, onDocumentG
     }
   };
 
-  const getModalTitle = () => {
-    const titles = {
-      'upload-document': 'Upload Document',
-      'calendar': 'Calendar & Deadlines',
-      'timeline': 'Case History',
-      'evidence-analysis': 'Evidence Analysis',
-      'next-best-action': 'Next Best Action',
-      'case-documents': 'Case Documents',
-      'case-analytics': 'Case Analytics',
-      'deposition-prep': 'Deposition Preparation',
-      'court-prep': 'Court Preparation',
-    };
-    return titles[functionId as keyof typeof titles] || 'Legal Function';
-  };
+  const modalInfo = getModalInfo(functionId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{getModalTitle()}</DialogTitle>
+          <DialogTitle>{modalInfo.title}</DialogTitle>
+          <DialogDescription>{modalInfo.description}</DialogDescription>
         </DialogHeader>
         <div className="py-4">
           {getModalContent()}

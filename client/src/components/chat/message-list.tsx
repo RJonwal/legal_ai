@@ -100,9 +100,41 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
           <div className="flex-1 max-w-3xl">
             <Card className="bg-gray-50">
               <CardContent className="p-4">
-                <p className="text-gray-900">
-                  Hello! I'm your Legal AI Assistant. I can help you with case analysis, document drafting, research, and strategic planning. What would you like to work on today?
-                </p>
+                <div className="space-y-3">
+                  <p className="text-gray-900 font-medium">
+                    Good morning! I've reviewed the Smith v. Johnson case and have some immediate observations:
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <Card className="border-red-200 bg-red-50">
+                      <CardContent className="p-3">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                          <span className="text-xs font-medium text-red-800">URGENT: Discovery Deadline</span>
+                        </div>
+                        <p className="text-sm text-red-700">
+                          Discovery deadline is March 30, 2024 - only 15 days remaining. We need to accelerate document production.
+                        </p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-yellow-200 bg-yellow-50">
+                      <CardContent className="p-3">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <AlertCircle className="h-4 w-4 text-yellow-500" />
+                          <span className="text-xs font-medium text-yellow-800">ACTION REQUIRED</span>
+                        </div>
+                        <p className="text-sm text-yellow-700">
+                          30-day delay breach creates $50,000 liquidated damages claim. I recommend sending breach notice immediately.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <p className="text-gray-700 text-sm">
+                    I'm ready to help with case strategy, document drafting, or any legal questions. Use <strong>Case Actions</strong> below for specific tasks, or ask me anything about this case.
+                  </p>
+                </div>
               </CardContent>
             </Card>
             <div className="mt-2 text-xs text-gray-500">

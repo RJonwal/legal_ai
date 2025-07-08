@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack legal assistant application built with React and Express.js. The application provides AI-powered legal case management features including document analysis, chat interface, case timeline management, and document generation. It uses a modern tech stack with TypeScript, Tailwind CSS, and shadcn/ui components.
+This is a comprehensive full-stack legal AI assistant that mimics ChatGPT behavior with a dynamic side canvas for document generation. Built with React and Express.js, the application provides AI-powered legal case management featuring a proactive attorney mindset, consolidated case actions, and responsive layout adjustments. The system thinks and acts like a senior attorney with 20+ years of experience, providing strategic legal analysis and recommendations.
 
 ## System Architecture
 
@@ -36,13 +36,15 @@ This is a full-stack legal assistant application built with React and Express.js
 
 ### Frontend Components
 1. **CaseSidebar**: Case navigation and user interface
-2. **ChatInterface**: AI chat with function buttons
-3. **DocumentCanvas**: Document editor with real-time editing
-4. **FunctionModal**: Modal dialogs for specific legal functions
-5. **MessageList**: Chat message display with structured analysis
+2. **ChatInterface**: AI chat with ChatGPT-like behavior and proactive messaging
+3. **DocumentCanvas**: Responsive document editor with dynamic resizing
+4. **FunctionModal**: Modal dialogs with descriptions for specific legal functions
+5. **MessageList**: Chat message display with structured analysis and proactive case insights
+6. **ChatInput**: Consolidated Case Actions dropdown with all legal functions
+7. **ResizablePanelGroup**: Dynamic layout adjustment for chat and document canvas
 
 ### Backend Services
-1. **OpenAI Service**: AI-powered legal analysis and document generation
+1. **OpenAI Service**: Proactive AI attorney with senior-level legal reasoning and strategic thinking
 2. **Storage Service**: Data persistence abstraction with in-memory implementation
 3. **Route Handlers**: RESTful API endpoints for case management
 

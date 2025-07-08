@@ -4,7 +4,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { ChatMessage } from "@/lib/types";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
-import { FunctionButtons } from "./function-buttons";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Share2, Bookmark } from "lucide-react";
@@ -111,15 +110,12 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
         isLoading={sendMessageMutation.isPending}
       />
 
-      {/* Function Buttons */}
-      <FunctionButtons 
-        onFunctionClick={handleFunctionClick}
-        disabled={sendMessageMutation.isPending}
-      />
+
 
       {/* Chat Input */}
       <ChatInput 
         onSendMessage={handleSendMessage}
+        onFunctionClick={handleFunctionClick}
         disabled={sendMessageMutation.isPending}
       />
     </div>

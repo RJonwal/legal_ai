@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { CaseSidebar } from "@/components/sidebar/case-sidebar";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { DocumentCanvas } from "@/components/canvas/document-canvas";
 import { FunctionModal } from "@/components/modals/function-modal";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export default function LegalAssistant() {
   const [currentCaseId, setCurrentCaseId] = useState<number>(1);
   const [currentDocument, setCurrentDocument] = useState<any>(null);
   const [modalFunction, setModalFunction] = useState<string | null>(null);
+  const [chatSize, setChatSize] = useState<number>(60);
+  const [canvasSize, setCanvasSize] = useState<number>(40);
 
   const handleCaseSelect = (caseId: number) => {
     setCurrentCaseId(caseId);
@@ -20,6 +23,9 @@ export default function LegalAssistant() {
 
   const handleDocumentGenerate = (document: any) => {
     setCurrentDocument(document);
+    // Expand canvas when document is generated
+    setChatSize(45);
+    setCanvasSize(55);
   };
 
   const handleDocumentUpdate = (document: any) => {
@@ -30,6 +36,11 @@ export default function LegalAssistant() {
     setModalFunction(null);
   };
 
+  const onLayoutChange = useCallback((sizes: number[]) => {
+    setChatSize(sizes[0]);
+    setCanvasSize(sizes[1]);
+  }, []);
+
   return (
     <div className="flex h-screen bg-gray-50">
       <CaseSidebar
@@ -37,19 +48,29 @@ export default function LegalAssistant() {
         onCaseSelect={handleCaseSelect}
       />
       
-      <div className="flex-1 flex">
-        <ChatInterface
-          caseId={currentCaseId}
-          onFunctionClick={handleFunctionClick}
-          onDocumentGenerate={handleDocumentGenerate}
-        />
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="flex-1"
+        onLayout={onLayoutChange}
+      >
+        <ResizablePanel defaultSize={chatSize} minSize={30}>
+          <ChatInterface
+            caseId={currentCaseId}
+            onFunctionClick={handleFunctionClick}
+            onDocumentGenerate={handleDocumentGenerate}
+          />
+        </ResizablePanel>
         
-        <DocumentCanvas
-          caseId={currentCaseId}
-          document={currentDocument}
-          onDocumentUpdate={handleDocumentUpdate}
-        />
-      </div>
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={canvasSize} minSize={25}>
+          <DocumentCanvas
+            caseId={currentCaseId}
+            document={currentDocument}
+            onDocumentUpdate={handleDocumentUpdate}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       <FunctionModal
         isOpen={!!modalFunction}

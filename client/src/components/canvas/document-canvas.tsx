@@ -140,24 +140,25 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
 
   if (!document && !generateDocumentMutation.isPending) {
     return (
-      <div className="w-2/5 bg-white border-l border-gray-200 flex flex-col">
+      <div className="flex-1 bg-white border-l border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200 bg-gray-50">
           <h3 className="text-lg font-semibold text-gray-900">Document Canvas</h3>
-          <p className="text-sm text-gray-500">Generate or select a document to view</p>
+          <p className="text-sm text-gray-500">Generate or select a document to view and edit</p>
         </div>
         
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
             <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Document Selected</h3>
-            <p className="text-gray-500 mb-4">
-              Use the chat interface to generate documents or select an existing document.
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Ready for Document Generation</h3>
+            <p className="text-gray-500 mb-4 max-w-md">
+              Ask the AI about case strategy, contract analysis, or use Case Actions to generate specific documents. 
+              The canvas will automatically expand when documents are created.
             </p>
             <Button
-              onClick={() => generateDocumentMutation.mutate('Contract Analysis Report')}
+              onClick={() => generateDocumentMutation.mutate('Breach Notice Letter')}
               className="bg-legal-blue hover:bg-legal-deep text-white"
             >
-              Generate Sample Report
+              Generate Breach Notice
             </Button>
           </div>
         </div>
@@ -166,7 +167,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   }
 
   return (
-    <div className="w-2/5 bg-white border-l border-gray-200 flex flex-col">
+    <div className="flex-1 bg-white border-l border-gray-200 flex flex-col">
       {/* Canvas Header */}
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
