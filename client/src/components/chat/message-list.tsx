@@ -1,0 +1,184 @@
+import { useEffect, useRef } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Bot, User, AlertTriangle, AlertCircle, Info } from "lucide-react";
+import { ChatMessage } from "@/lib/types";
+
+interface MessageListProps {
+  messages: ChatMessage[];
+  isLoading: boolean;
+}
+
+export function MessageList({ messages, isLoading }: MessageListProps) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const formatTimestamp = (timestamp: Date) => {
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  const renderMessageContent = (message: ChatMessage) => {
+    // Check if message contains structured analysis
+    if (message.role === 'assistant' && message.content.includes('Critical Issue')) {
+      return (
+        <div className="space-y-3">
+          <p className="text-gray-900 mb-3">
+            I've analyzed the contract and identified several key issues. Here's my analysis:
+          </p>
+          
+          <div className="space-y-3">
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="p-3">
+                <div className="flex items-center space-x-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  <Badge variant="destructive" className="text-xs">
+                    Critical Issue
+                  </Badge>
+                </div>
+                <p className="text-sm text-red-700">
+                  Section 4.2 - Delivery timeline breach (30 days overdue)
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardContent className="p-3">
+                <div className="flex items-center space-x-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                  <Badge className="text-xs bg-yellow-100 text-yellow-800">
+                    Moderate Issue
+                  </Badge>
+                </div>
+                <p className="text-sm text-yellow-700">
+                  Section 7.1 - Unclear termination clause language
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-3">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Info className="h-4 w-4 text-blue-500" />
+                  <Badge className="text-xs bg-blue-100 text-blue-800">
+                    Opportunity
+                  </Badge>
+                </div>
+                <p className="text-sm text-blue-700">
+                  Section 9.3 - Liquidated damages clause favorable to client
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <p className="text-gray-900 mt-3">
+            I'll generate a detailed analysis document in the canvas for your review. Would you like me to also prepare a breach notification letter?
+          </p>
+        </div>
+      );
+    }
+
+    return <p className="text-gray-900">{message.content}</p>;
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {messages.length === 0 && (
+        <div className="flex items-start space-x-3">
+          <Avatar className="w-8 h-8 bg-legal-blue">
+            <AvatarFallback>
+              <Bot className="h-4 w-4 text-white" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 max-w-3xl">
+            <Card className="bg-gray-50">
+              <CardContent className="p-4">
+                <p className="text-gray-900">
+                  Hello! I'm your Legal AI Assistant. I can help you with case analysis, document drafting, research, and strategic planning. What would you like to work on today?
+                </p>
+              </CardContent>
+            </Card>
+            <div className="mt-2 text-xs text-gray-500">
+              {formatTimestamp(new Date())}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {messages.map((message) => (
+        <div
+          key={message.id}
+          className={`flex items-start space-x-3 ${
+            message.role === 'user' ? 'justify-end' : ''
+          }`}
+        >
+          {message.role === 'assistant' && (
+            <Avatar className="w-8 h-8 bg-legal-blue flex-shrink-0">
+              <AvatarFallback>
+                <Bot className="h-4 w-4 text-white" />
+              </AvatarFallback>
+            </Avatar>
+          )}
+          
+          <div className="flex-1 max-w-3xl">
+            <Card className={`${
+              message.role === 'user' 
+                ? 'bg-legal-blue text-white ml-auto' 
+                : 'bg-gray-50'
+            }`}>
+              <CardContent className="p-4">
+                {renderMessageContent(message)}
+              </CardContent>
+            </Card>
+            <div className={`mt-2 text-xs text-gray-500 ${
+              message.role === 'user' ? 'text-right' : ''
+            }`}>
+              {formatTimestamp(message.timestamp)}
+            </div>
+          </div>
+
+          {message.role === 'user' && (
+            <Avatar className="w-8 h-8 bg-gray-300 flex-shrink-0">
+              <AvatarFallback>
+                <User className="h-4 w-4 text-gray-600" />
+              </AvatarFallback>
+            </Avatar>
+          )}
+        </div>
+      ))}
+
+      {isLoading && (
+        <div className="flex items-start space-x-3">
+          <Avatar className="w-8 h-8 bg-legal-blue flex-shrink-0">
+            <AvatarFallback>
+              <Bot className="h-4 w-4 text-white" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 max-w-3xl">
+            <Card className="bg-gray-50">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse [animation-delay:0.2s]" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse [animation-delay:0.4s]" />
+                  </div>
+                  <span className="text-sm text-gray-500">AI is analyzing...</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      <div ref={bottomRef} />
+    </div>
+  );
+}
