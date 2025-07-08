@@ -230,6 +230,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile routes
+  app.get("/api/user/profile", async (req, res) => {
+    try {
+      const user = await storage.getUser(1); // Using default user for demo
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  app.put("/api/user/profile", async (req, res) => {
+    try {
+      const updates = req.body;
+      const updatedUser = await storage.updateUser(1, updates);
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
+  });
+
+  // Case search route
+  app.get("/api/cases/search", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      const cases = await storage.searchCases(query || "");
+      res.json(cases);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search cases" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

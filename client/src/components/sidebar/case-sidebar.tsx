@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -19,6 +20,8 @@ interface CaseSidebarProps {
 }
 
 export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
+  const [, setLocation] = useLocation();
+  
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
   });
@@ -107,6 +110,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => setLocation('/new-case')}
           >
             <Plus className="h-4 w-4 mr-2" />
             New Case
@@ -114,6 +118,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => setLocation('/search-cases')}
           >
             <Search className="h-4 w-4 mr-2" />
             Search Cases
@@ -121,6 +126,15 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => setLocation('/profile')}
+          >
+            <User className="h-4 w-4 mr-2" />
+            Profile
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => setLocation('/settings')}
           >
             <Settings className="h-4 w-4 mr-2" />
             Settings

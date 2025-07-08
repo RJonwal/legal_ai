@@ -12,12 +12,14 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<User>): Promise<User>;
 
   // Case operations
   getCase(id: number): Promise<Case | undefined>;
   getCasesByUser(userId: number): Promise<Case[]>;
   createCase(caseData: InsertCase): Promise<Case>;
   updateCase(id: number, updates: Partial<Case>): Promise<Case>;
+  searchCases(query: string): Promise<Case[]>;
 
   // Chat operations
   getChatMessages(caseId: number): Promise<ChatMessage[]>;
@@ -205,6 +207,36 @@ export class MemStorage implements IStorage {
     };
     this.cases.set(id, updated);
     return updated;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updated: User = {
+      ...user,
+      ...updates,
+    };
+
+    this.users.set(id, updated);
+    return updated;
+  }
+
+  async searchCases(query: string): Promise<Case[]> {
+    const allCases = Array.from(this.cases.values());
+    
+    if (!query.trim()) {
+      return allCases;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    return allCases.filter(case_ => 
+      case_.title.toLowerCase().includes(lowerQuery) ||
+      (case_.description && case_.description.toLowerCase().includes(lowerQuery)) ||
+      case_.clientName.toLowerCase().includes(lowerQuery)
+    );
   }
 
   async getChatMessages(caseId: number): Promise<ChatMessage[]> {
