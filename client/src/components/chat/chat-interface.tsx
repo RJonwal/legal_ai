@@ -17,19 +17,24 @@ interface ChatInterfaceProps {
 export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: ChatInterfaceProps) {
   const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [currentCaseData, setCurrentCaseData] = useState<any>(null);
   const messagesRef = useRef(messages);
+  const chatInterfaceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  const { data: currentCase } = useQuery({
-    queryKey: ['/api/cases', caseId],
+  const { data: currentCase, refetch: refetchCase } = useQuery({
+    queryKey: [`/api/cases/${caseId}`],
     enabled: !!caseId,
+    onSuccess: (data) => {
+      setCurrentCaseData(data);
+    }
   });
 
   const { data: chatMessages = [], refetch: refetchChatMessages } = useQuery({
-    queryKey: ['/api/cases', caseId, 'messages'],
+    queryKey: [`/api/cases/${caseId}/messages`],
     enabled: !!caseId,
     onSuccess: (data) => {
       setMessages(data.map((msg: any) => ({
@@ -42,19 +47,50 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
     },
   });
 
-  // Refetch chat messages when caseId changes
+  // Handle case selection events and refetch data
   useEffect(() => {
     if (caseId) {
+      // Clear messages when switching cases
+      setMessages([]);
+      setCurrentCaseData(null);
+      
+      // Refetch case and message data
+      refetchCase();
       refetchChatMessages();
     }
-  }, [caseId, refetchChatMessages]);
+  }, [caseId, refetchCase, refetchChatMessages]);
+
+  // Listen for case selection events
+  useEffect(() => {
+    const handleCaseSelected = (event: CustomEvent) => {
+      const { caseId: newCaseId, caseData } = event.detail;
+      if (newCaseId === caseId) {
+        setCurrentCaseData(caseData);
+        console.log('Chat context updated with case data:', caseData);
+      }
+    };
+
+    const element = chatInterfaceRef.current;
+    if (element) {
+      element.addEventListener('caseSelected', handleCaseSelected as EventListener);
+      // Add data attribute for identification
+      element.setAttribute('data-chat-interface', 'true');
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener('caseSelected', handleCaseSelected as EventListener);
+      }
+    };
+  }, [caseId]);
 
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
+      const caseContext = currentCaseData || currentCase;
       const response = await apiRequest('POST', `/api/cases/${caseId}/messages`, {
         content,
-        caseContext: currentCase // Pass case context to the API
+        caseContext // Pass comprehensive case context to the API
       });
       return response.json();
     },
@@ -79,32 +115,41 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
 
       // Check if document was generated
       if (data.aiResponse?.documentGenerated) {
-        // Handle document generation
         onDocumentGenerate(data.document);
       }
     },
+    onError: (error) => {
+      console.error('Failed to send message:', error);
+    }
   });
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = useCallback((content: string) => {
+    if (!caseId) {
+      console.error('No case selected');
+      return;
+    }
     sendMessageMutation.mutate(content);
-  };
+  }, [caseId, sendMessageMutation]);
 
-  const handleFunctionClick = (functionId: string) => {
+  const handleFunctionClick = useCallback((functionId: string) => {
     onFunctionClick(functionId);
-  };
+  }, [onFunctionClick]);
+
+  const displayCase = currentCaseData || currentCase;
 
   return (
-    <div className="flex-1 flex flex-col bg-white h-full">
+    <div ref={chatInterfaceRef} className="flex-1 flex flex-col bg-white h-full" data-chat-interface="true">
       {/* Chat Header */}
       <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              {currentCase?.title || 'Legal Assistant'}
+              {displayCase?.title || 'Legal Assistant'}
             </h2>
             <p className="text-sm text-gray-500">
-              {currentCase?.caseNumber ? `Case #${currentCase.caseNumber} • ` : ''}
-              {currentCase?.status ? `${currentCase.status} since ${new Date(currentCase.createdAt).toLocaleDateString()}` : 'Ready to assist'}
+              {displayCase?.caseNumber ? `Case #${displayCase.caseNumber} • ` : ''}
+              {displayCase?.clientName ? `${displayCase.clientName} • ` : ''}
+              {displayCase?.status ? `${displayCase.status}` : 'Ready to assist'}
             </p>
           </div>
           <div className="flex items-center space-x-2">

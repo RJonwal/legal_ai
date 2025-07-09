@@ -29,12 +29,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search cases
   app.get("/api/cases/search", async (req, res) => {
     try {
-      const { query } = req.query;
-      if (!query || typeof query !== 'string') {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
         return res.status(400).json({ error: 'Search query is required' });
       }
 
-      const results = await storage.searchCases(query);
+      const results = await storage.searchCases(q);
       res.json(results);
     } catch (error) {
       console.error('Search error:', error);
@@ -833,16 +833,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  // Case search route
-  app.get("/api/cases/search", async (req, res) => {
-    try {
-      const query = req.query.q as string;
-      const cases = await storage.searchCases(query || "");
-      res.json(cases);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to search cases" });
-    }
-  });
+  
 
   const httpServer = createServer(app);
   return httpServer;

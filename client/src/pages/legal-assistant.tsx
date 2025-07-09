@@ -41,18 +41,22 @@ export default function LegalAssistant() {
         const caseData = await response.json();
         console.log('Case data loaded:', caseData);
 
-        // Update chat context with case information
-        const chatInterface = document.querySelector('[data-chat-interface]');
-        if (chatInterface) {
-          // Trigger a custom event to update chat context
-          const event = new CustomEvent('caseSelected', { 
-            detail: { 
-              caseId, 
-              caseData 
-            } 
-          });
-          chatInterface.dispatchEvent(event);
-        }
+        // Update chat context with case information after a brief delay to ensure DOM is ready
+        setTimeout(() => {
+          const chatInterface = document.querySelector('[data-chat-interface="true"]');
+          if (chatInterface) {
+            const event = new CustomEvent('caseSelected', { 
+              detail: { 
+                caseId, 
+                caseData 
+              } 
+            });
+            chatInterface.dispatchEvent(event);
+            console.log('Dispatched caseSelected event to chat interface');
+          } else {
+            console.log('Chat interface not found');
+          }
+        }, 100);
       }
     } catch (error) {
       console.error('Error loading case data:', error);
@@ -60,6 +64,7 @@ export default function LegalAssistant() {
 
     // Invalidate and refetch case data
     queryClient.invalidateQueries({ queryKey: [`/api/cases/${caseId}`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/cases/${caseId}/messages`] });
 
     // Update URL to reflect current case
     const currentUrl = new URL(window.location.href);

@@ -39,6 +39,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
 
   const { data: cases = [] } = useQuery({
     queryKey: ['/api/cases'],
+    refetchOnWindowFocus: false,
   });
 
   const getCaseTypeColor = (caseType: string) => {
@@ -82,8 +83,9 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
               className={`cursor-pointer hover:bg-gray-50 transition-colors ${
                 currentCaseId === case_.id ? 'ring-2 ring-legal-blue bg-legal-blue/5' : ''
               }`}
-              onClick={() => {
-                console.log('Case selected:', case_);
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('Case selected in sidebar:', case_);
                 onCaseSelect(case_.id);
               }}
             >

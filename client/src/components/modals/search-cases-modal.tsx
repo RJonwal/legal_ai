@@ -30,7 +30,12 @@ export function SearchCasesModal({ isOpen, onClose, onCaseSelect }: SearchCasesM
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: searchResults, isLoading } = useQuery({
-    queryKey: ['/api/cases/search', searchQuery],
+    queryKey: [`/api/cases/search?q=${encodeURIComponent(searchQuery)}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/cases/search?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) throw new Error('Failed to search cases');
+      return response.json();
+    },
     enabled: searchQuery.length > 0,
   });
 
@@ -168,7 +173,9 @@ export function SearchCasesModal({ isOpen, onClose, onCaseSelect }: SearchCasesM
                   <Card 
                     key={case_.id}
                     className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-legal-blue"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      console.log('Case selected from search modal:', case_);
                       onCaseSelect(case_.id);
                       onClose();
                     }}
