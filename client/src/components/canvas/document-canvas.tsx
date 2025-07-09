@@ -236,24 +236,34 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             formattedText = `${prefix3}### ${selectedText}`;
             break;
           case 'align-left':
-            // Use markdown-style left alignment
+            // For textarea, left alignment is just the normal text without extra formatting
             const lines1 = selectedText.split('\n');
             formattedText = lines1.map(line => line.trim()).join('\n');
             break;
           case 'align-center':
-            // Use markdown-style center alignment
+            // Center text using spaces (basic text centering)
             const lines2 = selectedText.split('\n');
-            formattedText = lines2.map(line => `<center>${line.trim()}</center>`).join('\n');
+            formattedText = lines2.map(line => {
+              const trimmed = line.trim();
+              if (trimmed.length === 0) return trimmed;
+              const padding = Math.max(0, Math.floor((60 - trimmed.length) / 2));
+              return ' '.repeat(padding) + trimmed;
+            }).join('\n');
             break;
           case 'align-right':
-            // Use markdown-style right alignment
+            // Right align text using spaces
             const lines3 = selectedText.split('\n');
-            formattedText = lines3.map(line => `<div align="right">${line.trim()}</div>`).join('\n');
+            formattedText = lines3.map(line => {
+              const trimmed = line.trim();
+              if (trimmed.length === 0) return trimmed;
+              const padding = Math.max(0, 60 - trimmed.length);
+              return ' '.repeat(padding) + trimmed;
+            }).join('\n');
             break;
           case 'justify':
-            // Use markdown-style justify alignment
+            // For justify, just clean up the text (textarea can't do real justify)
             const lines4 = selectedText.split('\n');
-            formattedText = lines4.map(line => `<div align="justify">${line.trim()}</div>`).join('\n');
+            formattedText = lines4.map(line => line.trim()).join('\n');
             break;
           case 'bullet-list':
             const bulletItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
@@ -289,9 +299,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
               .replace(/\*(.*?)\*/g, '$1') // Remove italic
               .replace(/_(.*?)_/g, '$1') // Remove underline
               .replace(/#{1,6}\s/g, '') // Remove headings
-              .replace(/<center>(.*?)<\/center>/g, '$1') // Remove center tags
-              .replace(/<div align="right">(.*?)<\/div>/g, '$1') // Remove right align tags
-              .replace(/<div align="justify">(.*?)<\/div>/g, '$1') // Remove justify tags
+              .replace(/^ +/gm, '') // Remove leading spaces (alignment)
               .replace(/^    /gm, '') // Remove indentation
               .replace(/^• /gm, '') // Remove bullet points
               .replace(/^\d+\.\s/gm, ''); // Remove numbered lists
