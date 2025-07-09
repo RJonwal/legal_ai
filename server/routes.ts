@@ -112,7 +112,7 @@ CASE INFORMATION:
 - Last Updated: ${case_.updatedAt}
 ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       `;
-      
+
       const aiResponse = await openaiService.generateChatResponse(
         content,
         enhancedCaseContext,
@@ -847,3 +847,55 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   const httpServer = createServer(app);
   return httpServer;
 }
+
+// Mock cases data
+const mockCases = [
+  {
+    id: 1,
+    title: "Smith v. Johnson",
+    description: "Contract dispute regarding construction project delays and breach of performance deadlines",
+    clientName: "Smith Construction LLC",
+    caseType: "Contract Dispute",
+    status: "active",
+    priority: "high",
+    createdAt: "2024-01-15T00:00:00Z",
+    updatedAt: "2024-03-15T00:00:00Z",
+    caseNumber: "CV-2024-001",
+    court: "Superior Court of California",
+    attorney: "Sarah Johnson",
+    estimatedValue: "$150,000",
+    nextDeadline: "2024-04-01T00:00:00Z"
+  },
+  {
+    id: 2,
+    title: "ABC Corp Merger",
+    description: "Corporate merger and acquisition legal review involving due diligence and regulatory compliance",
+    clientName: "ABC Corporation",
+    caseType: "Corporate Law",
+    status: "pending",
+    priority: "medium",
+    createdAt: "2024-02-01T00:00:00Z",
+    updatedAt: "2024-03-10T00:00:00Z",
+    caseNumber: "CORP-2024-002",
+    court: "Delaware Chancery Court",
+    attorney: "Sarah Johnson",
+    estimatedValue: "$2,500,000",
+    nextDeadline: "2024-04-15T00:00:00Z"
+  },
+  {
+    id: 3,
+    title: "Estate Planning - Davis",
+    description: "Comprehensive estate planning and will preparation for high-net-worth individual",
+    clientName: "Robert Davis",
+    caseType: "Estate Law",
+    status: "active",
+    priority: "low",
+    createdAt: "2024-01-20T00:00:00Z",
+    updatedAt: "2024-03-12T00:00:00Z",
+    caseNumber: "EST-2024-003",
+    court: "Probate Court",
+    attorney: "Sarah Johnson",
+    estimatedValue: "$850,000",
+    nextDeadline: "2024-03-30T00:00:00Z"
+  }
+];

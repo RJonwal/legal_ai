@@ -29,18 +29,43 @@ export default function LegalAssistant() {
     }
   }, [location]);
 
-  const handleCaseSelect = (caseId: number) => {
+  const handleCaseSelect = useCallback(async (caseId: number) => {
+    console.log('Case selected in LegalAssistant:', caseId);
     setCurrentCaseId(caseId);
     setCurrentDocument(null);
-    
-    // Invalidate chat messages to refresh them for the new case
-    queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'messages'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId] });
-    
+
+    try {
+      // Fetch case data first
+      const response = await fetch(`/api/cases/${caseId}`);
+      if (response.ok) {
+        const caseData = await response.json();
+        console.log('Case data loaded:', caseData);
+
+        // Update chat context with case information
+        const chatInterface = document.querySelector('[data-chat-interface]');
+        if (chatInterface) {
+          // Trigger a custom event to update chat context
+          const event = new CustomEvent('caseSelected', { 
+            detail: { 
+              caseId, 
+              caseData 
+            } 
+          });
+          chatInterface.dispatchEvent(event);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading case data:', error);
+    }
+
+    // Invalidate and refetch case data
+    queryClient.invalidateQueries({ queryKey: [`/api/cases/${caseId}`] });
+
     // Update URL to reflect current case
-    const newUrl = `/legal-assistant?case=${caseId}`;
-    window.history.pushState({}, '', newUrl);
-  };
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('case', caseId.toString());
+    window.history.pushState({}, '', currentUrl.toString());
+  }, [queryClient]);
 
   const handleFunctionClick = (functionId: string) => {
     setModalFunction(functionId);
@@ -81,7 +106,7 @@ export default function LegalAssistant() {
         currentCaseId={currentCaseId}
         onCaseSelect={handleCaseSelect}
       />
-      
+
       <ResizablePanelGroup
         direction="horizontal"
         className="flex-1"
@@ -94,9 +119,9 @@ export default function LegalAssistant() {
             onDocumentGenerate={handleDocumentGenerate}
           />
         </ResizablePanel>
-        
+
         <ResizableHandle withHandle />
-        
+
         <ResizablePanel size={canvasSize} minSize={25}>
           <DocumentCanvas
             caseId={currentCaseId}

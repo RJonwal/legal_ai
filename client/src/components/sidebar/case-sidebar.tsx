@@ -76,13 +76,16 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
         </div>
         
         <div className="space-y-2">
-          {cases.map((case_: any) => (
+          {cases && cases.length > 0 ? cases.map((case_: any) => (
             <Card 
               key={case_.id}
               className={`cursor-pointer hover:bg-gray-50 transition-colors ${
                 currentCaseId === case_.id ? 'ring-2 ring-legal-blue bg-legal-blue/5' : ''
               }`}
-              onClick={() => onCaseSelect(case_.id)}
+              onClick={() => {
+                console.log('Case selected:', case_);
+                onCaseSelect(case_.id);
+              }}
             >
               <CardContent className="p-3">
                 <div className="flex items-start space-x-3">
@@ -91,24 +94,36 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {case_.title}
+                      {case_.title || 'Untitled Case'}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
-                      {case_.clientName}
+                      {case_.clientName || 'No client specified'}
                     </p>
                     <div className="mt-2">
                       <Badge 
                         variant="secondary" 
-                        className={`text-xs ${getCaseTypeColor(case_.caseType)}`}
+                        className={`text-xs ${getCaseTypeColor(case_.caseType || 'general')}`}
                       >
-                        {case_.caseType}
+                        {case_.caseType || 'General'}
                       </Badge>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500">No cases available</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => setNewCaseOpen(true)}
+              >
+                Create First Case
+              </Button>
+            </div>
+          )}
         </div>
 
         <Separator className="my-4" />
