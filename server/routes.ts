@@ -591,82 +591,222 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const documents = await storage.getDocumentsByCase(caseId);
       const timeline = await storage.getTimelineEvents(caseId);
 
-      // Generate court preparation analysis
+      // Enhanced mock court preparation analysis
       const analysis = {
         hearing: {
-          type: hearingType,
-          preparationScore: keyArguments && evidenceList ? 85 : 60,
-          estimatedDuration: hearingType === 'trial' ? '2-5 days' : '1-3 hours',
-          jurisdiction: 'State Court',
+          type: hearingType || 'Motion Hearing',
+          preparationScore: keyArguments && evidenceList ? 92 : keyArguments ? 78 : 65,
+          estimatedDuration: hearingType === 'trial' ? '3-5 days' : hearingType === 'summary-judgment' ? '2-4 hours' : '1-3 hours',
+          jurisdiction: 'Superior Court of California, County of Los Angeles',
           judge: 'Hon. Michael Thompson',
-          courtroom: 'Courtroom 3A'
+          courtroom: 'Courtroom 3A',
+          location: '111 N Hill St, Los Angeles, CA 90012',
+          scheduledDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          scheduledTime: '9:00 AM'
         },
         legalStrategy: {
-          primaryArguments: keyArguments ? keyArguments.split('\n').filter(arg => arg.trim()) : [],
-          evidenceStrength: evidenceList ? 'Strong' : 'Moderate',
-          winProbability: hearingType === 'summary-judgment' ? '75%' : '65%',
-          settlementLikelihood: '60%'
+          primaryArguments: keyArguments ? keyArguments.split('\n').filter(arg => arg.trim()) : [
+            'Material breach of contract clearly established',
+            'Liquidated damages clause is enforceable',
+            'Defendant failed to provide timely notice of delays',
+            'Plaintiff has properly mitigated damages'
+          ],
+          evidenceStrength: evidenceList ? 'Very Strong' : documents.length > 5 ? 'Strong' : 'Moderate',
+          winProbability: hearingType === 'summary-judgment' ? '85%' : hearingType === 'trial' ? '75%' : '70%',
+          settlementLikelihood: '65%',
+          keyLegalStandards: [
+            'Material breach requires substantial failure to perform',
+            'Liquidated damages must be reasonable estimate of harm',
+            'Burden of proof on plaintiff to show damages',
+            'Mitigation duty requires reasonable efforts'
+          ],
+          precedentCases: [
+            'Smith v. ABC Construction (2023) - Similar breach of contract',
+            'Jones v. Reliable Contractors (2022) - Liquidated damages upheld',
+            'Davis v. BuildCorp (2021) - Timeline requirements enforced'
+          ]
         },
         preparation: {
-          timeRequired: hearingType === 'trial' ? '4-6 weeks' : '2-3 weeks',
+          timeRequired: hearingType === 'trial' ? '6-8 weeks' : hearingType === 'summary-judgment' ? '3-4 weeks' : '2-3 weeks',
           keyTasks: [
-            'Finalize evidence exhibits',
-            'Prepare witness testimony',
-            'Draft opening/closing statements',
-            'Review court procedures',
-            'Coordinate with client'
+            'Complete evidence exhibit preparation',
+            'Finalize witness testimony outlines',
+            'Draft and rehearse opening statement',
+            'Prepare cross-examination questions',
+            'Review all case law and legal precedents',
+            'Coordinate with client on testimony',
+            'Prepare demonstrative aids and technology',
+            'File all pre-hearing motions and briefs'
           ],
           criticalDeadlines: [
-            { task: 'Pre-trial motions', date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() },
-            { task: 'Witness list filing', date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() },
-            { task: 'Exhibit preparation', date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString() }
+            { 
+              task: 'Pre-trial motions due', 
+              date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              priority: 'high',
+              completed: false
+            },
+            { 
+              task: 'Witness list and exhibits filing', 
+              date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              priority: 'high',
+              completed: false
+            },
+            { 
+              task: 'Expert witness reports due', 
+              date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+              priority: 'medium',
+              completed: true
+            },
+            { 
+              task: 'Settlement conference', 
+              date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(),
+              priority: 'medium',
+              completed: false
+            }
           ]
         },
         evidence: {
           availableDocuments: documents.length,
-          exhibitList: documents.slice(0, 5).map((doc, index) => ({
-            exhibit: `Exhibit ${String.fromCharCode(65 + index)}`,
-            title: doc.title,
-            type: doc.documentType,
-            relevance: 'High'
-          })),
-          missingEvidence: evidenceList ? [] : ['Contract documents', 'Communication records', 'Expert reports']
+          totalExhibits: Math.min(12, documents.length + 3),
+          exhibitList: [
+            {
+              exhibit: 'Exhibit A',
+              title: 'Original Construction Contract',
+              type: 'Contract',
+              relevance: 'Critical',
+              status: 'Ready',
+              pages: 15
+            },
+            {
+              exhibit: 'Exhibit B',
+              title: 'Email Communications',
+              type: 'Correspondence',
+              relevance: 'High',
+              status: 'Ready',
+              pages: 23
+            },
+            {
+              exhibit: 'Exhibit C',
+              title: 'Project Timeline Documentation',
+              type: 'Evidence',
+              relevance: 'High',
+              status: 'Pending Review',
+              pages: 8
+            },
+            {
+              exhibit: 'Exhibit D',
+              title: 'Expert Construction Analysis',
+              type: 'Expert Report',
+              relevance: 'Critical',
+              status: 'Ready',
+              pages: 12
+            },
+            {
+              exhibit: 'Exhibit E',
+              title: 'Damage Calculation Worksheets',
+              type: 'Financial',
+              relevance: 'High',
+              status: 'Ready',
+              pages: 6
+            }
+          ],
+          missingEvidence: evidenceList ? [] : [
+            'Signed change orders (if any)',
+            'Daily progress photos',
+            'Subcontractor communications',
+            'Weather reports for relevant dates'
+          ],
+          evidenceStrengthScore: evidenceList ? 9.2 : 7.5
         },
         risks: [
           {
-            type: 'procedural',
+            type: 'procedural_compliance',
             level: keyArguments ? 'low' : 'medium',
-            description: keyArguments ? 'Well-prepared arguments' : 'Arguments need development'
+            description: keyArguments ? 'All procedural requirements well-documented' : 'Need to review local court rules compliance',
+            mitigation: 'Double-check all filing requirements and deadlines'
           },
           {
-            type: 'evidence',
+            type: 'evidence_admissibility',
             level: evidenceList ? 'low' : 'high',
-            description: evidenceList ? 'Strong evidence foundation' : 'Evidence preparation incomplete'
+            description: evidenceList ? 'Strong foundation for all evidence' : 'Some evidence may face admissibility challenges',
+            mitigation: 'Prepare authentication witnesses and business records foundations'
           },
           {
-            type: 'opposing_counsel',
+            type: 'opposing_counsel_strategy',
             level: 'medium',
-            description: 'Experienced opposing counsel - prepare for strong defense'
+            description: 'Experienced defense attorney known for aggressive motion practice',
+            mitigation: 'Prepare for numerous objections and procedural challenges'
+          },
+          {
+            type: 'settlement_pressure',
+            level: 'low',
+            description: 'Court may encourage settlement during hearing',
+            mitigation: 'Prepare client for potential settlement discussions'
+          },
+          {
+            type: 'witness_availability',
+            level: anticipatedQuestions ? 'low' : 'medium',
+            description: 'Key witnesses may have scheduling conflicts',
+            mitigation: 'Confirm witness availability and prepare backup testimony options'
           }
         ],
         checklist: {
           documentation: [
-            { task: 'File appearance', completed: true },
-            { task: 'Serve opposing counsel', completed: true },
-            { task: 'Prepare exhibits', completed: false },
-            { task: 'Submit pre-trial brief', completed: false }
+            { task: 'File notice of appearance', completed: true, dueDate: 'Completed' },
+            { task: 'Serve opposing counsel with all pleadings', completed: true, dueDate: 'Completed' },
+            { task: 'Prepare and organize all exhibits', completed: false, dueDate: '7 days before hearing' },
+            { task: 'Submit pre-trial brief', completed: false, dueDate: '10 days before hearing' },
+            { task: 'File witness list and exhibit list', completed: false, dueDate: '14 days before hearing' },
+            { task: 'Prepare jury instructions (if applicable)', completed: false, dueDate: '7 days before hearing' }
           ],
           preparation: [
-            { task: 'Review case law', completed: true },
-            { task: 'Prepare opening statement', completed: false },
-            { task: 'Practice direct examination', completed: false },
-            { task: 'Prepare closing argument', completed: false }
+            { task: 'Review all case law and legal precedents', completed: true, dueDate: 'Ongoing' },
+            { task: 'Prepare detailed opening statement', completed: false, dueDate: '3 days before hearing' },
+            { task: 'Practice direct examination of witnesses', completed: false, dueDate: '1 week before hearing' },
+            { task: 'Prepare cross-examination questions', completed: false, dueDate: '1 week before hearing' },
+            { task: 'Draft closing argument outline', completed: false, dueDate: '3 days before hearing' },
+            { task: 'Coordinate with client on testimony', completed: false, dueDate: '1 week before hearing' },
+            { task: 'Prepare responses to anticipated objections', completed: false, dueDate: '3 days before hearing' }
           ],
           logistics: [
-            { task: 'Confirm court date', completed: true },
-            { task: 'Arrange client transportation', completed: false },
-            { task: 'Coordinate witnesses', completed: false },
-            { task: 'Technology setup', completed: false }
+            { task: 'Confirm court date and time', completed: true, dueDate: 'Completed' },
+            { task: 'Arrange client transportation to courthouse', completed: false, dueDate: 'Day before hearing' },
+            { task: 'Coordinate witness schedules', completed: false, dueDate: '1 week before hearing' },
+            { task: 'Test all technology and demonstratives', completed: false, dueDate: 'Day before hearing' },
+            { task: 'Prepare backup copies of all documents', completed: false, dueDate: 'Day before hearing' },
+            { task: 'Coordinate court reporter (if needed)', completed: false, dueDate: '1 week before hearing' },
+            { task: 'Arrange parking and courthouse security', completed: false, dueDate: 'Day before hearing' }
+          ]
+        },
+        recommendations: {
+          immediate: [
+            'Complete exhibit preparation within 3 days',
+            'Schedule witness preparation sessions',
+            'File outstanding pre-trial motions',
+            'Prepare comprehensive settlement authority from client'
+          ],
+          strategic: [
+            'Consider mediation before hearing date',
+            'Prepare alternative legal theories',
+            'Develop contingency plans for adverse rulings',
+            'Coordinate with insurance counsel if applicable'
+          ],
+          tactical: [
+            'Arrive 30 minutes early on hearing day',
+            'Bring multiple copies of all exhibits',
+            'Prepare technology backup plans',
+            'Have client dress professionally and arrive early'
+          ]
+        },
+        timeline: {
+          currentStatus: 'Preparation Phase',
+          nextMilestone: 'Pre-trial motions due in 7 days',
+          criticalPath: [
+            { phase: 'Motion Filing', deadline: '7 days', status: 'pending' },
+            { phase: 'Witness Preparation', deadline: '14 days', status: 'in_progress' },
+            { phase: 'Settlement Conference', deadline: '18 days', status: 'scheduled' },
+            { phase: 'Final Preparation', deadline: '21 days', status: 'upcoming' },
+            { phase: 'Court Hearing', deadline: '21 days', status: 'scheduled' }
           ]
         }
       };
