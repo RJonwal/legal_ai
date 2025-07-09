@@ -122,6 +122,93 @@ export class MemStorage implements IStorage {
 
     this.caseIdCounter = 4;
 
+    // Create sample documents for case 1 (Smith v. Johnson)
+    const sampleDocuments: Document[] = [
+      {
+        id: 1,
+        caseId: 1,
+        title: "Construction Contract Agreement",
+        content: "CONSTRUCTION CONTRACT AGREEMENT\n\nThis agreement entered into on January 15, 2024, between Smith Construction LLC (Contractor) and Johnson Development Corp (Owner).\n\nSCOPE OF WORK:\n- Complete foundation and framing by February 15, 2024\n- All work to be performed per attached specifications\n- Total contract amount: $450,000\n\nDELIVERY TERMS:\n- Project completion deadline: February 15, 2024\n- Liquidated damages: $1,667 per day for delays\n- Payment terms: 30% down, balance on completion\n\nSigned:\nSmith Construction LLC\nJohnson Development Corp",
+        documentType: "contract",
+        status: "final",
+        createdAt: new Date("2024-01-15"),
+        updatedAt: new Date("2024-01-15"),
+      },
+      {
+        id: 2,
+        caseId: 1,
+        title: "Breach Notice Letter",
+        content: "NOTICE OF BREACH\n\nDate: March 1, 2024\n\nTo: Johnson Development Corp\nRe: Material Breach of Construction Contract\n\nDear Mr. Johnson,\n\nThis letter serves as formal notice that you are in material breach of the Construction Agreement dated January 15, 2024.\n\nSPECIFIC BREACHES:\n1. Failure to complete work by February 15, 2024 deadline\n2. Current delay of 15 days and counting\n3. No communication regarding completion timeline\n\nDEMAND FOR CURE:\nYou have 10 days to cure this breach or we will pursue all available legal remedies.\n\nSincerely,\nSmith Construction LLC",
+        documentType: "correspondence",
+        status: "final",
+        createdAt: new Date("2024-03-01"),
+        updatedAt: new Date("2024-03-01"),
+      },
+      {
+        id: 3,
+        caseId: 1,
+        title: "Damage Calculation Worksheet",
+        content: "DAMAGE CALCULATION ANALYSIS\n\nProject: Smith v. Johnson Construction Dispute\nPrepared: March 5, 2024\n\nDIRECT DAMAGES:\n- Contract delay: 18 days @ $1,667/day = $30,006\n- Additional labor costs due to delay = $15,000\n- Equipment rental extension = $8,500\nSubtotal Direct Damages: $53,506\n\nCONSEQUENTIAL DAMAGES:\n- Lost opportunity costs = $25,000\n- Additional financing costs = $3,200\nSubtotal Consequential: $28,200\n\nTOTAL ESTIMATED DAMAGES: $81,706\n\nRECOMMENDATION:\nSeek settlement in range of $75,000-$85,000",
+        documentType: "analysis",
+        status: "draft",
+        createdAt: new Date("2024-03-05"),
+        updatedAt: new Date("2024-03-05"),
+      },
+      {
+        id: 4,
+        caseId: 1,
+        title: "Discovery Request - Document Production",
+        content: "REQUEST FOR PRODUCTION OF DOCUMENTS\n\nCase: Smith Construction LLC v. Johnson Development Corp\nCase No: 2024-CD-001\n\nTO: Defendant Johnson Development Corp\n\nPlaintiff requests production of the following documents:\n\n1. All contracts, agreements, and amendments related to the construction project\n2. All correspondence between parties from January 1, 2024 to present\n3. All payment records, invoices, and financial documents\n4. All project schedules, timelines, and progress reports\n5. All communications with subcontractors or third parties\n6. All change orders or modification requests\n7. All photographs or videos of the construction site\n\nThese documents must be produced within 30 days of service.\n\nRespectfully submitted,\nSarah Johnson, Esq.",
+        documentType: "discovery",
+        status: "final",
+        createdAt: new Date("2024-03-10"),
+        updatedAt: new Date("2024-03-10"),
+      },
+      {
+        id: 5,
+        caseId: 1,
+        title: "Expert Witness Report - Construction Delays",
+        content: "EXPERT WITNESS REPORT\n\nCase: Smith Construction LLC v. Johnson Development Corp\nExpert: Michael Thompson, PE\nDate: March 15, 2024\n\nQUALIFICATIONS:\n- Professional Engineer with 20 years construction experience\n- Certified Construction Manager\n- Expert in construction delay analysis\n\nOPINIONS:\n1. The February 15, 2024 completion deadline was reasonable and achievable\n2. Delays were caused by defendant's failure to provide required materials\n3. Additional costs of $53,000 were directly attributable to the delay\n4. Standard industry liquidated damages clause is enforceable\n\nCONCLUSION:\nDefendant's actions directly caused delays and resulting damages to plaintiff.\n\nMichael Thompson, PE\nLicense #12345",
+        documentType: "expert_report",
+        status: "final",
+        createdAt: new Date("2024-03-15"),
+        updatedAt: new Date("2024-03-15"),
+      },
+      {
+        id: 6,
+        caseId: 1,
+        title: "Settlement Demand Letter",
+        content: "SETTLEMENT DEMAND\n\nDate: March 20, 2024\n\nTo: Johnson Development Corp\nRe: Final Settlement Demand - Construction Dispute\n\nDear Counsel,\n\nThis letter constitutes our final settlement demand before filing litigation.\n\nSETTLEMENT TERMS:\n- Total demand: $75,000\n- Payment due within 15 days\n- Mutual release of all claims\n- Confidentiality agreement\n\nDAMAGE SUMMARY:\n- Contractual liquidated damages: $30,006\n- Additional costs and expenses: $23,500\n- Attorney fees and costs: $21,494\n\nIf this demand is not accepted, we will file suit seeking full damages plus attorney fees.\n\nSincerely,\nSarah Johnson, Esq.\nAttorney for Smith Construction LLC",
+        documentType: "settlement",
+        status: "final",
+        createdAt: new Date("2024-03-20"),
+        updatedAt: new Date("2024-03-20"),
+      },
+      {
+        id: 7,
+        caseId: 2,
+        title: "Merger Agreement - ABC Corp",
+        content: "MERGER AGREEMENT\n\nDate: February 1, 2024\nParties: ABC Corporation and XYZ Holdings\n\nTRANSACTION STRUCTURE:\n- Asset purchase agreement\n- Purchase price: $2.5 million\n- Cash at closing: $2.0 million\n- Seller financing: $500,000\n\nCLOSING CONDITIONS:\n- Due diligence completion\n- Board approvals\n- Regulatory clearances\n- Third-party consents\n\nCLOSING DATE: Target April 30, 2024\n\nKey terms subject to final due diligence and documentation.",
+        documentType: "corporate",
+        status: "draft",
+        createdAt: new Date("2024-02-01"),
+        updatedAt: new Date("2024-03-15"),
+      },
+      {
+        id: 8,
+        caseId: 3,
+        title: "Last Will and Testament - Robert Davis",
+        content: "LAST WILL AND TESTAMENT\n\nI, Robert Davis, being of sound mind, do hereby make this my Last Will and Testament.\n\nARTICLE I - EXECUTOR\nI nominate my daughter, Susan Davis, as Executor of this Will.\n\nARTICLE II - BEQUESTS\n1. To my wife, Mary Davis: The family residence and $500,000\n2. To my daughter, Susan Davis: 50% of remaining estate\n3. To my son, Michael Davis: 50% of remaining estate\n\nARTICLE III - TRUSTS\nEstablish education trust for grandchildren with $100,000 funding.\n\nARTICLE IV - RESIDUARY\nAll remaining property to be divided equally between children.\n\nExecuted this 10th day of March, 2024.\n\n_____________________\nRobert Davis\n\nWitnesses:\n_____________________\n_____________________",
+        documentType: "will",
+        status: "draft",
+        createdAt: new Date("2024-03-10"),
+        updatedAt: new Date("2024-03-12"),
+      }
+    ];
+
+    sampleDocuments.forEach(doc => this.documents.set(doc.id, doc));
+    this.documentIdCounter = 9;
+
     // Create sample timeline events
     const timelineEvents: TimelineEvent[] = [
       {
@@ -158,6 +245,19 @@ export class MemStorage implements IStorage {
 
     timelineEvents.forEach(event => this.timelineEvents.set(event.id, event));
     this.timelineIdCounter = 4;
+
+    // Create sample folders
+    const sampleFolders = [
+      { id: "folder_1", name: "Contracts & Agreements", caseId: 1 },
+      { id: "folder_2", name: "Correspondence", caseId: 1 },
+      { id: "folder_3", name: "Expert Reports", caseId: 1 },
+      { id: "folder_4", name: "Discovery Materials", caseId: 1 },
+      { id: "folder_5", name: "Corporate Documents", caseId: 2 },
+      { id: "folder_6", name: "Estate Planning", caseId: 3 },
+    ];
+
+    sampleFolders.forEach(folder => this.folders.set(folder.id, folder));
+    this.folderIdCounter = 7;
   }
 
   async getUser(id: number): Promise<User | undefined> {
