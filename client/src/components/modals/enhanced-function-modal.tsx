@@ -1885,15 +1885,16 @@ export function EnhancedFunctionModal({
 
       {/* Main Function Modal */}
       <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{modalInfo.title}</DialogTitle>
-          <DialogDescription>{modalInfo.description}</DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          {getModalContent()}
-        </div>
-      </DialogContent>
-    </Dialog>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{modalInfo.title}</DialogTitle>
+            <DialogDescription>{modalInfo.description}</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {getModalContent()}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
