@@ -197,6 +197,11 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   };
 
   const applyTextFormat = (format: string) => {
+    // Check if we're in a browser environment
+    if (typeof document === 'undefined' || typeof window === 'undefined') {
+      return;
+    }
+    
     const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
     if (textarea) {
       const start = textarea.selectionStart;
