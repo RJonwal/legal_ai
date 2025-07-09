@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useLocation } from "wouter";
 import { CaseSidebar } from "@/components/sidebar/case-sidebar";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { DocumentCanvas } from "@/components/canvas/document-canvas";
@@ -6,15 +7,32 @@ import { EnhancedFunctionModal } from "@/components/modals/enhanced-function-mod
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export default function LegalAssistant() {
+  const [location] = useLocation();
   const [currentCaseId, setCurrentCaseId] = useState<number>(1);
   const [currentDocument, setCurrentDocument] = useState<any>(null);
   const [modalFunction, setModalFunction] = useState<string | null>(null);
   const [chatSize, setChatSize] = useState<number>(60);
   const [canvasSize, setCanvasSize] = useState<number>(40);
 
+  // Handle URL parameters for case selection
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.split('?')[1] || '');
+    const caseParam = urlParams.get('case');
+    if (caseParam) {
+      const caseId = parseInt(caseParam);
+      if (!isNaN(caseId)) {
+        setCurrentCaseId(caseId);
+        setCurrentDocument(null); // Reset document when switching cases
+      }
+    }
+  }, [location]);
+
   const handleCaseSelect = (caseId: number) => {
     setCurrentCaseId(caseId);
     setCurrentDocument(null);
+    // Update URL to reflect current case
+    const newUrl = `/legal-assistant?case=${caseId}`;
+    window.history.pushState({}, '', newUrl);
   };
 
   const handleFunctionClick = (functionId: string) => {

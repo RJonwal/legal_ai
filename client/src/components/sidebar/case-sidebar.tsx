@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { NewCaseModal } from "@/components/modals/new-case-modal";
+import { SearchCasesModal } from "@/components/modals/search-cases-modal";
+import { SettingsModal } from "@/components/modals/settings-modal";
 import { 
   FolderOpen, 
   Gavel, 
@@ -21,6 +24,9 @@ interface CaseSidebarProps {
 
 export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
   const [, setLocation] = useLocation();
+  const [newCaseOpen, setNewCaseOpen] = useState(false);
+  const [searchCasesOpen, setSearchCasesOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
@@ -110,7 +116,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
-            onClick={() => setLocation('/new-case')}
+            onClick={() => setNewCaseOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
             New Case
@@ -118,7 +124,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
-            onClick={() => setLocation('/search-cases')}
+            onClick={() => setSearchCasesOpen(true)}
           >
             <Search className="h-4 w-4 mr-2" />
             Search Cases
@@ -134,7 +140,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
-            onClick={() => setLocation('/settings')}
+            onClick={() => setSettingsOpen(true)}
           >
             <Settings className="h-4 w-4 mr-2" />
             Settings
@@ -158,6 +164,29 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           </div>
         </div>
       </div>
+
+      <NewCaseModal
+        isOpen={newCaseOpen}
+        onClose={() => setNewCaseOpen(false)}
+        onCaseCreated={(caseId) => {
+          onCaseSelect(caseId);
+          setNewCaseOpen(false);
+        }}
+      />
+
+      <SearchCasesModal
+        isOpen={searchCasesOpen}
+        onClose={() => setSearchCasesOpen(false)}
+        onCaseSelect={(caseId) => {
+          onCaseSelect(caseId);
+          setSearchCasesOpen(false);
+        }}
+      />
+
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 }

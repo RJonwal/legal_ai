@@ -26,6 +26,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search cases
+  app.get("/api/cases/search", async (req, res) => {
+    try {
+      const { query } = req.query;
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: 'Search query is required' });
+      }
+      
+      const results = await storage.searchCases(query);
+      res.json(results);
+    } catch (error) {
+      console.error('Search error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Get specific case
   app.get("/api/cases/:id", async (req, res) => {
     try {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { 
   Download, 
   Printer, 
@@ -29,7 +32,10 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(document?.title || "");
   const [content, setContent] = useState(document?.content || "");
+  const [isDownloading, setIsDownloading] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const documentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (document) {
@@ -74,6 +80,61 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   const handleSaveFinal = () => {
     if (document) {
       updateDocumentMutation.mutate({ title, content, status: 'final' });
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!documentRef.current) return;
+    
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(documentRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: documentRef.current.scrollWidth,
+        height: documentRef.current.scrollHeight
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const fileName = `${title || 'document'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+      toast({
+        title: "PDF Downloaded",
+        description: `Document saved as ${fileName}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Unable to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -186,13 +247,30 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleDownloadPDF}
+              disabled={isDownloading || !document}
+              title="Download as PDF"
+            >
               <Download className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => window.print()}
+              disabled={!document}
+              title="Print Document"
+            >
               <Printer className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              disabled={!document}
+              title="Share Document"
+            >
               <Share2 className="h-4 w-4" />
             </Button>
           </div>
@@ -218,7 +296,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             />
           </div>
         ) : (
-          <div className="max-w-none prose prose-sm">
+          <div ref={documentRef} className="max-w-none prose prose-sm">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
               <div className="text-sm text-gray-500 mb-4">
