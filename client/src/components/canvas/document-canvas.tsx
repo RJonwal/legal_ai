@@ -203,7 +203,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       const end = textarea.selectionEnd;
       const selectedText = content.substring(start, end);
       
-      if (selectedText) {
+      if (selectedText || format.startsWith('align-') || format === 'justify' || format === 'clear-formatting') {
         let formattedText = selectedText;
         
         switch (format) {
@@ -216,8 +216,42 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           case 'underline':
             formattedText = `<u>${selectedText}</u>`;
             break;
-          case 'heading':
+          case 'heading1':
+            formattedText = `# ${selectedText}`;
+            break;
+          case 'heading2':
             formattedText = `## ${selectedText}`;
+            break;
+          case 'heading3':
+            formattedText = `### ${selectedText}`;
+            break;
+          case 'align-left':
+            formattedText = `<div style="text-align: left;">${selectedText}</div>`;
+            break;
+          case 'align-center':
+            formattedText = `<div style="text-align: center;">${selectedText}</div>`;
+            break;
+          case 'align-right':
+            formattedText = `<div style="text-align: right;">${selectedText}</div>`;
+            break;
+          case 'justify':
+            formattedText = `<div style="text-align: justify;">${selectedText}</div>`;
+            break;
+          case 'bullet-list':
+            const bulletItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
+            formattedText = bulletItems.map(item => `• ${item}`).join('\n');
+            break;
+          case 'numbered-list':
+            const numberedItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
+            formattedText = numberedItems.map((item, index) => `${index + 1}. ${item}`).join('\n');
+            break;
+          case 'indent':
+            const indentLines = selectedText.split('\n');
+            formattedText = indentLines.map(line => `    ${line}`).join('\n');
+            break;
+          case 'outdent':
+            const outdentLines = selectedText.split('\n');
+            formattedText = outdentLines.map(line => line.replace(/^    /, '')).join('\n');
             break;
           case 'uppercase':
             formattedText = selectedText.toUpperCase();
@@ -225,10 +259,30 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           case 'lowercase':
             formattedText = selectedText.toLowerCase();
             break;
+          case 'title-case':
+            formattedText = selectedText.replace(/\w\S*/g, (txt) => 
+              txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+            );
+            break;
+          case 'clear-formatting':
+            // Remove common formatting markers
+            formattedText = selectedText
+              .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+              .replace(/\*(.*?)\*/g, '$1') // Remove italic
+              .replace(/<u>(.*?)<\/u>/g, '$1') // Remove underline
+              .replace(/#{1,6}\s/g, '') // Remove headings
+              .replace(/<div[^>]*>(.*?)<\/div>/g, '$1'); // Remove div tags
+            break;
         }
         
         const newContent = content.substring(0, start) + formattedText + content.substring(end);
         setContent(newContent);
+        
+        // Update cursor position after formatting
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start + formattedText.length, start + formattedText.length);
+        }, 0);
       }
     }
   };
@@ -468,7 +522,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
                   }}
                 />
               </ContextMenuTrigger>
-              <ContextMenuContent className="w-48">
+              <ContextMenuContent className="w-56">
                 <ContextMenuItem onClick={() => applyTextFormat('bold')}>
                   <Bold className="h-4 w-4 mr-2" />
                   Bold
@@ -482,25 +536,105 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
                   Underline
                 </ContextMenuItem>
                 <ContextMenuSeparator />
-                <ContextMenuItem onClick={() => applyTextFormat('heading')}>
+                <ContextMenuItem onClick={() => applyTextFormat('heading1')}>
                   <Type className="h-4 w-4 mr-2" />
-                  Make Heading
+                  Heading 1
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('heading2')}>
+                  <Type className="h-4 w-4 mr-2" />
+                  Heading 2
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('heading3')}>
+                  <Type className="h-4 w-4 mr-2" />
+                  Heading 3
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => applyTextFormat('align-left')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M3 12h12M3 18h18" />
+                  </svg>
+                  Align Left
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('align-center')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M7 12h10M3 18h18" />
+                  </svg>
+                  Align Center
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('align-right')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M9 12h12M3 18h18" />
+                  </svg>
+                  Align Right
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('justify')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M3 12h18M3 18h18" />
+                  </svg>
+                  Justify
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => applyTextFormat('bullet-list')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  Bullet List
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('numbered-list')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                  Numbered List
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => applyTextFormat('indent')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7M3 12h16" />
+                  </svg>
+                  Indent
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('outdent')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7M19 12H5" />
+                  </svg>
+                  Outdent
                 </ContextMenuItem>
                 <ContextMenuSeparator />
                 <ContextMenuItem onClick={() => applyTextFormat('uppercase')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
                   UPPERCASE
                 </ContextMenuItem>
                 <ContextMenuItem onClick={() => applyTextFormat('lowercase')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
                   lowercase
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('title-case')}>
+                  <Type className="h-4 w-4 mr-2" />
+                  Title Case
                 </ContextMenuItem>
                 <ContextMenuSeparator />
                 <ContextMenuItem onClick={() => changeFontSize(true)}>
-                  <Type className="h-4 w-4 mr-2" />
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
                   Increase Font Size
                 </ContextMenuItem>
                 <ContextMenuItem onClick={() => changeFontSize(false)}>
-                  <Type className="h-4 w-4 mr-2" />
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
+                  </svg>
                   Decrease Font Size
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => applyTextFormat('clear-formatting')}>
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Clear Formatting
                 </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
