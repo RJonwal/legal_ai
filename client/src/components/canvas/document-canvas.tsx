@@ -208,62 +208,79 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     const end = textarea.selectionEnd;
     const selectedText = content.substring(start, end);
     
-    // If no text is selected for certain operations, return early
+    // If no text is selected, try to get the current word or line
+    let actualStart = start;
+    let actualEnd = end;
+    let actualSelectedText = selectedText;
+    
     if (!selectedText && !['align-left', 'align-center', 'align-right', 'justify', 'clear-formatting'].includes(format)) {
-      return;
+      // If no selection, select the current word
+      const beforeCursor = content.substring(0, start);
+      const afterCursor = content.substring(end);
+      
+      const wordStart = beforeCursor.lastIndexOf(' ') + 1;
+      const wordEnd = afterCursor.indexOf(' ');
+      
+      actualStart = wordStart;
+      actualEnd = wordEnd === -1 ? content.length : end + wordEnd;
+      actualSelectedText = content.substring(actualStart, actualEnd);
+      
+      if (!actualSelectedText.trim()) {
+        return;
+      }
     }
     
-    let formattedText = selectedText;
+    let formattedText = actualSelectedText;
     let newContent = content;
     
     switch (format) {
       case 'bold':
         // Apply bold formatting to selected text only
-        if (selectedText) {
-          formattedText = `**${selectedText}**`;
+        if (actualSelectedText) {
+          formattedText = `**${actualSelectedText}**`;
         }
         break;
       case 'italic':
         // Apply italic formatting to selected text only
-        if (selectedText) {
-          formattedText = `*${selectedText}*`;
+        if (actualSelectedText) {
+          formattedText = `*${actualSelectedText}*`;
         }
         break;
       case 'underline':
         // Apply underline formatting to selected text only
-        if (selectedText) {
-          formattedText = `_${selectedText}_`;
+        if (actualSelectedText) {
+          formattedText = `_${actualSelectedText}_`;
         }
         break;
       case 'heading1':
-        if (selectedText) {
-          const prefix1 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-          formattedText = `${prefix1}${selectedText.toUpperCase()}`;
+        if (actualSelectedText) {
+          const prefix1 = actualStart > 0 && content[actualStart - 1] !== '\n' ? '\n' : '';
+          formattedText = `${prefix1}${actualSelectedText.toUpperCase()}`;
         }
         break;
       case 'heading2':
-        if (selectedText) {
-          const prefix2 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-          formattedText = `${prefix2}${selectedText.charAt(0).toUpperCase()}${selectedText.slice(1)}`;
+        if (actualSelectedText) {
+          const prefix2 = actualStart > 0 && content[actualStart - 1] !== '\n' ? '\n' : '';
+          formattedText = `${prefix2}${actualSelectedText.charAt(0).toUpperCase()}${actualSelectedText.slice(1)}`;
         }
         break;
       case 'heading3':
-        if (selectedText) {
-          const prefix3 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-          formattedText = `${prefix3}${selectedText.charAt(0).toUpperCase()}${selectedText.slice(1)}`;
+        if (actualSelectedText) {
+          const prefix3 = actualStart > 0 && content[actualStart - 1] !== '\n' ? '\n' : '';
+          formattedText = `${prefix3}${actualSelectedText.charAt(0).toUpperCase()}${actualSelectedText.slice(1)}`;
         }
         break;
       case 'align-left':
         // For left alignment, remove any leading spaces
-        if (selectedText) {
-          const lines = selectedText.split('\n');
+        if (actualSelectedText) {
+          const lines = actualSelectedText.split('\n');
           formattedText = lines.map(line => line.trimStart()).join('\n');
         }
         break;
       case 'align-center':
         // Center text using spaces
-        if (selectedText) {
-          const lines = selectedText.split('\n');
+        if (actualSelectedText) {
+          const lines = actualSelectedText.split('\n');
           formattedText = lines.map(line => {
             const trimmed = line.trim();
             if (trimmed.length === 0) return trimmed;
@@ -274,8 +291,8 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
         break;
       case 'align-right':
         // Right align text using spaces
-        if (selectedText) {
-          const lines = selectedText.split('\n');
+        if (actualSelectedText) {
+          const lines = actualSelectedText.split('\n');
           formattedText = lines.map(line => {
             const trimmed = line.trim();
             if (trimmed.length === 0) return trimmed;
@@ -286,42 +303,42 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
         break;
       case 'justify':
         // For justify in textarea, just clean up spacing
-        if (selectedText) {
-          const lines = selectedText.split('\n');
+        if (actualSelectedText) {
+          const lines = actualSelectedText.split('\n');
           formattedText = lines.map(line => line.trim()).join('\n');
         }
         break;
       case 'bullet-list':
-        const bulletItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
+        const bulletItems = actualSelectedText.split('\n').map(line => line.trim()).filter(line => line);
         formattedText = bulletItems.map(item => `• ${item}`).join('\n');
         break;
       case 'numbered-list':
-        const numberedItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
+        const numberedItems = actualSelectedText.split('\n').map(line => line.trim()).filter(line => line);
         formattedText = numberedItems.map((item, index) => `${index + 1}. ${item}`).join('\n');
         break;
       case 'indent':
-        const indentLines = selectedText.split('\n');
+        const indentLines = actualSelectedText.split('\n');
         formattedText = indentLines.map(line => `    ${line}`).join('\n');
         break;
       case 'outdent':
-        const outdentLines = selectedText.split('\n');
+        const outdentLines = actualSelectedText.split('\n');
         formattedText = outdentLines.map(line => line.replace(/^    /, '')).join('\n');
         break;
       case 'uppercase':
-        formattedText = selectedText.toUpperCase();
+        formattedText = actualSelectedText.toUpperCase();
         break;
       case 'lowercase':
-        formattedText = selectedText.toLowerCase();
+        formattedText = actualSelectedText.toLowerCase();
         break;
       case 'title-case':
-        formattedText = selectedText.replace(/\w\S*/g, (txt) => 
+        formattedText = actualSelectedText.replace(/\w\S*/g, (txt) => 
           txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
         );
         break;
       case 'clear-formatting':
         // Remove all formatting from selected text only
-        if (selectedText) {
-          formattedText = selectedText
+        if (actualSelectedText) {
+          formattedText = actualSelectedText
             .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
             .replace(/\*(.*?)\*/g, '$1') // Remove italic
             .replace(/_(.*?)_/g, '$1') // Remove underline
@@ -337,15 +354,15 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     }
     
     // Update content only if we have selected text or for alignment operations
-    if (selectedText && (formattedText !== selectedText || ['align-left', 'align-center', 'align-right', 'justify', 'clear-formatting'].includes(format))) {
-      newContent = content.substring(0, start) + formattedText + content.substring(end);
+    if (actualSelectedText && (formattedText !== actualSelectedText || ['align-left', 'align-center', 'align-right', 'justify', 'clear-formatting'].includes(format))) {
+      newContent = content.substring(0, actualStart) + formattedText + content.substring(actualEnd);
       setContent(newContent);
       
       // Update cursor position after formatting
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          textareaRef.current.setSelectionRange(start + formattedText.length, start + formattedText.length);
+          textareaRef.current.setSelectionRange(actualStart + formattedText.length, actualStart + formattedText.length);
         }
       }, 0);
     }
