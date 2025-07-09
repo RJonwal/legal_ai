@@ -42,16 +42,20 @@ export default function LegalAssistant() {
   const handleDocumentGenerate = (document: any) => {
     setCurrentDocument(document);
     // Auto-expand document canvas when document is generated
-    setChatSize(35);
-    setCanvasSize(65);
+    setTimeout(() => {
+      setChatSize(35);
+      setCanvasSize(65);
+    }, 100);
   };
 
   // Auto-adjust panel sizes based on document state
   useEffect(() => {
     if (!currentDocument) {
       // When no document, give more space to chat
-      setChatSize(70);
-      setCanvasSize(30);
+      setTimeout(() => {
+        setChatSize(70);
+        setCanvasSize(30);
+      }, 100);
     }
   }, [currentDocument]);
 
@@ -80,7 +84,7 @@ export default function LegalAssistant() {
         className="flex-1"
         onLayout={onLayoutChange}
       >
-        <ResizablePanel defaultSize={chatSize} minSize={30}>
+        <ResizablePanel defaultSize={60} minSize={30} size={chatSize}>
           <ChatInterface
             caseId={currentCaseId}
             onFunctionClick={handleFunctionClick}
@@ -90,7 +94,7 @@ export default function LegalAssistant() {
         
         <ResizableHandle withHandle />
         
-        <ResizablePanel defaultSize={canvasSize} minSize={25}>
+        <ResizablePanel defaultSize={40} minSize={25} size={canvasSize}>
           <DocumentCanvas
             caseId={currentCaseId}
             document={currentDocument}
