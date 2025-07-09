@@ -168,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cases/:id/documents/upload", async (req, res) => {
     try {
       const caseId = parseInt(req.params.id);
-      
+
       // Mock file upload processing with more realistic data
       // In a real implementation, you would use multer or similar middleware
       const mockFileTypes = [
@@ -181,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Simulate 1-3 files being uploaded
       const numFiles = Math.floor(Math.random() * 3) + 1;
       const mockFiles = [];
-      
+
       for (let i = 0; i < numFiles; i++) {
         const randomFile = mockFileTypes[Math.floor(Math.random() * mockFileTypes.length)];
         mockFiles.push({
@@ -371,7 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate case metrics
       const caseStartDate = new Date(case_.createdAt);
       const daysActive = Math.floor((Date.now() - caseStartDate.getTime()) / (1000 * 60 * 60 * 24));
-      
+
       // Generate realistic financial data based on case type and duration
       const baseRate = case_.caseType === 'corporate_law' ? 500 : 350;
       const estimatedHours = Math.min(daysActive * 2.5, 200);
@@ -533,7 +533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const caseId = parseInt(req.params.id);
       const { witnessName, depositionType, keyTopics, witnessRole } = req.body;
-      
+
       const case_ = await storage.getCase(caseId);
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -581,240 +581,220 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cases/:id/court-prep", async (req, res) => {
     try {
       const caseId = parseInt(req.params.id);
-      const { hearingType, keyArguments, anticipatedQuestions, evidenceList, opposingCounsel } = req.body;
-      
-      const case_ = await storage.getCase(caseId);
-      if (!case_) {
-        return res.status(404).json({ message: "Case not found" });
-      }
+      const { hearingType, keyArguments, evidence, timeline } = req.body;
 
-      const documents = await storage.getDocumentsByCase(caseId);
-      const timeline = await storage.getTimelineEvents(caseId);
-
-      // Enhanced mock court preparation analysis
-      const analysis = {
+      // Mock court preparation response
+      const courtPrepData = {
         hearing: {
-          type: hearingType || 'Motion Hearing',
-          preparationScore: keyArguments && evidenceList ? 92 : keyArguments ? 78 : 65,
-          estimatedDuration: hearingType === 'trial' ? '3-5 days' : hearingType === 'summary-judgment' ? '2-4 hours' : '1-3 hours',
-          jurisdiction: 'Superior Court of California, County of Los Angeles',
-          judge: 'Hon. Michael Thompson',
-          courtroom: 'Courtroom 3A',
-          location: '111 N Hill St, Los Angeles, CA 90012',
-          scheduledDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          scheduledTime: '9:00 AM'
-        },
-        legalStrategy: {
-          primaryArguments: keyArguments ? keyArguments.split('\n').filter(arg => arg.trim()) : [
-            'Material breach of contract clearly established',
-            'Liquidated damages clause is enforceable',
-            'Defendant failed to provide timely notice of delays',
-            'Plaintiff has properly mitigated damages'
+          type: hearingType || 'motion-hearing',
+          keyArguments: keyArguments || [
+            'Breach of contract is clearly established',
+            'Damages are readily calculable',
+            'No genuine dispute of material facts exists'
           ],
-          evidenceStrength: evidenceList ? 'Very Strong' : documents.length > 5 ? 'Strong' : 'Moderate',
-          winProbability: hearingType === 'summary-judgment' ? '85%' : hearingType === 'trial' ? '75%' : '70%',
-          settlementLikelihood: '65%',
-          keyLegalStandards: [
-            'Material breach requires substantial failure to perform',
-            'Liquidated damages must be reasonable estimate of harm',
-            'Burden of proof on plaintiff to show damages',
-            'Mitigation duty requires reasonable efforts'
+          evidence: evidence || [
+            'Original contract documents',
+            'Email correspondence showing breach',
+            'Damage calculations and estimates'
           ],
-          precedentCases: [
-            'Smith v. ABC Construction (2023) - Similar breach of contract',
-            'Jones v. Reliable Contractors (2022) - Liquidated damages upheld',
-            'Davis v. BuildCorp (2021) - Timeline requirements enforced'
+          timeline: timeline || [
+            'Contract signed: January 15, 2024',
+            'Breach occurred: February 20, 2024',
+            'Notice sent: February 25, 2024',
+            'Lawsuit filed: March 1, 2024'
           ]
         },
-        preparation: {
-          timeRequired: hearingType === 'trial' ? '6-8 weeks' : hearingType === 'summary-judgment' ? '3-4 weeks' : '2-3 weeks',
-          keyTasks: [
-            'Complete evidence exhibit preparation',
-            'Finalize witness testimony outlines',
-            'Draft and rehearse opening statement',
-            'Prepare cross-examination questions',
-            'Review all case law and legal precedents',
-            'Coordinate with client on testimony',
-            'Prepare demonstrative aids and technology',
-            'File all pre-hearing motions and briefs'
-          ],
-          criticalDeadlines: [
-            { 
-              task: 'Pre-trial motions due', 
-              date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-              priority: 'high',
-              completed: false
-            },
-            { 
-              task: 'Witness list and exhibits filing', 
-              date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-              priority: 'high',
-              completed: false
-            },
-            { 
-              task: 'Expert witness reports due', 
-              date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-              priority: 'medium',
-              completed: true
-            },
-            { 
-              task: 'Settlement conference', 
-              date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(),
-              priority: 'medium',
-              completed: false
-            }
-          ]
-        },
-        evidence: {
-          availableDocuments: documents.length,
-          totalExhibits: Math.min(12, documents.length + 3),
-          exhibitList: [
-            {
-              exhibit: 'Exhibit A',
-              title: 'Original Construction Contract',
-              type: 'Contract',
-              relevance: 'Critical',
-              status: 'Ready',
-              pages: 15
-            },
-            {
-              exhibit: 'Exhibit B',
-              title: 'Email Communications',
-              type: 'Correspondence',
-              relevance: 'High',
-              status: 'Ready',
-              pages: 23
-            },
-            {
-              exhibit: 'Exhibit C',
-              title: 'Project Timeline Documentation',
-              type: 'Evidence',
-              relevance: 'High',
-              status: 'Pending Review',
-              pages: 8
-            },
-            {
-              exhibit: 'Exhibit D',
-              title: 'Expert Construction Analysis',
-              type: 'Expert Report',
-              relevance: 'Critical',
-              status: 'Ready',
-              pages: 12
-            },
-            {
-              exhibit: 'Exhibit E',
-              title: 'Damage Calculation Worksheets',
-              type: 'Financial',
-              relevance: 'High',
-              status: 'Ready',
-              pages: 6
-            }
-          ],
-          missingEvidence: evidenceList ? [] : [
-            'Signed change orders (if any)',
-            'Daily progress photos',
-            'Subcontractor communications',
-            'Weather reports for relevant dates'
-          ],
-          evidenceStrengthScore: evidenceList ? 9.2 : 7.5
-        },
-        risks: [
-          {
-            type: 'procedural_compliance',
-            level: keyArguments ? 'low' : 'medium',
-            description: keyArguments ? 'All procedural requirements well-documented' : 'Need to review local court rules compliance',
-            mitigation: 'Double-check all filing requirements and deadlines'
-          },
-          {
-            type: 'evidence_admissibility',
-            level: evidenceList ? 'low' : 'high',
-            description: evidenceList ? 'Strong foundation for all evidence' : 'Some evidence may face admissibility challenges',
-            mitigation: 'Prepare authentication witnesses and business records foundations'
-          },
-          {
-            type: 'opposing_counsel_strategy',
-            level: 'medium',
-            description: 'Experienced defense attorney known for aggressive motion practice',
-            mitigation: 'Prepare for numerous objections and procedural challenges'
-          },
-          {
-            type: 'settlement_pressure',
-            level: 'low',
-            description: 'Court may encourage settlement during hearing',
-            mitigation: 'Prepare client for potential settlement discussions'
-          },
-          {
-            type: 'witness_availability',
-            level: anticipatedQuestions ? 'low' : 'medium',
-            description: 'Key witnesses may have scheduling conflicts',
-            mitigation: 'Confirm witness availability and prepare backup testimony options'
-          }
+        recommendations: [
+          'Focus opening arguments on the clear breach',
+          'Present evidence chronologically',
+          'Emphasize the financial impact on client',
+          'Be prepared for settlement discussions'
         ],
-        checklist: {
-          documentation: [
-            { task: 'File notice of appearance', completed: true, dueDate: 'Completed' },
-            { task: 'Serve opposing counsel with all pleadings', completed: true, dueDate: 'Completed' },
-            { task: 'Prepare and organize all exhibits', completed: false, dueDate: '7 days before hearing' },
-            { task: 'Submit pre-trial brief', completed: false, dueDate: '10 days before hearing' },
-            { task: 'File witness list and exhibit list', completed: false, dueDate: '14 days before hearing' },
-            { task: 'Prepare jury instructions (if applicable)', completed: false, dueDate: '7 days before hearing' }
-          ],
-          preparation: [
-            { task: 'Review all case law and legal precedents', completed: true, dueDate: 'Ongoing' },
-            { task: 'Prepare detailed opening statement', completed: false, dueDate: '3 days before hearing' },
-            { task: 'Practice direct examination of witnesses', completed: false, dueDate: '1 week before hearing' },
-            { task: 'Prepare cross-examination questions', completed: false, dueDate: '1 week before hearing' },
-            { task: 'Draft closing argument outline', completed: false, dueDate: '3 days before hearing' },
-            { task: 'Coordinate with client on testimony', completed: false, dueDate: '1 week before hearing' },
-            { task: 'Prepare responses to anticipated objections', completed: false, dueDate: '3 days before hearing' }
-          ],
-          logistics: [
-            { task: 'Confirm court date and time', completed: true, dueDate: 'Completed' },
-            { task: 'Arrange client transportation to courthouse', completed: false, dueDate: 'Day before hearing' },
-            { task: 'Coordinate witness schedules', completed: false, dueDate: '1 week before hearing' },
-            { task: 'Test all technology and demonstratives', completed: false, dueDate: 'Day before hearing' },
-            { task: 'Prepare backup copies of all documents', completed: false, dueDate: 'Day before hearing' },
-            { task: 'Coordinate court reporter (if needed)', completed: false, dueDate: '1 week before hearing' },
-            { task: 'Arrange parking and courthouse security', completed: false, dueDate: 'Day before hearing' }
-          ]
+        potentialQuestions: [
+          'What specific provisions of the contract were breached?',
+          'What efforts were made to resolve this matter before litigation?',
+          'How were the damages calculated?',
+          'Are there any mitigating circumstances?'
+        ]
+      };
+
+      res.json(courtPrepData);
+    } catch (error) {
+      console.error('Court prep error:', error);
+      res.status(500).json({ error: 'Failed to generate court preparation' });
+    }
+  });
+
+  // Billing endpoints
+  app.get("/api/billing", async (req, res) => {
+    try {
+      // Mock billing data
+      const billingData = {
+        subscription: {
+          plan: 'Professional',
+          amount: 99,
+          status: 'active',
+          nextBilling: 'February 15, 2024',
+          startDate: 'January 15, 2024'
         },
-        recommendations: {
-          immediate: [
-            'Complete exhibit preparation within 3 days',
-            'Schedule witness preparation sessions',
-            'File outstanding pre-trial motions',
-            'Prepare comprehensive settlement authority from client'
-          ],
-          strategic: [
-            'Consider mediation before hearing date',
-            'Prepare alternative legal theories',
-            'Develop contingency plans for adverse rulings',
-            'Coordinate with insurance counsel if applicable'
-          ],
-          tactical: [
-            'Arrive 30 minutes early on hearing day',
-            'Bring multiple copies of all exhibits',
-            'Prepare technology backup plans',
-            'Have client dress professionally and arrive early'
-          ]
+        paymentMethod: {
+          last4: '4242',
+          brand: 'Visa',
+          expiry: '12/25',
+          name: 'Sarah Johnson'
         },
-        timeline: {
-          currentStatus: 'Preparation Phase',
-          nextMilestone: 'Pre-trial motions due in 7 days',
-          criticalPath: [
-            { phase: 'Motion Filing', deadline: '7 days', status: 'pending' },
-            { phase: 'Witness Preparation', deadline: '14 days', status: 'in_progress' },
-            { phase: 'Settlement Conference', deadline: '18 days', status: 'scheduled' },
-            { phase: 'Final Preparation', deadline: '21 days', status: 'upcoming' },
-            { phase: 'Court Hearing', deadline: '21 days', status: 'scheduled' }
-          ]
+        tokens: {
+          balance: 2500,
+          used: 750,
+          resetDate: 'February 15, 2024'
         }
       };
 
-      res.json(analysis);
+      res.json(billingData);
     } catch (error) {
-      console.error("Court preparation analysis error:", error);
-      res.status(500).json({ message: "Failed to generate court preparation analysis" });
+      console.error('Billing data error:', error);
+      res.status(500).json({ error: 'Failed to fetch billing data' });
+    }
+  });
+
+  app.get("/api/billing/invoices", async (req, res) => {
+    try {
+      // Mock invoice data
+      const invoices = [
+        {
+          id: 'inv_001',
+          description: 'Professional Plan - January 2024',
+          amount: 99,
+          date: 'January 15, 2024',
+          status: 'paid',
+          downloadUrl: '/api/billing/invoices/inv_001/download'
+        },
+        {
+          id: 'inv_002',
+          description: 'Professional Plan - December 2023',
+          amount: 99,
+          date: 'December 15, 2023',
+          status: 'paid',
+          downloadUrl: '/api/billing/invoices/inv_002/download'
+        },
+        {
+          id: 'inv_003',
+          description: 'Token Purchase - 5,000 tokens',
+          amount: 79,
+          date: 'December 8, 2023',
+          status: 'paid',
+          downloadUrl: '/api/billing/invoices/inv_003/download'
+        }
+      ];
+
+      res.json(invoices);
+    } catch (error) {
+      console.error('Invoice data error:', error);
+      res.status(500).json({ error: 'Failed to fetch invoices' });
+    }
+  });
+
+  app.post("/api/billing/subscription", async (req, res) => {
+    try {
+      const { action } = req.body;
+
+      // Mock subscription action
+      let message = '';
+      switch (action) {
+        case 'pause':
+          message = 'Subscription paused successfully';
+          break;
+        case 'resume':
+          message = 'Subscription resumed successfully';
+          break;
+        case 'cancel':
+          message = 'Subscription cancelled successfully';
+          break;
+        default:
+          message = 'Subscription updated successfully';
+      }
+
+      res.json({ 
+        success: true, 
+        message,
+        subscription: {
+          plan: 'Professional',
+          amount: 99,
+          status: action === 'pause' ? 'paused' : action === 'cancel' ? 'cancelled' : 'active',
+          nextBilling: 'February 15, 2024'
+        }
+      });
+    } catch (error) {
+      console.error('Subscription update error:', error);
+      res.status(500).json({ error: 'Failed to update subscription' });
+    }
+  });
+
+  app.post("/api/billing/payment-method", async (req, res) => {
+    try {
+      const { number, expiry, cvv, name } = req.body;
+
+      // Mock payment method update
+      res.json({ 
+        success: true, 
+        message: 'Payment method updated successfully',
+        paymentMethod: {
+          last4: number.slice(-4),
+          brand: 'Visa',
+          expiry,
+          name
+        }
+      });
+    } catch (error) {
+      console.error('Payment method update error:', error);
+      res.status(500).json({ error: 'Failed to update payment method' });
+    }
+  });
+
+  app.post("/api/billing/tokens", async (req, res) => {
+    try {
+      const { plan } = req.body;
+
+      // Mock token purchase
+      const tokenPlans = {
+        '1000': { tokens: 1000, price: 19 },
+        '5000': { tokens: 5000, price: 79 },
+        '10000': { tokens: 10000, price: 149 },
+        '25000': { tokens: 25000, price: 349 }
+      };
+
+      const selectedPlan = tokenPlans[plan as keyof typeof tokenPlans];
+
+      if (!selectedPlan) {
+        return res.status(400).json({ error: 'Invalid token plan' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: `${selectedPlan.tokens} tokens purchased successfully`,
+        transaction: {
+          tokens: selectedPlan.tokens,
+          amount: selectedPlan.price,
+          transactionId: `txn_${Date.now()}`
+        }
+      });
+    } catch (error) {
+      console.error('Token purchase error:', error);
+      res.status(500).json({ error: 'Failed to purchase tokens' });
+    }
+  });
+
+  app.get("/api/billing/invoices/:id/download", async (req, res) => {
+    try {
+      const invoiceId = req.params.id;
+
+      // Mock PDF generation - in real app, generate actual PDF
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoiceId}.pdf"`);
+      res.send(Buffer.from(`Mock PDF content for invoice ${invoiceId}`, 'utf-8'));
+    } catch (error) {
+      console.error('Invoice download error:', error);
+      res.status(500).json({ error: 'Failed to download invoice' });
     }
   });
 

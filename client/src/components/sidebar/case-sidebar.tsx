@@ -9,13 +9,15 @@ import { NewCaseModal } from "@/components/modals/new-case-modal";
 import { SearchCasesModal } from "@/components/modals/search-cases-modal";
 import { SettingsModal } from "@/components/modals/settings-modal";
 import { UserProfileModal } from "@/components/modals/user-profile-modal";
+import { BillingModal } from "@/components/modals/billing-modal";
 import { 
   FolderOpen, 
   Gavel, 
   Plus, 
   Search, 
   Settings, 
-  User 
+  User,
+  CreditCard
 } from "lucide-react";
 
 interface CaseSidebarProps {
@@ -29,6 +31,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
   const [searchCasesOpen, setSearchCasesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [userProfileOpen, setUserProfileOpen] = useState(false);
+  const [billingOpen, setBillingOpen] = useState(false);
   
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
@@ -135,6 +138,15 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
+            onClick={() => setBillingOpen(true)}
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            Billing
+          </Button>
+          
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
             onClick={() => setSettingsOpen(true)}
           >
             <Settings className="h-4 w-4 mr-2" />
@@ -189,6 +201,11 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
       <UserProfileModal
         isOpen={userProfileOpen}
         onClose={() => setUserProfileOpen(false)}
+      />
+
+      <BillingModal
+        isOpen={billingOpen}
+        onClose={() => setBillingOpen(false)}
       />
     </div>
   );

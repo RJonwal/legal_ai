@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, User, FileText, AlertCircle, Calendar, Scale } from "lucide-react";
+import { Plus, User, FileText, AlertCircle, Calendar, Scale, Upload, X, File } from "lucide-react";
 
 const newCaseSchema = z.object({
   title: z.string().min(1, "Case title is required"),
@@ -35,6 +36,12 @@ interface NewCaseModalProps {
 export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // File upload states
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<NewCaseForm>({
     resolver: zodResolver(newCaseSchema),
@@ -53,7 +60,12 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
       const response = await apiRequest('POST', '/api/cases', caseData);
       return response.json();
     },
-    onSuccess: (newCase) => {
+    onSuccess: async (newCase) => {
+      // Upload files if any
+      if (uploadedFiles.length > 0) {
+        await uploadFilesToCase(newCase.id);
+      }
+      
       toast({
         title: "Case Created",
         description: `Case "${newCase.title}" has been created successfully.`,
@@ -61,6 +73,7 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
       queryClient.invalidateQueries({ queryKey: ['/api/cases'] });
       onCaseCreated(newCase.id);
       form.reset();
+      setUploadedFiles([]);
       onClose();
     },
     onError: (error) => {
@@ -71,6 +84,102 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
       });
     },
   });
+
+  // File upload functions
+  const uploadFilesToCase = async (caseId: number) => {
+    if (uploadedFiles.length === 0) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    uploadedFiles.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    try {
+      const response = await fetch(`/api/cases/${caseId}/documents/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload files');
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "File upload failed",
+        description: "Some files could not be uploaded.",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+    
+    const validFiles = Array.from(files).filter(file => {
+      const validTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/jpeg',
+        'image/png',
+        'image/gif'
+      ];
+      
+      if (!validTypes.includes(file.type)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid file type",
+          description: `${file.name} is not a supported file type.`,
+        });
+        return false;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: `${file.name} exceeds the 10MB size limit.`,
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    setUploadedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   const handleSubmit = (data: NewCaseForm) => {
     createCaseMutation.mutate(data);
@@ -131,15 +240,42 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="contract dispute">Contract Dispute</SelectItem>
+                            <SelectItem value="personal injury">Personal Injury</SelectItem>
+                            <SelectItem value="family law">Family Law</SelectItem>
+                            <SelectItem value="criminal law">Criminal Law</SelectItem>
                             <SelectItem value="corporate law">Corporate Law</SelectItem>
                             <SelectItem value="employment law">Employment Law</SelectItem>
                             <SelectItem value="intellectual property">Intellectual Property</SelectItem>
                             <SelectItem value="real estate">Real Estate</SelectItem>
-                            <SelectItem value="personal injury">Personal Injury</SelectItem>
-                            <SelectItem value="family law">Family Law</SelectItem>
-                            <SelectItem value="criminal law">Criminal Law</SelectItem>
-                            <SelectItem value="estate law">Estate Law</SelectItem>
-                            <SelectItem value="immigration">Immigration</SelectItem>
+                            <SelectItem value="estate law">Estate & Probate Law</SelectItem>
+                            <SelectItem value="immigration">Immigration Law</SelectItem>
+                            <SelectItem value="bankruptcy">Bankruptcy Law</SelectItem>
+                            <SelectItem value="tax law">Tax Law</SelectItem>
+                            <SelectItem value="environmental law">Environmental Law</SelectItem>
+                            <SelectItem value="healthcare law">Healthcare Law</SelectItem>
+                            <SelectItem value="securities law">Securities Law</SelectItem>
+                            <SelectItem value="antitrust law">Antitrust Law</SelectItem>
+                            <SelectItem value="civil rights">Civil Rights</SelectItem>
+                            <SelectItem value="constitutional law">Constitutional Law</SelectItem>
+                            <SelectItem value="administrative law">Administrative Law</SelectItem>
+                            <SelectItem value="insurance law">Insurance Law</SelectItem>
+                            <SelectItem value="international law">International Law</SelectItem>
+                            <SelectItem value="maritime law">Maritime Law</SelectItem>
+                            <SelectItem value="entertainment law">Entertainment Law</SelectItem>
+                            <SelectItem value="sports law">Sports Law</SelectItem>
+                            <SelectItem value="education law">Education Law</SelectItem>
+                            <SelectItem value="construction law">Construction Law</SelectItem>
+                            <SelectItem value="product liability">Product Liability</SelectItem>
+                            <SelectItem value="medical malpractice">Medical Malpractice</SelectItem>
+                            <SelectItem value="class action">Class Action</SelectItem>
+                            <SelectItem value="appellate">Appellate</SelectItem>
+                            <SelectItem value="white collar crime">White Collar Crime</SelectItem>
+                            <SelectItem value="compliance">Regulatory Compliance</SelectItem>
+                            <SelectItem value="mergers acquisitions">Mergers & Acquisitions</SelectItem>
+                            <SelectItem value="joint ventures">Joint Ventures</SelectItem>
+                            <SelectItem value="data privacy">Data Privacy & Security</SelectItem>
+                            <SelectItem value="cybersecurity">Cybersecurity Law</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -265,6 +401,81 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
               </CardContent>
             </Card>
 
+            {/* Document Upload Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Upload className="h-4 w-4" />
+                  Initial Documents (Optional)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Drag and Drop Area */}
+                <div
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                    isDragOver 
+                      ? 'border-legal-blue bg-legal-blue/5' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-600 mb-1">
+                    Drag and drop files here, or click to select
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Supports: PDF, DOC, DOCX, TXT, JPG, PNG, GIF (Max 10MB each)
+                  </p>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                  onChange={(e) => handleFileSelect(e.target.files)}
+                  className="hidden"
+                />
+
+                {/* Uploaded Files List */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">
+                      Uploaded Files ({uploadedFiles.length})
+                    </h4>
+                    <div className="max-h-32 overflow-y-auto space-y-2">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <File className="h-4 w-4 text-gray-500" />
+                            <div>
+                              <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                                {file.name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {formatFileSize(file.size)}
+                              </div>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeFile(index)}
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <DialogFooter>
               <Button
                 type="button"
@@ -276,10 +487,13 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
               </Button>
               <Button
                 type="submit"
-                disabled={createCaseMutation.isPending}
+                disabled={createCaseMutation.isPending || isUploading}
                 className="bg-legal-blue hover:bg-legal-deep text-white"
               >
-                {createCaseMutation.isPending ? "Creating..." : "Create Case"}
+                {createCaseMutation.isPending || isUploading 
+                  ? "Creating..." 
+                  : `Create Case${uploadedFiles.length > 0 ? ` (${uploadedFiles.length} files)` : ''}`
+                }
               </Button>
             </DialogFooter>
           </form>
