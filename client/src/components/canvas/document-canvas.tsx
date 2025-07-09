@@ -450,13 +450,13 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             </div>
           </div>
         ) : isEditing ? (
-          <div className="space-y-2">
+          <div className="flex flex-col h-full">
             <ContextMenu>
-              <ContextMenuTrigger>
+              <ContextMenuTrigger className="flex-1 h-full">
                 <Textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[300px] resize-none border-gray-300 focus:border-legal-blue focus:ring-legal-blue text-xs"
+                  className="h-full resize-none border-gray-300 focus:border-legal-blue focus:ring-legal-blue text-xs"
                   placeholder="Document content..."
                   style={{
                     fontFamily: selectedFont,
