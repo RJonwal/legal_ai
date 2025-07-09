@@ -107,42 +107,9 @@ export class OpenAIService {
   }
 
   async generateDocument(request: DocumentGenerationRequest): Promise<DocumentGenerationResponse> {
-    try {
-      const prompt = `Generate a professional legal document of type: ${request.type}
-      
-      Case Context: ${request.caseContext}
-      
-      Specific Instructions: ${request.specificInstructions || "Create a comprehensive document following standard legal practices"}
-      
-      Please provide:
-      1. An appropriate document title
-      2. Professional legal document content with proper formatting
-      3. All necessary legal disclaimers and standard clauses
-      
-      Format your response as a JSON object with 'title', 'content', and 'documentType' fields.`;
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: "You are a legal document drafting specialist. Generate professional legal documents with proper formatting and legal language." },
-          { role: "user", content: prompt }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.3,
-        max_tokens: 2000,
-      });
-
-      const result = JSON.parse(response.choices[0].message.content || "{}");
-      
-      return {
-        title: result.title || "Generated Legal Document",
-        content: result.content || "Document generation failed",
-        documentType: result.documentType || request.type,
-      };
-    } catch (error) {
-      console.error("Document generation error, using mock for testing:", error);
-      return this.generateMockDocument(request);
-    }
+    // For now, always use mock documents
+    console.log("Using mock document generation for:", request.type);
+    return this.generateMockDocument(request);
   }
 
   private generateMockDocument(request: DocumentGenerationRequest): DocumentGenerationResponse {
@@ -161,19 +128,33 @@ export class OpenAIService {
         title: 'Case Strategy Analysis',
         content: `STRATEGIC ANALYSIS\n\nCASE STRENGTH: Strong (85% win probability)\nSETTLEMENT LIKELIHOOD: High (75%)\nESTIMATED TIMELINE: 6-8 months\n\nIMMEDIATE ACTIONS:\n1. Send breach notice letter\n2. File discovery requests\n3. Begin settlement negotiations\n\nRECOMMENDED SETTLEMENT: $95,000-$110,000\n\nLITIGATION COSTS: $40,000-$60,000\nRECOVERY PROBABILITY: 85%`,
         documentType: 'strategy_memo'
+      },
+      'discovery': {
+        title: 'Discovery Request Document',
+        content: `DISCOVERY REQUEST\n\nDate: ${new Date().toLocaleDateString()}\n\nRE: Request for Production of Documents\n\nPursuant to Rule 34 of the Federal Rules of Civil Procedure, plaintiff requests defendant produce the following documents:\n\n1. All contracts related to the construction project\n2. Payment records and invoices\n3. Correspondence between parties\n4. Project specifications and change orders\n\nThese documents must be produced within 30 days.\n\nRespectfully,\n[ATTORNEY NAME]`,
+        documentType: 'discovery_request'
+      },
+      'motion': {
+        title: 'Motion for Summary Judgment',
+        content: `MOTION FOR SUMMARY JUDGMENT\n\nDate: ${new Date().toLocaleDateString()}\n\nTO THE HONORABLE COURT:\n\nPlaintiff respectfully moves for summary judgment on all claims against defendant.\n\nSTATEMENT OF FACTS:\n1. Undisputed material breach by defendant\n2. Clear contractual obligations\n3. Damages are calculable and proven\n\nCONCLUSION:\nNo genuine issue of material fact exists. Judgment should be entered in favor of plaintiff.\n\nRespectfully,\n[ATTORNEY NAME]`,
+        documentType: 'motion_summary_judgment'
       }
     };
 
+    // Safely handle request.type that might be undefined
+    const requestType = request.type || 'default';
+    const lowerType = requestType.toLowerCase();
+
     // Find matching template or create default
     const key = Object.keys(mockTemplates).find(k => 
-      request.type.toLowerCase().includes(k) || k.includes(request.type.toLowerCase())
+      lowerType.includes(k) || k.includes(lowerType)
     ) || 'default';
 
     if (key === 'default') {
       return {
-        title: `${request.type} - Generated Document`,
-        content: `LEGAL DOCUMENT: ${request.type.toUpperCase()}\n\nGenerated: ${new Date().toLocaleString()}\nCase: ${request.caseContext}\n\nThis document has been generated for testing purposes.\n\nKEY SECTIONS:\n1. Legal Analysis\n2. Recommendations\n3. Next Steps\n\n[ATTORNEY NAME]\n[DATE]`,
-        documentType: request.type.toLowerCase().replace(/\s+/g, '_')
+        title: `${requestType} - Generated Document`,
+        content: `LEGAL DOCUMENT: ${requestType.toUpperCase()}\n\nGenerated: ${new Date().toLocaleString()}\nCase: ${request.caseContext}\n\nThis document has been generated for testing purposes.\n\nKEY SECTIONS:\n1. Legal Analysis\n2. Recommendations\n3. Next Steps\n\n[ATTORNEY NAME]\n[DATE]`,
+        documentType: requestType.toLowerCase().replace(/\s+/g, '_')
       };
     }
 
