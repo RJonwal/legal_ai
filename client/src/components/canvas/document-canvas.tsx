@@ -266,13 +266,15 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
 
   if (!document && !generateDocumentMutation.isPending) {
     return (
-      <div className="h-full bg-white border-l border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-          <h3 className="text-lg font-semibold text-gray-900">Document Canvas</h3>
-          <p className="text-sm text-gray-500">Generate or select a document to view and edit</p>
-        </div>
+      <div className="h-full bg-gray-100 flex flex-col p-6">
+        {/* Floating Empty State Island */}
+        <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
+            <h3 className="text-lg font-semibold text-gray-900">Document Canvas</h3>
+            <p className="text-sm text-gray-500">Generate or select a document to view and edit</p>
+          </div>
 
-        <div className="flex-1 flex items-center justify-center p-6 min-h-0">
+          <div className="flex-1 flex items-center justify-center p-8 min-h-0">
           <div className="text-center">
             <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Ready for Document Generation</h3>
@@ -288,14 +290,17 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             </Button>
           </div>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-white border-l border-gray-200 flex flex-col">
-      {/* Canvas Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+    <div className="h-full bg-gray-100 flex flex-col p-6">
+      {/* Floating Document Island */}
+      <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        {/* Canvas Header */}
+        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
             {isEditing ? (
@@ -359,7 +364,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       </div>
 
       {/* Document Content */}
-      <div className="flex-1 overflow-y-auto p-6 bg-white min-h-0">
+      <div className="flex-1 overflow-y-auto p-8 bg-white min-h-0">
         {generateDocumentMutation.isPending ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -496,7 +501,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       </div>
 
       {/* Canvas Footer */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+      <div className="p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <CheckCircle className="h-4 w-4 text-green-500" />
@@ -544,6 +549,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
