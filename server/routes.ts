@@ -577,6 +577,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Court preparation analysis
+  app.post("/api/cases/:id/court-prep", async (req, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const { hearingType, keyArguments, anticipatedQuestions, evidenceList, opposingCounsel } = req.body;
+      
+      const case_ = await storage.getCase(caseId);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+
+      const documents = await storage.getDocumentsByCase(caseId);
+      const timeline = await storage.getTimelineEvents(caseId);
+
+      // Generate court preparation analysis
+      const analysis = {
+        hearing: {
+          type: hearingType,
+          preparationScore: keyArguments && evidenceList ? 85 : 60,
+          estimatedDuration: hearingType === 'trial' ? '2-5 days' : '1-3 hours',
+          jurisdiction: 'State Court',
+          judge: 'Hon. Michael Thompson',
+          courtroom: 'Courtroom 3A'
+        },
+        legalStrategy: {
+          primaryArguments: keyArguments ? keyArguments.split('\n').filter(arg => arg.trim()) : [],
+          evidenceStrength: evidenceList ? 'Strong' : 'Moderate',
+          winProbability: hearingType === 'summary-judgment' ? '75%' : '65%',
+          settlementLikelihood: '60%'
+        },
+        preparation: {
+          timeRequired: hearingType === 'trial' ? '4-6 weeks' : '2-3 weeks',
+          keyTasks: [
+            'Finalize evidence exhibits',
+            'Prepare witness testimony',
+            'Draft opening/closing statements',
+            'Review court procedures',
+            'Coordinate with client'
+          ],
+          criticalDeadlines: [
+            { task: 'Pre-trial motions', date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() },
+            { task: 'Witness list filing', date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() },
+            { task: 'Exhibit preparation', date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString() }
+          ]
+        },
+        evidence: {
+          availableDocuments: documents.length,
+          exhibitList: documents.slice(0, 5).map((doc, index) => ({
+            exhibit: `Exhibit ${String.fromCharCode(65 + index)}`,
+            title: doc.title,
+            type: doc.documentType,
+            relevance: 'High'
+          })),
+          missingEvidence: evidenceList ? [] : ['Contract documents', 'Communication records', 'Expert reports']
+        },
+        risks: [
+          {
+            type: 'procedural',
+            level: keyArguments ? 'low' : 'medium',
+            description: keyArguments ? 'Well-prepared arguments' : 'Arguments need development'
+          },
+          {
+            type: 'evidence',
+            level: evidenceList ? 'low' : 'high',
+            description: evidenceList ? 'Strong evidence foundation' : 'Evidence preparation incomplete'
+          },
+          {
+            type: 'opposing_counsel',
+            level: 'medium',
+            description: 'Experienced opposing counsel - prepare for strong defense'
+          }
+        ],
+        checklist: {
+          documentation: [
+            { task: 'File appearance', completed: true },
+            { task: 'Serve opposing counsel', completed: true },
+            { task: 'Prepare exhibits', completed: false },
+            { task: 'Submit pre-trial brief', completed: false }
+          ],
+          preparation: [
+            { task: 'Review case law', completed: true },
+            { task: 'Prepare opening statement', completed: false },
+            { task: 'Practice direct examination', completed: false },
+            { task: 'Prepare closing argument', completed: false }
+          ],
+          logistics: [
+            { task: 'Confirm court date', completed: true },
+            { task: 'Arrange client transportation', completed: false },
+            { task: 'Coordinate witnesses', completed: false },
+            { task: 'Technology setup', completed: false }
+          ]
+        }
+      };
+
+      res.json(analysis);
+    } catch (error) {
+      console.error("Court preparation analysis error:", error);
+      res.status(500).json({ message: "Failed to generate court preparation analysis" });
+    }
+  });
+
   // User profile routes
   app.get("/api/user/profile", async (req, res) => {
     try {

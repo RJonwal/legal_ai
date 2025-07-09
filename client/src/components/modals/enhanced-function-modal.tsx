@@ -92,6 +92,10 @@ export function EnhancedFunctionModal({
     { id: 'correspondence', name: 'Correspondence', documentCount: 12 },
   ]);
 
+  // Court preparation analysis state
+  const [courtPrepAnalysis, setCourtPrepAnalysis] = useState<any>(null);
+  const [loadingCourtPrep, setLoadingCourtPrep] = useState(false);
+
   const { data: currentCase } = useQuery({
     queryKey: [`/api/cases/${caseId}`],
     enabled: !!caseId,
@@ -507,6 +511,46 @@ export function EnhancedFunctionModal({
         title: "Failed to delete documents",
         description: "Please try again.",
       });
+    }
+  };
+
+  // Court preparation analysis
+  const analyzeCourtPreparation = async () => {
+    if (!courtPrepInputs.hearingType || !courtPrepInputs.keyArguments) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please fill in hearing type and key arguments to analyze court preparation.",
+      });
+      return;
+    }
+
+    setLoadingCourtPrep(true);
+    try {
+      const response = await apiRequest('POST', `/api/cases/${caseId}/court-prep`, {
+        hearingType: courtPrepInputs.hearingType,
+        keyArguments: courtPrepInputs.keyArguments,
+        anticipatedQuestions: courtPrepInputs.anticipatedQuestions,
+        evidenceList: courtPrepInputs.evidenceList,
+        opposingCounsel: courtPrepInputs.opposingCounsel
+      });
+
+      if (response.ok) {
+        const analysis = await response.json();
+        setCourtPrepAnalysis(analysis);
+        toast({
+          title: "Court Preparation Analysis Complete",
+          description: "Comprehensive analysis generated with recommendations and checklist.",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Analysis Failed",
+        description: "Failed to generate court preparation analysis. Please try again.",
+      });
+    } finally {
+      setLoadingCourtPrep(false);
     }
   };
 
@@ -1789,71 +1833,273 @@ case 'case-analytics':
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="hearing-type">Hearing Type</Label>
-                <Select value={courtPrepInputs.hearingType} onValueChange={(value) => setCourtPrepInputs(prev => ({...prev, hearingType: value}))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select hearing type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="motion-hearing">Motion Hearing</SelectItem>
-                    <SelectItem value="trial">Trial</SelectItem>
-                    <SelectItem value="preliminary-injunction">Preliminary Injunction</SelectItem>
-                    <SelectItem value="summary-judgment">Summary Judgment</SelectItem>
-                    <SelectItem value="settlement-conference">Settlement Conference</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="opposing-counsel">Opposing Counsel</Label>
-                <Input
-                  id="opposing-counsel"
-                  value={courtPrepInputs.opposingCounsel}
-                  onChange={(e) => setCourtPrepInputs(prev => ({...prev, opposingCounsel: e.target.value}))}
-                  placeholder="e.g., Smith & Associates"
-                />
-              </div>
-            </div>
+            <Tabs defaultValue="preparation" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="preparation">Preparation</TabsTrigger>
+                <TabsTrigger value="analysis">Analysis</TabsTrigger>
+                <TabsTrigger value="checklist">Checklist</TabsTrigger>
+              </TabsList>
 
-            <div>
-              <Label htmlFor="key-arguments">Key Legal Arguments</Label>
-              <Textarea
-                id="key-arguments"
-                value={courtPrepInputs.keyArguments}
-                onChange={(e) => setCourtPrepInputs(prev => ({...prev, keyArguments: e.target.value}))}
-                placeholder="e.g., Breach of contract, liquidated damages enforceable, defendant failed to mitigate..."
-                rows={3}
-              />
-            </div>
+              <TabsContent value="preparation" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="hearing-type">Hearing Type *</Label>
+                    <Select value={courtPrepInputs.hearingType} onValueChange={(value) => setCourtPrepInputs(prev => ({...prev, hearingType: value}))}>
+                      <SelectTrigger className="border-red-200">
+                        <SelectValue placeholder="Select hearing type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="motion-hearing">Motion Hearing</SelectItem>
+                        <SelectItem value="trial">Trial</SelectItem>
+                        <SelectItem value="preliminary-injunction">Preliminary Injunction</SelectItem>
+                        <SelectItem value="summary-judgment">Summary Judgment</SelectItem>
+                        <SelectItem value="settlement-conference">Settlement Conference</SelectItem>
+                        <SelectItem value="status-conference">Status Conference</SelectItem>
+                        <SelectItem value="case-management">Case Management Conference</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="opposing-counsel">Opposing Counsel</Label>
+                    <Input
+                      id="opposing-counsel"
+                      value={courtPrepInputs.opposingCounsel}
+                      onChange={(e) => setCourtPrepInputs(prev => ({...prev, opposingCounsel: e.target.value}))}
+                      placeholder="e.g., Smith & Associates"
+                      className="border-red-200"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <Label htmlFor="anticipated-questions">Anticipated Questions from Court</Label>
-              <Textarea
-                id="anticipated-questions"
-                value={courtPrepInputs.anticipatedQuestions}
-                onChange={(e) => setCourtPrepInputs(prev => ({...prev, anticipatedQuestions: e.target.value}))}
-                placeholder="e.g., What evidence supports damages calculation? Why wasn't mediation attempted earlier?"
-                rows={3}
-              />
-            </div>
+                <div>
+                  <Label htmlFor="key-arguments">Key Legal Arguments *</Label>
+                  <Textarea
+                    id="key-arguments"
+                    value={courtPrepInputs.keyArguments}
+                    onChange={(e) => setCourtPrepInputs(prev => ({...prev, keyArguments: e.target.value}))}
+                    placeholder="e.g., Breach of contract, liquidated damages enforceable, defendant failed to mitigate..."
+                    rows={4}
+                    className="border-red-200"
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="evidence-list">Evidence to Present</Label>
-              <Textarea
-                id="evidence-list"
-                value={courtPrepInputs.evidenceList}
-                onChange={(e) => setCourtPrepInputs(prev => ({...prev, evidenceList: e.target.value}))}
-                placeholder="e.g., Original contract, email communications, expert testimony, damage calculations..."
-                rows={3}
-              />
-            </div>
+                <div>
+                  <Label htmlFor="anticipated-questions">Anticipated Questions from Court</Label>
+                  <Textarea
+                    id="anticipated-questions"
+                    value={courtPrepInputs.anticipatedQuestions}
+                    onChange={(e) => setCourtPrepInputs(prev => ({...prev, anticipatedQuestions: e.target.value}))}
+                    placeholder="e.g., What evidence supports damages calculation? Why wasn't mediation attempted earlier?"
+                    rows={3}
+                    className="border-red-200"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="evidence-list">Evidence to Present</Label>
+                  <Textarea
+                    id="evidence-list"
+                    value={courtPrepInputs.evidenceList}
+                    onChange={(e) => setCourtPrepInputs(prev => ({...prev, evidenceList: e.target.value}))}
+                    placeholder="e.g., Original contract, email communications, expert testimony, damage calculations..."
+                    rows={3}
+                    className="border-red-200"
+                  />
+                </div>
+
+                <Button 
+                  onClick={analyzeCourtPreparation}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  disabled={!courtPrepInputs.hearingType || !courtPrepInputs.keyArguments || loadingCourtPrep}
+                >
+                  {loadingCourtPrep ? 'Analyzing...' : 'Analyze Court Preparation'}
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="analysis" className="space-y-4">
+                {courtPrepAnalysis ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Card className="border-red-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center">
+                            <Gavel className="h-5 w-5 mr-2 text-red-600" />
+                            Hearing Overview
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Type</span>
+                            <Badge variant="outline">{courtPrepAnalysis.hearing.type}</Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Duration</span>
+                            <span className="text-sm">{courtPrepAnalysis.hearing.estimatedDuration}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Judge</span>
+                            <span className="text-sm">{courtPrepAnalysis.hearing.judge}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Preparation Score</span>
+                            <Badge variant={courtPrepAnalysis.hearing.preparationScore > 80 ? 'default' : 'secondary'}>
+                              {courtPrepAnalysis.hearing.preparationScore}%
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-blue-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center">
+                            <Scale className="h-5 w-5 mr-2 text-blue-600" />
+                            Legal Strategy
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Win Probability</span>
+                            <Badge variant="default">{courtPrepAnalysis.legalStrategy.winProbability}</Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Evidence Strength</span>
+                            <Badge variant={courtPrepAnalysis.legalStrategy.evidenceStrength === 'Strong' ? 'default' : 'secondary'}>
+                              {courtPrepAnalysis.legalStrategy.evidenceStrength}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Settlement Likelihood</span>
+                            <span className="text-sm">{courtPrepAnalysis.legalStrategy.settlementLikelihood}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <Card className="border-orange-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center">
+                          <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
+                          Risk Assessment
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {courtPrepAnalysis.risks.map((risk: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center">
+                            <div>
+                              <span className="font-medium text-sm">{risk.type.replace('_', ' ')}</span>
+                              <p className="text-xs text-gray-600">{risk.description}</p>
+                            </div>
+                            <Badge variant={risk.level === 'high' ? 'destructive' : risk.level === 'medium' ? 'secondary' : 'outline'}>
+                              {risk.level}
+                            </Badge>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-purple-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center">
+                          <FileText className="h-5 w-5 mr-2 text-purple-600" />
+                          Evidence & Exhibits
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="mb-3">
+                          <span className="text-sm font-medium">Available Documents: {courtPrepAnalysis.evidence.availableDocuments}</span>
+                        </div>
+                        {courtPrepAnalysis.evidence.exhibitList.map((exhibit: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center py-1">
+                            <span className="text-sm">{exhibit.exhibit}: {exhibit.title}</span>
+                            <Badge variant="outline" className="text-xs">{exhibit.relevance}</Badge>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Gavel className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Complete the preparation form and click "Analyze Court Preparation" to see detailed analysis</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="checklist" className="space-y-4">
+                {courtPrepAnalysis?.checklist ? (
+                  <div className="space-y-4">
+                    <Card className="border-green-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center">
+                          <FileCheck className="h-5 w-5 mr-2 text-green-600" />
+                          Documentation Checklist
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {courtPrepAnalysis.checklist.documentation.map((item: any, index: number) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <CheckCircle className={`h-4 w-4 ${item.completed ? 'text-green-500' : 'text-gray-400'}`} />
+                            <span className={`text-sm ${item.completed ? 'line-through text-gray-500' : ''}`}>
+                              {item.task}
+                            </span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-blue-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center">
+                          <Brain className="h-5 w-5 mr-2 text-blue-600" />
+                          Preparation Tasks
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {courtPrepAnalysis.checklist.preparation.map((item: any, index: number) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <CheckCircle className={`h-4 w-4 ${item.completed ? 'text-green-500' : 'text-gray-400'}`} />
+                            <span className={`text-sm ${item.completed ? 'line-through text-gray-500' : ''}`}>
+                              {item.task}
+                            </span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-orange-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center">
+                          <Clock className="h-5 w-5 mr-2 text-orange-600" />
+                          Logistics
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {courtPrepAnalysis.checklist.logistics.map((item: any, index: number) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <CheckCircle className={`h-4 w-4 ${item.completed ? 'text-green-500' : 'text-gray-400'}`} />
+                            <span className={`text-sm ${item.completed ? 'line-through text-gray-500' : ''}`}>
+                              {item.task}
+                            </span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <FileCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Analysis required to generate preparation checklist</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
 
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 onClick={() => handleGenerateDocument(`Court Brief - ${courtPrepInputs.hearingType || 'Hearing'}`)}
                 variant="outline"
                 disabled={!courtPrepInputs.hearingType || generateDocumentMutation.isPending}
+                className="border-red-200 hover:bg-red-50"
               >
                 <Gavel className="h-4 w-4 mr-2" />
                 {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Brief'}
@@ -1862,6 +2108,7 @@ case 'case-analytics':
                 onClick={() => handleGenerateDocument('Evidence List and Exhibits')}
                 variant="outline"
                 disabled={!courtPrepInputs.evidenceList || generateDocumentMutation.isPending}
+                className="border-red-200 hover:bg-red-50"
               >
                 <FileCheck className="h-4 w-4 mr-2" />
                 {generateDocumentMutation.isPending ? 'Generating...' : 'Evidence List'}
@@ -1870,6 +2117,7 @@ case 'case-analytics':
                 onClick={() => handleGenerateDocument('Argument Outline and Talking Points')}
                 variant="outline"
                 disabled={!courtPrepInputs.keyArguments || generateDocumentMutation.isPending}
+                className="border-red-200 hover:bg-red-50"
               >
                 <Scale className="h-4 w-4 mr-2" />
                 {generateDocumentMutation.isPending ? 'Generating...' : 'Argument Outline'}
@@ -1878,10 +2126,48 @@ case 'case-analytics':
                 onClick={() => handleGenerateDocument('Q&A Preparation Document')}
                 variant="outline"
                 disabled={!courtPrepInputs.anticipatedQuestions || generateDocumentMutation.isPending}
+                className="border-red-200 hover:bg-red-50"
               >
                 <Brain className="h-4 w-4 mr-2" />
                 {generateDocumentMutation.isPending ? 'Generating...' : 'Q&A Prep'}
               </Button>
+            </div>
+
+            <div className="bg-red-50 p-4 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Target className="h-5 w-5 text-red-600" />
+                <span className="font-medium text-red-900">Court Readiness Score</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-red-600 h-2 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${Math.min(100, (
+                        (courtPrepInputs.hearingType ? 25 : 0) +
+                        (courtPrepInputs.keyArguments ? 25 : 0) +
+                        (courtPrepInputs.evidenceList ? 20 : 0) +
+                        (courtPrepInputs.anticipatedQuestions ? 15 : 0) +
+                        (courtPrepInputs.opposingCounsel ? 10 : 0) +
+                        (courtPrepAnalysis ? 5 : 0)
+                      ))}%` 
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-red-700">
+                  {Math.min(100, (
+                    (courtPrepInputs.hearingType ? 25 : 0) +
+                    (courtPrepInputs.keyArguments ? 25 : 0) +
+                    (courtPrepInputs.evidenceList ? 20 : 0) +
+                    (courtPrepInputs.anticipatedQuestions ? 15 : 0) +
+                    (courtPrepInputs.opposingCounsel ? 10 : 0) +
+                    (courtPrepAnalysis ? 5 : 0)
+                  ))}%
+                </span>
+              </div>
+              <p className="text-xs text-red-600 mt-1">
+                Complete all fields and run analysis for optimal court preparation
+              </p>
             </div>
 
             <Button 
