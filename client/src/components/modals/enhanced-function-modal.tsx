@@ -1269,76 +1269,161 @@ export function EnhancedFunctionModal({
         );
 
       
-{/* Enhanced Case Analytics */}
-      
-       
-          
-        
-          
-            
-              
-                
-                  {caseAnalytics.timeline.phases.map((phase, index) => (
-                    {""}
-                      
-                        
-                          
-                            
-                              
-                                
-                                
-                          
-                          
-                           
-                              
-                                
-                                
-                           
-                        
-                      
-                  ))}
-                
-              
-        
-      
-/*End Analytics Section*/}
-      
-       
-          
-            
-              
-                
-                  {caseAnalytics.risks.map((risk, index) => (
-                    {""}
-                      
-                        
-                          
-                            
-                              {""}
-                          
-                          
-                            
-                              
-                                {risk.description}
-                          
-                        
-                      
-                  ))}
-                
-              
-        
-     
-      
-        
-          Generate Analytics Report
-        
+case 'case-analytics':
+        return (
+          <div className="space-y-4">
+            <div className="bg-indigo-50 p-4 rounded-lg">
+              <h3 className="font-medium text-indigo-900 mb-2">Case Analytics for {currentCase?.title}</h3>
+              <p className="text-sm text-indigo-700">
+                Comprehensive case metrics, financial tracking, and performance analysis.
+              </p>
+            </div>
 
-        
-          Export Dashboard
-        
-      
-    
-   
+            {analyticsLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <p className="text-indigo-600">Loading analytics...</p>
+              </div>
+            ) : caseAnalytics ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Key Metrics */}
+                <Card className="border-indigo-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center">
+                      <BarChart3 className="h-5 w-5 mr-2 text-indigo-600" />
+                      Key Metrics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Days Active</span>
+                      <Badge variant="outline">{caseAnalytics.basicMetrics.daysActive}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Completion Rate</span>
+                      <Badge variant={caseAnalytics.basicMetrics.completionRate > 70 ? 'default' : 'secondary'}>
+                        {caseAnalytics.basicMetrics.completionRate}%
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Critical Tasks</span>
+                      <Badge variant={caseAnalytics.basicMetrics.criticalTasks > 0 ? 'destructive' : 'default'}>
+                        {caseAnalytics.basicMetrics.criticalTasks}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Financial Overview */}
+                <Card className="border-green-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center">
+                      <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+                      Financial Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total Costs</span>
+                      <span className="font-medium">${caseAnalytics.financial.totalCosts.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Potential Recovery</span>
+                      <span className="font-medium text-green-600">${caseAnalytics.financial.potentialRecovery.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Expected ROI</span>
+                      <Badge variant={caseAnalytics.financial.roi > 100 ? 'default' : 'secondary'}>
+                        {caseAnalytics.financial.roi}%
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Case Timeline */}
+                <Card className="border-blue-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center">
+                      <Clock className="h-5 w-5 mr-2 text-blue-600" />
+                      Timeline Progress
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {caseAnalytics.timeline.phases.map((phase, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">{phase.name}</span>
+                          <Badge variant={phase.status === 'complete' ? 'default' : phase.status === 'in_progress' ? 'secondary' : 'outline'}>
+                            {phase.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${phase.progress}%` }}
+                          />
+                        </div>
+                        {phase.estimatedDays && (
+                          <div className="text-xs text-gray-500">
+                            {phase.estimatedDays} days remaining
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Risk Assessment */}
+                <Card className="border-orange-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center">
+                      <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
+                      Risk Assessment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {caseAnalytics.risks.map((risk, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">{risk.type.replace('_', ' ')}</span>
+                          <Badge variant={risk.level === 'high' ? 'destructive' : risk.level === 'medium' ? 'secondary' : 'outline'}>
+                            {risk.level}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-600">{risk.description}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No analytics data available</p>
+              </div>
+            )}
+
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => handleGenerateDocument('Analytics Report')}
+                variant="outline"
+                className="flex-1"
+                disabled={generateDocumentMutation.isPending}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Report'}
+              </Button>
+              <Button
+                onClick={() => handleGenerateDocument('Performance Dashboard')}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                disabled={generateDocumentMutation.isPending}
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Export Dashboard'}
+              </Button>
+            </div>
+          </div>
+        );
 
       case 'deposition-prep':
         return (
