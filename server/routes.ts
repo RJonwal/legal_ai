@@ -169,18 +169,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const caseId = parseInt(req.params.id);
       
-      // Mock file upload processing for now
+      // Mock file upload processing with more realistic data
       // In a real implementation, you would use multer or similar middleware
-      const mockFiles = [
-        {
-          id: Date.now(),
-          name: "uploaded_document.pdf",
-          size: 1024 * 1024, // 1MB
-          type: "application/pdf",
-          uploadedAt: new Date().toISOString(),
-          isDuplicate: false
-        }
+      const mockFileTypes = [
+        { name: "contract_analysis.pdf", type: "application/pdf", size: 2048 * 1024 },
+        { name: "evidence_photos.jpg", type: "image/jpeg", size: 1536 * 1024 },
+        { name: "witness_statement.docx", type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", size: 512 * 1024 },
+        { name: "email_correspondence.txt", type: "text/plain", size: 128 * 1024 }
       ];
+
+      // Simulate 1-3 files being uploaded
+      const numFiles = Math.floor(Math.random() * 3) + 1;
+      const mockFiles = [];
+      
+      for (let i = 0; i < numFiles; i++) {
+        const randomFile = mockFileTypes[Math.floor(Math.random() * mockFileTypes.length)];
+        mockFiles.push({
+          id: Date.now() + i,
+          name: `${i > 0 ? i + '_' : ''}${randomFile.name}`,
+          size: randomFile.size + Math.floor(Math.random() * 512 * 1024), // Add some randomness
+          type: randomFile.type,
+          uploadedAt: new Date().toISOString(),
+          isDuplicate: Math.random() < 0.1 // 10% chance of duplicate
+        });
+      }
 
       // Create document records for uploaded files
       const documents = [];
@@ -188,8 +200,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const document = await storage.createDocument({
           caseId,
           title: file.name,
-          content: `Document uploaded: ${file.name}\n\nFile Details:\n- Size: ${(file.size / 1024).toFixed(1)} KB\n- Type: ${file.type}\n- Uploaded: ${new Date(file.uploadedAt).toLocaleString()}\n\nThis document has been successfully uploaded and is available for analysis and review.`,
-          documentType: 'uploaded_file',
+          content: `UPLOADED DOCUMENT: ${file.name}\n\nFile Details:\n- Size: ${(file.size / 1024).toFixed(1)} KB\n- Type: ${file.type}\n- Uploaded: ${new Date(file.uploadedAt).toLocaleString()}\n\nDocument Summary:\nThis document has been successfully uploaded and processed for case analysis.\n\nKey Information:\n- Document contains relevant case evidence\n- Ready for legal review and analysis\n- Can be used in document generation workflows\n\nNext Steps:\n1. Review document content\n2. Analyze for legal significance\n3. Include in case strategy development\n\nDocument Status: Ready for Review`,
+          documentType: 'uploaded_evidence',
           status: "draft",
         });
         documents.push(document);

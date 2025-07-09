@@ -1,6 +1,6 @@
 
 import { useState, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ export function EnhancedFunctionModal({
   onSendMessage,
 }: FunctionModalProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [contractText, setContractText] = useState("");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
@@ -66,7 +67,8 @@ export function EnhancedFunctionModal({
 
   const { data: caseDocuments = [] } = useQuery({
     queryKey: ['/api/cases', caseId, 'documents'],
-    enabled: isOpen && functionId === 'case-documents',
+    queryFn: () => apiRequest('GET', `/api/cases/${caseId}/documents`).then(res => res.json()),
+    enabled: isOpen && (functionId === 'case-documents' || functionId === 'evidence-analysis'),
   });
 
   const { data: timelineEvents = [] } = useQuery({
@@ -89,12 +91,15 @@ export function EnhancedFunctionModal({
       return response.json();
     },
     onSuccess: (data) => {
-      setUploadedFiles(prev => [...prev, ...data.files]);
+      setUploadedFiles(prev => [...prev, ...(data.files || [])]);
       setIsUploading(false);
       toast({
         title: "Files uploaded successfully!",
-        description: `${data.files.length} file(s) uploaded and processed.`,
+        description: `${data.files?.length || 0} file(s) uploaded and processed.`,
       });
+      
+      // Refresh documents list
+      queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
     },
     onError: (error: any) => {
       setIsUploading(false);
@@ -164,6 +169,30 @@ export function EnhancedFunctionModal({
 
   const handleFileUpload = async (files: FileList) => {
     if (!files.length) return;
+
+    // Validate file types and sizes
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/jpeg', 'image/png', 'image/jpg'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    for (const file of Array.from(files)) {
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid file type",
+          description: `${file.name} is not a supported file type.`,
+        });
+        return;
+      }
+      
+      if (file.size > maxSize) {
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: `${file.name} exceeds the 10MB limit.`,
+        });
+        return;
+      }
+    }
 
     setIsUploading(true);
     const formData = new FormData();
@@ -419,14 +448,49 @@ export function EnhancedFunctionModal({
               </TabsList>
 
               <TabsContent value="upload" className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-sm text-gray-600 mb-2">Drop evidence files here or click to browse</p>
-                  <p className="text-xs text-gray-500">PDF, DOC, DOCX, TXT, JPG, PNG (Max 10MB each)</p>
-                  <Button variant="outline" className="mt-4">
-                    <CloudUpload className="h-4 w-4 mr-2" />
-                    Choose Evidence Files
-                  </Button>
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                    isDragging 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                  />
+                  
+                  {isUploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-sm text-blue-600">Uploading evidence files...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-sm text-gray-600 mb-2">
+                        {isDragging ? 'Drop evidence files here' : 'Drop evidence files here or click to browse'}
+                      </p>
+                      <p className="text-xs text-gray-500">PDF, DOC, DOCX, TXT, JPG, PNG (Max 10MB each)</p>
+                      <Button 
+                        variant="outline" 
+                        className="mt-4"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                      >
+                        <CloudUpload className="h-4 w-4 mr-2" />
+                        Choose Evidence Files
+                      </Button>
+                    </>
+                  )}
                 </div>
 
                 {uploadedFiles.length > 0 && (
@@ -496,13 +560,31 @@ export function EnhancedFunctionModal({
                 </div>
 
                 {selectedDocuments.length > 0 && (
-                  <Button 
-                    onClick={() => handleGenerateDocument('Multi-Document Evidence Analysis')}
-                    className="w-full"
-                    disabled={generateDocumentMutation.isPending}
-                  >
-                    {generateDocumentMutation.isPending ? 'Generating...' : `Analyze Selected Documents (${selectedDocuments.length})`}
-                  </Button>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => {
+                        const selectedDocs = caseDocuments.filter((doc: any) => selectedDocuments.includes(doc.id));
+                        const docTitles = selectedDocs.map((doc: any) => doc.title).join(', ');
+                        handleGenerateDocument(`Multi-Document Evidence Analysis - ${docTitles}`);
+                      }}
+                      className="w-full"
+                      disabled={generateDocumentMutation.isPending}
+                    >
+                      {generateDocumentMutation.isPending ? 'Generating...' : `Analyze Selected Documents (${selectedDocuments.length})`}
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        const selectedDocs = caseDocuments.filter((doc: any) => selectedDocuments.includes(doc.id));
+                        const docTitles = selectedDocs.map((doc: any) => doc.title).join(', ');
+                        handleGenerateDocument(`Evidence Summary Report - ${docTitles}`);
+                      }}
+                      variant="outline"
+                      className="w-full"
+                      disabled={generateDocumentMutation.isPending}
+                    >
+                      {generateDocumentMutation.isPending ? 'Generating...' : `Generate Evidence Summary (${selectedDocuments.length})`}
+                    </Button>
+                  </div>
                 )}
               </TabsContent>
 
@@ -519,13 +601,23 @@ export function EnhancedFunctionModal({
                   />
                 </div>
 
-                <Button 
-                  onClick={() => handleGenerateDocument('Contract Analysis Report')}
-                  disabled={!contractText.trim() || generateDocumentMutation.isPending}
-                  className="w-full"
-                >
-                  {generateDocumentMutation.isPending ? 'Generating...' : 'Analyze Contract Text'}
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => handleGenerateDocument(`Contract Analysis Report - ${contractText.substring(0, 50)}...`)}
+                    disabled={!contractText.trim() || generateDocumentMutation.isPending}
+                    className="w-full"
+                  >
+                    {generateDocumentMutation.isPending ? 'Generating...' : 'Analyze Contract Text'}
+                  </Button>
+                  <Button 
+                    onClick={() => handleGenerateDocument(`Contract Risk Assessment - ${contractText.substring(0, 50)}...`)}
+                    disabled={!contractText.trim() || generateDocumentMutation.isPending}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Risk Assessment'}
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
