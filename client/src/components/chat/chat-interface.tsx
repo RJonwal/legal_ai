@@ -168,6 +168,7 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
         <MessageList 
           messages={messages} 
           isLoading={sendMessageMutation.isPending}
+          currentCase={displayCase}
         />
       </div>
 

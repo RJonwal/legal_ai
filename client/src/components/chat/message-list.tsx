@@ -8,6 +8,7 @@ import { ChatMessage } from "@/lib/types";
 interface MessageListProps {
   messages: ChatMessage[];
   isLoading: boolean;
+  currentCase?: any;
 }
 
 export function MessageList({ messages, isLoading }: MessageListProps) {
@@ -88,6 +89,99 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
     return <p className="text-gray-900">{message.content}</p>;
   };
 
+  const generateCaseSpecificMessage = () => {
+    if (!currentCase) {
+      return {
+        greeting: "Good morning! I'm ready to assist with your legal matters.",
+        alerts: [],
+        description: "Please select a case from the sidebar to begin our legal analysis and strategy session."
+      };
+    }
+
+    const caseType = currentCase.caseType?.toLowerCase() || '';
+    const caseTitle = currentCase.title || 'Current Case';
+    const clientName = currentCase.clientName || 'Client';
+    
+    switch (caseType) {
+      case 'contract dispute':
+        return {
+          greeting: `Good morning! I've reviewed the ${caseTitle} case and have some immediate observations:`,
+          alerts: [
+            {
+              type: 'urgent',
+              title: 'URGENT: Discovery Deadline',
+              message: 'Discovery deadline is March 30, 2024 - only 15 days remaining. We need to accelerate document production.',
+              color: 'red'
+            },
+            {
+              type: 'action',
+              title: 'ACTION REQUIRED',
+              message: '30-day delay breach creates $50,000 liquidated damages claim. I recommend sending breach notice immediately.',
+              color: 'yellow'
+            }
+          ],
+          description: `I'm ready to help with contract analysis, breach documentation, and litigation strategy for ${clientName}. Use Case Actions below for specific tasks.`
+        };
+      
+      case 'corporate law':
+        return {
+          greeting: `Good morning! I've reviewed the ${caseTitle} matter and identified key strategic considerations:`,
+          alerts: [
+            {
+              type: 'priority',
+              title: 'PRIORITY: Due Diligence Review',
+              message: 'Corporate structure analysis needed for merger compliance. Regulatory filings due within 30 days.',
+              color: 'blue'
+            },
+            {
+              type: 'action',
+              title: 'COMPLIANCE CHECK',
+              message: 'SEC filings and shareholder notifications require immediate attention to maintain transaction timeline.',
+              color: 'yellow'
+            }
+          ],
+          description: `I'm ready to assist with corporate governance, merger documentation, and regulatory compliance for ${clientName}. Let me know how I can help advance this transaction.`
+        };
+      
+      case 'estate law':
+      case 'estate planning':
+        return {
+          greeting: `Good morning! I've reviewed the ${caseTitle} estate planning matter and have important recommendations:`,
+          alerts: [
+            {
+              type: 'planning',
+              title: 'ESTATE PLANNING: Tax Optimization',
+              message: 'Current estate structure may benefit from tax-efficient trust arrangements before year-end.',
+              color: 'green'
+            },
+            {
+              type: 'documentation',
+              title: 'DOCUMENT REVIEW',
+              message: 'Will and trust documents need updating to reflect recent life changes and tax law modifications.',
+              color: 'blue'
+            }
+          ],
+          description: `I'm ready to help with will preparation, trust structures, and estate tax planning for ${clientName}. Use Case Actions for document generation.`
+        };
+      
+      default:
+        return {
+          greeting: `Good morning! I've reviewed the ${caseTitle} matter and I'm ready to provide comprehensive legal support:`,
+          alerts: [
+            {
+              type: 'review',
+              title: 'CASE ANALYSIS',
+              message: 'Initial case review complete. Ready to develop strategic approach and identify key priorities.',
+              color: 'blue'
+            }
+          ],
+          description: `I'm ready to assist with legal analysis, document preparation, and case strategy for ${clientName}. How can I help advance this matter?`
+        };
+    }
+  };
+
+  const caseMessage = generateCaseSpecificMessage();
+
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {messages.length === 0 && (
@@ -102,37 +196,31 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
               <CardContent className="p-4">
                 <div className="space-y-3">
                   <p className="text-gray-900 font-medium">
-                    Good morning! I've reviewed the Smith v. Johnson case and have some immediate observations:
+                    {caseMessage.greeting}
                   </p>
                   
-                  <div className="space-y-2">
-                    <Card className="border-red-200 bg-red-50">
-                      <CardContent className="p-3">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <AlertTriangle className="h-4 w-4 text-red-500" />
-                          <span className="text-xs font-medium text-red-800">URGENT: Discovery Deadline</span>
-                        </div>
-                        <p className="text-sm text-red-700">
-                          Discovery deadline is March 30, 2024 - only 15 days remaining. We need to accelerate document production.
-                        </p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="border-yellow-200 bg-yellow-50">
-                      <CardContent className="p-3">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <AlertCircle className="h-4 w-4 text-yellow-500" />
-                          <span className="text-xs font-medium text-yellow-800">ACTION REQUIRED</span>
-                        </div>
-                        <p className="text-sm text-yellow-700">
-                          30-day delay breach creates $50,000 liquidated damages claim. I recommend sending breach notice immediately.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  {caseMessage.alerts.length > 0 && (
+                    <div className="space-y-2">
+                      {caseMessage.alerts.map((alert, index) => (
+                        <Card key={index} className={`border-${alert.color}-200 bg-${alert.color}-50`}>
+                          <CardContent className="p-3">
+                            <div className="flex items-center space-x-2 mb-1">
+                              {alert.color === 'red' && <AlertTriangle className="h-4 w-4 text-red-500" />}
+                              {alert.color === 'yellow' && <AlertCircle className="h-4 w-4 text-yellow-500" />}
+                              {(alert.color === 'blue' || alert.color === 'green') && <Info className="h-4 w-4 text-blue-500" />}
+                              <span className={`text-xs font-medium text-${alert.color}-800`}>{alert.title}</span>
+                            </div>
+                            <p className={`text-sm text-${alert.color}-700`}>
+                              {alert.message}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                   
                   <p className="text-gray-700 text-sm">
-                    I'm ready to help with case strategy, document drafting, or any legal questions. Use <strong>Case Actions</strong> below for specific tasks, or ask me anything about this case.
+                    {caseMessage.description}
                   </p>
                 </div>
               </CardContent>
