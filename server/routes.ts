@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cases/:id/messages", async (req, res) => {
     try {
       const caseId = parseInt(req.params.id);
-      const { content } = req.body;
+      const { content, caseContext } = req.body;
 
       if (!content) {
         return res.status(400).json({ message: "Message content is required" });
@@ -99,11 +99,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: msg.content,
       }));
 
-      // Generate AI response
-      const caseContext = `${case_.title} - ${case_.description}`;
+      // Generate AI response with enhanced case context
+      const enhancedCaseContext = `
+CASE INFORMATION:
+- Title: ${case_.title}
+- Case Number: ${case_.caseNumber || 'Not assigned'}
+- Client: ${case_.clientName}
+- Case Type: ${case_.caseType}
+- Status: ${case_.status}
+- Description: ${case_.description}
+- Created: ${case_.createdAt}
+- Last Updated: ${case_.updatedAt}
+${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
+      `;
+      
       const aiResponse = await openaiService.generateChatResponse(
         content,
-        caseContext,
+        enhancedCaseContext,
         messageHistory
       );
 

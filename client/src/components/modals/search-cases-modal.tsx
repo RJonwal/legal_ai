@@ -168,7 +168,10 @@ export function SearchCasesModal({ isOpen, onClose, onCaseSelect }: SearchCasesM
                   <Card 
                     key={case_.id}
                     className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-legal-blue"
-                    onClick={() => handleCaseClick(case_.id)}
+                    onClick={() => {
+                      onCaseSelect(case_.id);
+                      onClose();
+                    }}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
@@ -190,7 +193,7 @@ export function SearchCasesModal({ isOpen, onClose, onCaseSelect }: SearchCasesM
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-gray-700 mb-3 line-clamp-2">{case_.description}</p>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Badge variant="outline" className="text-xs">
@@ -200,7 +203,7 @@ export function SearchCasesModal({ isOpen, onClose, onCaseSelect }: SearchCasesM
                             {case_.priority || 'medium'}
                           </Badge>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                           <Calendar className="h-3 w-3" />
                           <span>Created {formatDate(case_.createdAt)}</span>

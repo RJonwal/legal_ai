@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { CaseSidebar } from "@/components/sidebar/case-sidebar";
 import { ChatInterface } from "@/components/chat/chat-interface";
 import { DocumentCanvas } from "@/components/canvas/document-canvas";
@@ -8,6 +9,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 
 export default function LegalAssistant() {
   const [location] = useLocation();
+  const queryClient = useQueryClient();
   const [currentCaseId, setCurrentCaseId] = useState<number>(1);
   const [currentDocument, setCurrentDocument] = useState<any>(null);
   const [modalFunction, setModalFunction] = useState<string | null>(null);
@@ -30,6 +32,11 @@ export default function LegalAssistant() {
   const handleCaseSelect = (caseId: number) => {
     setCurrentCaseId(caseId);
     setCurrentDocument(null);
+    
+    // Invalidate chat messages to refresh them for the new case
+    queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'messages'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId] });
+    
     // Update URL to reflect current case
     const newUrl = `/legal-assistant?case=${caseId}`;
     window.history.pushState({}, '', newUrl);

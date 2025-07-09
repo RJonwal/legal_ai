@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ChatMessage } from "@/lib/types";
@@ -17,13 +17,18 @@ interface ChatInterfaceProps {
 export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: ChatInterfaceProps) {
   const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesRef = useRef(messages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const { data: currentCase } = useQuery({
     queryKey: ['/api/cases', caseId],
     enabled: !!caseId,
   });
 
-  const { data: chatMessages = [] } = useQuery({
+  const { data: chatMessages = [], refetch: refetchChatMessages } = useQuery({
     queryKey: ['/api/cases', caseId, 'messages'],
     enabled: !!caseId,
     onSuccess: (data) => {
@@ -37,10 +42,19 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
     },
   });
 
+  // Refetch chat messages when caseId changes
+  useEffect(() => {
+    if (caseId) {
+      refetchChatMessages();
+    }
+  }, [caseId, refetchChatMessages]);
+
+
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       const response = await apiRequest('POST', `/api/cases/${caseId}/messages`, {
         content,
+        caseContext: currentCase // Pass case context to the API
       });
       return response.json();
     },
