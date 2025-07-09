@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { NewCaseModal } from "@/components/modals/new-case-modal";
 import { SearchCasesModal } from "@/components/modals/search-cases-modal";
 import { SettingsModal } from "@/components/modals/settings-modal";
+import { UserProfileModal } from "@/components/modals/user-profile-modal";
 import { 
   FolderOpen, 
   Gavel, 
@@ -27,6 +28,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
   const [newCaseOpen, setNewCaseOpen] = useState(false);
   const [searchCasesOpen, setSearchCasesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [userProfileOpen, setUserProfileOpen] = useState(false);
   
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
@@ -152,7 +154,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
       <div className="p-4 border-t border-gray-200">
         <div 
           className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
-          onClick={() => setLocation('/profile')}
+          onClick={() => setUserProfileOpen(true)}
         >
           <div className="w-8 h-8 bg-legal-blue rounded-full flex items-center justify-center">
             <User className="h-4 w-4 text-white" />
@@ -189,6 +191,11 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
       <SettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      <UserProfileModal
+        isOpen={userProfileOpen}
+        onClose={() => setUserProfileOpen(false)}
       />
     </div>
   );
