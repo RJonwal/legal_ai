@@ -131,14 +131,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
             <Search className="h-4 w-4 mr-2" />
             Search Cases
           </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
-            onClick={() => setLocation('/profile')}
-          >
-            <User className="h-4 w-4 mr-2" />
-            Profile
-          </Button>
+          
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
