@@ -266,66 +266,69 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
 
   if (!document && !generateDocumentMutation.isPending) {
     return (
-      <div className="h-full bg-gray-100 flex flex-col p-6">
-        {/* Floating Empty State Island */}
-        <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
-            <h3 className="text-lg font-semibold text-gray-900">Document Canvas</h3>
-            <p className="text-sm text-gray-500">Generate or select a document to view and edit</p>
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Material Design Floating Card */}
+        <div className="absolute top-6 right-6 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 pointer-events-auto transform transition-all duration-300 hover:shadow-3xl">
+          <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <h3 className="text-base font-semibold text-gray-900 flex items-center">
+              <FileText className="h-4 w-4 mr-2 text-blue-600" />
+              Document Canvas
+            </h3>
+            <p className="text-xs text-gray-600 mt-1">Generate or select a document</p>
           </div>
 
-          <div className="flex-1 flex items-center justify-center p-8 min-h-0">
-          <div className="text-center">
-            <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Ready for Document Generation</h3>
-            <p className="text-gray-500 mb-4 max-w-md">
-              Ask the AI about case strategy, contract analysis, or use Case Actions to generate specific documents. 
-              The canvas will automatically expand when documents are created.
+          <div className="p-6 text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Ready for Documents</h4>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              Ask about case strategy or use Case Actions to generate documents.
             </p>
             <Button
               onClick={() => generateDocumentMutation.mutate('Breach Notice Letter')}
-              className="bg-legal-blue hover:bg-legal-deep text-white"
+              size="sm"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs px-4 py-2 rounded-lg shadow-md transition-all duration-200"
             >
-              Generate Breach Notice
+              Generate Document
             </Button>
           </div>
-        </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-gray-100 flex flex-col p-6">
-      {/* Floating Document Island */}
-      <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+    <div className="absolute inset-0 pointer-events-none">
+      {/* Material Design Floating Document Card */}
+      <div className="absolute top-4 right-4 bottom-4 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 pointer-events-auto overflow-hidden transform transition-all duration-300 hover:shadow-3xl">
         {/* Canvas Header */}
-        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
+        <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1 min-w-0">
             {isEditing ? (
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="text-lg font-semibold"
+                className="text-sm font-medium"
               />
             ) : (
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 truncate">{title}</h3>
             )}
-            <p className="text-sm text-gray-500">
-              {document?.status === 'final' ? 'Final' : 'Draft'} • Auto-saved at {new Date().toLocaleTimeString()}
+            <p className="text-xs text-gray-500 truncate">
+              {document?.status === 'final' ? 'Final' : 'Draft'} • Auto-saved
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 ml-2">
             {/* Font Selector */}
             <Select value={selectedFont} onValueChange={setSelectedFont}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select font" />
+              <SelectTrigger className="w-[120px] h-8 text-xs">
+                <SelectValue placeholder="Font" />
               </SelectTrigger>
               <SelectContent>
                 {courtFonts.map((font) => (
                   <SelectItem key={font} value={font}>
-                    <span style={{ fontFamily: font }}>{font}</span>
+                    <span style={{ fontFamily: font }} className="text-xs">{font}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -334,28 +337,25 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             {/* Download Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" disabled={isDownloading}>
+                <Button variant="outline" size="sm" className="h-8 px-2" disabled={isDownloading}>
                   {isDownloading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-legal-blue mr-2"></div>
-                      Generating...
-                    </>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-legal-blue"></div>
                   ) : (
                     <>
-                      <Download className="h-4 w-4 mr-2" />
-                      Download <ChevronDown className="h-4 w-4 ml-1" />
+                      <Download className="h-3 w-3" />
+                      <ChevronDown className="h-3 w-3 ml-1" />
                     </>
                   )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleDownloadPDF}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Download PDF
+                  <FileText className="h-3 w-3 mr-2" />
+                  <span className="text-xs">PDF</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadEditable}>
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Download Editable
+                  <Edit3 className="h-3 w-3 mr-2" />
+                  <span className="text-xs">Editable</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -364,38 +364,34 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       </div>
 
       {/* Document Content */}
-      <div className="flex-1 overflow-y-auto p-8 bg-white min-h-0">
+      <div className="flex-1 overflow-y-auto p-4 bg-white min-h-0">
         {generateDocumentMutation.isPending ? (
-          <div className="flex items-center justify-center h-64">
+          <div className="flex items-center justify-center h-32">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-legal-blue mx-auto mb-4"></div>
-              <p className="text-gray-500">Generating document...</p>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-legal-blue mx-auto mb-2"></div>
+              <p className="text-xs text-gray-500">Generating...</p>
             </div>
           </div>
         ) : isEditing ? (
-          <div className="space-y-4">
+          <div className="space-y-2">
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[400px] resize-none border-gray-300 focus:border-legal-blue focus:ring-legal-blue"
+              className="min-h-[300px] resize-none border-gray-300 focus:border-legal-blue focus:ring-legal-blue text-xs"
               placeholder="Document content..."
             />
           </div>
         ) : (
           <div 
             ref={documentRef} 
-            className="max-w-none prose prose-sm"
+            className="max-w-none prose prose-xs"
             style={{ 
               fontFamily: selectedFont,
-              fontSize: '12pt',
-              lineHeight: '1.6',
+              fontSize: '10pt',
+              lineHeight: '1.4',
               color: '#000000',
-              maxWidth: '8.5in',
-              margin: '0 auto',
-              padding: '1in',
-              backgroundColor: '#ffffff',
-              boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-              minHeight: '11in'
+              padding: '0.5rem',
+              backgroundColor: '#ffffff'
             }}
           >
             <div className="mb-6">
@@ -501,29 +497,30 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       </div>
 
       {/* Canvas Footer */}
-      <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
+      <div className="p-2 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span>Document saved automatically</span>
+          <div className="flex items-center space-x-1 text-xs text-gray-500">
+            <CheckCircle className="h-3 w-3 text-green-500" />
+            <span>Auto-saved</span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             {isEditing ? (
               <>
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-7 px-2 text-xs"
                   onClick={() => setIsEditing(false)}
                 >
                   Cancel
                 </Button>
                 <Button
                   size="sm"
+                  className="h-7 px-2 text-xs bg-legal-blue hover:bg-legal-deep text-white"
                   onClick={handleSave}
                   disabled={updateDocumentMutation.isPending}
-                  className="bg-legal-blue hover:bg-legal-deep text-white"
                 >
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-3 w-3 mr-1" />
                   Save
                 </Button>
               </>
@@ -532,18 +529,19 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-7 px-2 text-xs"
                   onClick={() => setIsEditing(true)}
                 >
-                  <Edit3 className="h-4 w-4 mr-2" />
+                  <Edit3 className="h-3 w-3 mr-1" />
                   Edit
                 </Button>
                 <Button
                   size="sm"
+                  className="h-7 px-2 text-xs bg-legal-blue hover:bg-legal-deep text-white"
                   onClick={handleSaveFinal}
                   disabled={updateDocumentMutation.isPending}
-                  className="bg-legal-blue hover:bg-legal-deep text-white"
                 >
-                  Save Final
+                  Final
                 </Button>
               </>
             )}
