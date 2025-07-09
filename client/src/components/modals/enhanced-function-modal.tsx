@@ -73,6 +73,8 @@ export function EnhancedFunctionModal({
   const [editingTitle, setEditingTitle] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [showFolderSelector, setShowFolderSelector] = useState(false);
+  const [documentToMove, setDocumentToMove] = useState<string | null>(null);
   const [documentFolders, setDocumentFolders] = useState([
     { id: 'evidence', name: 'Evidence', documentCount: 5 },
     { id: 'drafts', name: 'Generated Drafts', documentCount: 8 },
@@ -357,21 +359,29 @@ export function EnhancedFunctionModal({
     setEditingTitle('');
   };
 
-  const handleMoveDocument = async (docId: string) => {
-    // For now, just move to the first folder
-    const targetFolder = documentFolders[0];
+  const handleMoveDocument = (docId: string) => {
+    setDocumentToMove(docId);
+    setShowFolderSelector(true);
+  };
+
+  const handleMoveToFolder = async (folderId: string) => {
+    if (!documentToMove) return;
+    
+    const targetFolder = documentFolders.find(f => f.id === folderId);
     
     try {
-      const response = await apiRequest('PUT', `/api/documents/${docId}`, {
-        folderId: targetFolder.id
+      const response = await apiRequest('PUT', `/api/documents/${documentToMove}`, {
+        folderId: folderId
       });
 
       if (response.ok) {
         queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
         toast({
           title: "Document moved",
-          description: `Document moved to ${targetFolder.name}.`,
+          description: `Document moved to ${targetFolder?.name || 'selected folder'}.`,
         });
+        setShowFolderSelector(false);
+        setDocumentToMove(null);
       }
     } catch (error) {
       toast({
@@ -428,14 +438,19 @@ export function EnhancedFunctionModal({
     }
   };
 
-  const handleBulkMove = async () => {
-    // Move all selected documents to first folder
-    const targetFolder = documentFolders[0];
+  const handleBulkMove = () => {
+    if (selectedDocumentsForManagement.length === 0) return;
+    setDocumentToMove('bulk');
+    setShowFolderSelector(true);
+  };
+
+  const handleBulkMoveToFolder = async (folderId: string) => {
+    const targetFolder = documentFolders.find(f => f.id === folderId);
     
     try {
       const response = await apiRequest('PUT', `/api/documents/bulk-move`, {
         documentIds: selectedDocumentsForManagement,
-        folderId: targetFolder.id
+        folderId: folderId
       });
 
       if (response.ok) {
@@ -443,8 +458,10 @@ export function EnhancedFunctionModal({
         setSelectedDocumentsForManagement([]);
         toast({
           title: "Documents moved",
-          description: `${selectedDocumentsForManagement.length} documents moved to ${targetFolder.name}.`,
+          description: `${selectedDocumentsForManagement.length} documents moved to ${targetFolder?.name || 'selected folder'}.`,
         });
+        setShowFolderSelector(false);
+        setDocumentToMove(null);
       }
     } catch (error) {
       toast({
@@ -1820,7 +1837,54 @@ export function EnhancedFunctionModal({
   const modalInfo = getModalInfo(functionId);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      {/* Folder Selection Dialog */}
+      <Dialog open={showFolderSelector} onOpenChange={setShowFolderSelector}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Folder</DialogTitle>
+            <DialogDescription>
+              Choose which folder to move the document to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {documentFolders.map((folder) => (
+              <Button
+                key={folder.id}
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  if (documentToMove === 'bulk') {
+                    handleBulkMoveToFolder(folder.id);
+                  } else {
+                    handleMoveToFolder(folder.id);
+                  }
+                }}
+              >
+                <FolderOpen className="h-4 w-4 mr-2" />
+                {folder.name}
+                <Badge variant="secondary" className="ml-auto">
+                  {folder.documentCount}
+                </Badge>
+              </Button>
+            ))}
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowFolderSelector(false);
+                setDocumentToMove(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Function Modal */}
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{modalInfo.title}</DialogTitle>
