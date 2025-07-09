@@ -218,32 +218,40 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     
     switch (format) {
       case 'bold':
-        // Toggle bold state and apply visual styling
-        setIsBold(!isBold);
-        // For markdown preview, we can still add the markers
-        formattedText = `**${selectedText}**`;
+        // Apply bold formatting to selected text only
+        if (selectedText) {
+          formattedText = `**${selectedText}**`;
+        }
         break;
       case 'italic':
-        // Toggle italic state and apply visual styling
-        setIsItalic(!isItalic);
-        formattedText = `*${selectedText}*`;
+        // Apply italic formatting to selected text only
+        if (selectedText) {
+          formattedText = `*${selectedText}*`;
+        }
         break;
       case 'underline':
-        // Toggle underline state and apply visual styling
-        setIsUnderline(!isUnderline);
-        formattedText = `_${selectedText}_`;
+        // Apply underline formatting to selected text only
+        if (selectedText) {
+          formattedText = `_${selectedText}_`;
+        }
         break;
       case 'heading1':
-        const prefix1 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-        formattedText = `${prefix1}# ${selectedText}`;
+        if (selectedText) {
+          const prefix1 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+          formattedText = `${prefix1}${selectedText.toUpperCase()}`;
+        }
         break;
       case 'heading2':
-        const prefix2 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-        formattedText = `${prefix2}## ${selectedText}`;
+        if (selectedText) {
+          const prefix2 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+          formattedText = `${prefix2}${selectedText.charAt(0).toUpperCase()}${selectedText.slice(1)}`;
+        }
         break;
       case 'heading3':
-        const prefix3 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-        formattedText = `${prefix3}### ${selectedText}`;
+        if (selectedText) {
+          const prefix3 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+          formattedText = `${prefix3}${selectedText.charAt(0).toUpperCase()}${selectedText.slice(1)}`;
+        }
         break;
       case 'align-left':
         // For left alignment, remove any leading spaces
@@ -311,11 +319,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
         );
         break;
       case 'clear-formatting':
-        // Remove all formatting and reset styles
-        setIsBold(false);
-        setIsItalic(false);
-        setIsUnderline(false);
-        
+        // Remove all formatting from selected text only
         if (selectedText) {
           formattedText = selectedText
             .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
@@ -333,7 +337,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     }
     
     // Update content only if we have selected text or for alignment operations
-    if (selectedText || ['align-left', 'align-center', 'align-right', 'justify', 'clear-formatting'].includes(format)) {
+    if (selectedText && (formattedText !== selectedText || ['align-left', 'align-center', 'align-right', 'justify', 'clear-formatting'].includes(format))) {
       newContent = content.substring(0, start) + formattedText + content.substring(end);
       setContent(newContent);
       
@@ -348,8 +352,43 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   };
 
   const changeFontSize = (increase: boolean) => {
-    const newSize = increase ? Math.min(fontSize + 2, 24) : Math.max(fontSize - 2, 8);
-    setFontSize(newSize);
+    // Check if we're in a browser environment and textarea ref exists
+    if (typeof document === 'undefined' || typeof window === 'undefined' || !textareaRef.current) {
+      return;
+    }
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    
+    // Only apply font size changes to selected text
+    if (!selectedText) {
+      return;
+    }
+    
+    // For textarea, we can't actually change font size of individual text
+    // Instead, we'll use text indicators for size changes
+    let formattedText = selectedText;
+    
+    if (increase) {
+      // Make text appear larger using uppercase
+      formattedText = selectedText.toUpperCase();
+    } else {
+      // Make text appear smaller using lowercase
+      formattedText = selectedText.toLowerCase();
+    }
+    
+    const newContent = content.substring(0, start) + formattedText + content.substring(end);
+    setContent(newContent);
+    
+    // Update cursor position after formatting
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(start + formattedText.length, start + formattedText.length);
+      }
+    }, 0);
   };
 
   const handleDownloadEditable = () => {
