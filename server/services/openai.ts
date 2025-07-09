@@ -87,7 +87,7 @@ export class OpenAIService {
       });
 
       const content = response.choices[0].message.content || "I apologize, but I couldn't generate a response.";
-      
+
       // Check if response suggests document generation
       const shouldGenerateDocument = content.toLowerCase().includes('document') || 
                                    content.toLowerCase().includes('draft') ||
@@ -113,18 +113,18 @@ export class OpenAIService {
   }
 
   private generateMockDocument(request: DocumentGenerationRequest): DocumentGenerationResponse {
-    const mockTemplates: Record<string, any> = {
-      'breach': {
-        title: 'Formal Breach Notice Letter',
-        content: `NOTICE OF BREACH OF CONTRACT\n\nDate: ${new Date().toLocaleDateString()}\n\nTO: Johnson Development Corp.\nRE: Breach of Construction Contract\n\nThis letter serves as formal notice of material breach of the construction contract dated January 1, 2024.\n\nNATURE OF BREACH:\n1. Failure to make progress payments totaling $85,000\n2. Denial of site access preventing work completion\n3. Unilateral modification of specifications\n\nDEMAND FOR CURE:\nYou have thirty (30) days to cure these breaches.\n\nCONSEQUENCES:\nFailure to cure will result in contract termination and pursuit of all legal remedies.\n\nRespectfully,\n[ATTORNEY NAME]`,
-        documentType: 'breach_notice'
+    const mockTemplates = {
+      'contract': {
+        title: 'Contract Analysis Report',
+        content: `CONTRACT ANALYSIS REPORT\n\nExecutive Summary:\nComprehensive review of the contract dated ${new Date().toLocaleDateString()} reveals several critical areas requiring immediate attention.\n\nKey Findings:\n1. CRITICAL ISSUE: Breach of Section 4.2 - Delivery Timeline\n   The contract stipulates completion by February 15, 2024. Current status shows 30-day delay.\n\n2. MODERATE ISSUE: Ambiguous termination language in Section 7.1\n   Termination clause lacks clarity on notice periods and cure provisions.\n\n3. FAVORABLE: Strong liquidated damages provision (Section 9.3)\n   Well-drafted clause providing $1,667 per day for delays.\n\nRecommendations:\n1. Send formal breach notice immediately\n2. Calculate damages for 30-day delay period\n3. Consider settlement negotiations\n4. Prepare for potential litigation\n\nRisk Assessment: MODERATE to HIGH\nEstimated Damages: $50,000-$75,000\nSettlement Likelihood: 75%`,
+        documentType: 'contract_analysis'
       },
-      'settlement': {
-        title: 'Settlement Demand Letter',
-        content: `SETTLEMENT DEMAND\n\nDate: ${new Date().toLocaleDateString()}\n\nRE: Smith Construction LLC v. Johnson Development Corp.\n\nTo resolve this matter without litigation, our client demands $110,000 in full settlement.\n\nFACTUAL SUMMARY:\n- Contract breach by defendant\n- $85,000 in unpaid progress payments\n- Additional damages of $25,000\n\nThis offer expires in 21 days.\n\nRespectfully,\n[ATTORNEY NAME]`,
-        documentType: 'settlement_demand'
+      'brief': {
+        title: 'Legal Brief',
+        content: `LEGAL BRIEF\n\nDate: ${new Date().toLocaleDateString()}\n\nTO THE HONORABLE COURT:\n\nI. INTRODUCTION\nThis brief addresses the motion for summary judgment filed by defendant.\n\nII. STATEMENT OF FACTS\n1. Plaintiff and defendant entered into contract on January 15, 2024\n2. Contract required completion by February 15, 2024\n3. Defendant failed to complete work as of March 15, 2024\n\nIII. ARGUMENT\nA. Legal Standard\nSummary judgment is appropriate when no genuine issue of material fact exists.\n\nB. Analysis\nDefendant's breach is undisputed and damages are readily calculable.\n\nIV. CONCLUSION\nFor the foregoing reasons, plaintiff's motion should be granted.\n\nRespectfully submitted,\n[ATTORNEY NAME]`,
+        documentType: 'legal_brief'
       },
-      'strategy': {
+      'memo': {
         title: 'Case Strategy Analysis',
         content: `STRATEGIC ANALYSIS\n\nCASE STRENGTH: Strong (85% win probability)\nSETTLEMENT LIKELIHOOD: High (75%)\nESTIMATED TIMELINE: 6-8 months\n\nIMMEDIATE ACTIONS:\n1. Send breach notice letter\n2. File discovery requests\n3. Begin settlement negotiations\n\nRECOMMENDED SETTLEMENT: $95,000-$110,000\n\nLITIGATION COSTS: $40,000-$60,000\nRECOVERY PROBABILITY: 85%`,
         documentType: 'strategy_memo'
@@ -139,20 +139,15 @@ export class OpenAIService {
         content: `MOTION FOR SUMMARY JUDGMENT\n\nDate: ${new Date().toLocaleDateString()}\n\nTO THE HONORABLE COURT:\n\nPlaintiff respectfully moves for summary judgment on all claims against defendant.\n\nSTATEMENT OF FACTS:\n1. Undisputed material breach by defendant\n2. Clear contractual obligations\n3. Damages are calculable and proven\n\nCONCLUSION:\nNo genuine issue of material fact exists. Judgment should be entered in favor of plaintiff.\n\nRespectfully,\n[ATTORNEY NAME]`,
         documentType: 'motion_summary_judgment'
       },
-      'compel': {
-        title: 'Motion to Compel Discovery',
-        content: `MOTION TO COMPEL DISCOVERY\n\nDate: ${new Date().toLocaleDateString()}\n\nTO THE HONORABLE COURT:\n\nPlaintiff moves to compel defendant's responses to discovery requests served on ${new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toLocaleDateString()}.\n\nDEFENDANT'S DEFICIENCIES:\n1. Incomplete responses to interrogatories\n2. Failure to produce requested documents\n3. Objections lack good faith basis\n\nRELIEF REQUESTED:\nOrder compelling full responses within 14 days and award of attorney fees.\n\nRespectfully,\n[ATTORNEY NAME]`,
-        documentType: 'motion_to_compel'
+      'management': {
+        title: 'Document Management Report',
+        content: `DOCUMENT MANAGEMENT REPORT\n\nGenerated: ${new Date().toLocaleString()}\n\nDOCUMENT INVENTORY:\n• Total Documents: 25\n• Evidence Files: 8\n• Generated Drafts: 12\n• Final Documents: 5\n\nFOLDER ORGANIZATION:\n├── Evidence (8 files)\n├── Generated Drafts (12 files)\n├── Final Documents (5 files)\n└── Correspondence (0 files)\n\nRECENT ACTIVITY:\n• 3 documents generated today\n• 2 documents moved to Evidence folder\n• 1 document marked as final\n\nRECOMMENDATIONS:\n1. Archive completed discovery documents\n2. Organize correspondence by date\n3. Create subfolder for expert reports\n4. Review draft status on older documents\n\nDOCUMENT STATUS SUMMARY:\n• Draft: 18 documents\n• Final: 7 documents\n• Archived: 0 documents`,
+        documentType: 'document_management_report'
       },
-      'deposition': {
-        title: 'Deposition Outline',
-        content: `DEPOSITION OUTLINE\n\nWitness: [WITNESS NAME]\nDate: ${new Date().toLocaleDateString()}\nTime: [TIME]\nLocation: [LOCATION]\n\nOBJECTIVES:\n1. Establish timeline of events\n2. Obtain admissions regarding breach\n3. Identify additional witnesses/documents\n\nKEY TOPICS:\n1. Background and role in project\n2. Contract negotiations and terms\n3. Performance issues and communications\n4. Knowledge of breach events\n5. Damages and mitigation efforts\n\nDOCUMENTS TO REVIEW:\n- Original contract\n- Email correspondence\n- Project timelines\n- Payment records\n\nPrepared by: [ATTORNEY NAME]`,
-        documentType: 'deposition_outline'
-      },
-      'damages': {
-        title: 'Damages Calculation Worksheet',
-        content: `DAMAGES CALCULATION\n\nCase: ${request.caseContext}\nDate: ${new Date().toLocaleDateString()}\n\nDIRECT DAMAGES:\n1. Unpaid contract amounts: $85,000\n2. Additional labor costs: $15,000\n3. Material cost increases: $8,000\n   Subtotal Direct: $108,000\n\nCONSEQUENTIAL DAMAGES:\n1. Lost profits on delayed projects: $25,000\n2. Equipment rental extensions: $5,000\n   Subtotal Consequential: $30,000\n\nTOTAL DAMAGES: $138,000\n\nMITIGATION EFFORTS:\n- Secured alternative financing\n- Negotiated payment plans with suppliers\n- Reassigned crew to other projects\n\nNET RECOVERABLE DAMAGES: $120,000\n\nPrepared by: [ATTORNEY NAME]`,
-        documentType: 'damages_calculation'
+      'index': {
+        title: 'Document Index Report',
+        content: `CASE DOCUMENT INDEX\n\nGenerated: ${new Date().toLocaleString()}\n\nDOCUMENT LISTING BY CATEGORY:\n\nI. PLEADINGS & MOTIONS\n   1. Complaint - Filed 01/15/2024\n   2. Answer - Filed 02/01/2024\n   3. Motion for Summary Judgment - Filed 03/01/2024\n\nII. DISCOVERY MATERIALS\n   1. Request for Production - Served 02/15/2024\n   2. Interrogatories - Served 02/15/2024\n   3. Document Production - Received 03/15/2024\n\nIII. EVIDENCE & EXHIBITS\n   1. Contract Agreement - Exhibit A\n   2. Email Correspondence - Exhibit B\n   3. Project Photos - Exhibit C\n   4. Expert Report - Exhibit D\n\nIV. CORRESPONDENCE\n   1. Demand Letter - Sent 01/05/2024\n   2. Settlement Discussions - 02/20/2024\n   3. Extension Requests - Various dates\n\nV. WORK PRODUCT\n   1. Case Strategy Memo\n   2. Legal Research\n   3. Damage Calculations\n   4. Witness Interview Notes\n\nDOCUMENT COUNT: 25 total documents\nLAST UPDATED: ${new Date().toLocaleDateString()}`,
+        documentType: 'document_index_report'
       }
     };
 
@@ -164,7 +159,7 @@ export class OpenAIService {
 
     // Enhanced matching for document types
     let matchedKey = 'default';
-    
+
     for (const [key, template] of Object.entries(mockTemplates)) {
       if (lowerType.includes(key) || 
           key.includes(lowerType) ||
@@ -195,7 +190,7 @@ export class OpenAIService {
 
     const template = mockTemplates[matchedKey];
     console.log('Using template:', matchedKey, 'for document type:', requestType);
-    
+
     return {
       title: template.title,
       content: template.content.replace(/\[ATTORNEY NAME\]/g, 'Sarah Johnson, Esq.'),
@@ -206,16 +201,16 @@ export class OpenAIService {
   async analyzeContract(contractText: string, caseContext: string): Promise<any> {
     try {
       const prompt = `Analyze the following contract for potential issues, breaches, and opportunities:
-      
+
       Contract Text: ${contractText}
       Case Context: ${caseContext}
-      
+
       Please provide a detailed analysis including:
       1. Critical issues (breaches, violations)
       2. Moderate issues (ambiguities, potential problems)
       3. Favorable provisions (client advantages)
       4. Recommendations for next steps
-      
+
       Format your response as a JSON object with structured analysis.`;
 
       const response = await openai.chat.completions.create({
@@ -239,17 +234,17 @@ export class OpenAIService {
   async generateNextBestAction(caseContext: string, caseHistory: string): Promise<any> {
     try {
       const prompt = `Based on the case context and history, recommend the next best actions:
-      
+
       Case Context: ${caseContext}
       Case History: ${caseHistory}
-      
+
       Please provide prioritized recommendations with:
       1. Immediate actions (within 1 week)
       2. Short-term actions (within 1 month)
       3. Long-term strategic actions
-      
+
       For each action, include timeline, priority level, and rationale.
-      
+
       Format your response as a JSON object with structured recommendations.`;
 
       const response = await openai.chat.completions.create({

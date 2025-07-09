@@ -59,6 +59,21 @@ export function EnhancedFunctionModal({
     opposingCounsel: ""
   });
 
+  // Document management states
+  const [sortBy, setSortBy] = useState('date');
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [selectedDocumentsForManagement, setSelectedDocumentsForManagement] = useState<string[]>([]);
+  const [editingDocument, setEditingDocument] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [documentFolders, setDocumentFolders] = useState([
+    { id: 'evidence', name: 'Evidence', documentCount: 5 },
+    { id: 'drafts', name: 'Generated Drafts', documentCount: 8 },
+    { id: 'final', name: 'Final Documents', documentCount: 3 },
+    { id: 'correspondence', name: 'Correspondence', documentCount: 12 },
+  ]);
+
   const { data: currentCase } = useQuery({
     queryKey: ['/api/cases', caseId],
     queryFn: () => apiRequest('GET', `/api/cases/${caseId}`).then(res => res.json()),
@@ -238,6 +253,222 @@ export function EnhancedFunctionModal({
     const files = e.target.files;
     if (files) {
       handleFileUpload(files);
+    }
+  };
+
+  // Document management handlers
+  const getSortedDocuments = () => {
+    if (!caseDocuments) return [];
+    
+    let filtered = caseDocuments;
+    if (selectedFolder) {
+      // Filter by folder if selected
+      filtered = caseDocuments.filter((doc: any) => doc.folderId === selectedFolder);
+    }
+    
+    return filtered.sort((a: any, b: any) => {
+      switch (sortBy) {
+        case 'name':
+          return a.title.localeCompare(b.title);
+        case 'type':
+          return a.documentType.localeCompare(b.documentType);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'date':
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+  };
+
+  const handleDocumentSelect = (docId: string) => {
+    setSelectedDocumentsForManagement(prev => 
+      prev.includes(docId) 
+        ? prev.filter(id => id !== docId)
+        : [...prev, docId]
+    );
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    
+    try {
+      const response = await apiRequest('POST', `/api/cases/${caseId}/folders`, {
+        name: newFolderName.trim()
+      });
+      
+      if (response.ok) {
+        const newFolder = await response.json();
+        setDocumentFolders(prev => [...prev, { 
+          id: newFolder.id, 
+          name: newFolder.name, 
+          documentCount: 0 
+        }]);
+        setIsCreatingFolder(false);
+        setNewFolderName('');
+        toast({
+          title: "Folder created",
+          description: `Folder "${newFolderName}" has been created.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to create folder",
+        description: "Please try again.",
+      });
+    }
+  };
+
+  const handleRenameDocument = async (docId: string) => {
+    if (!editingTitle.trim()) {
+      setEditingDocument(null);
+      setEditingTitle('');
+      return;
+    }
+
+    try {
+      const response = await apiRequest('PUT', `/api/documents/${docId}`, {
+        title: editingTitle.trim()
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
+        toast({
+          title: "Document renamed",
+          description: "Document has been successfully renamed.",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to rename document",
+        description: "Please try again.",
+      });
+    }
+
+    setEditingDocument(null);
+    setEditingTitle('');
+  };
+
+  const handleMoveDocument = async (docId: string) => {
+    // For now, just move to the first folder
+    const targetFolder = documentFolders[0];
+    
+    try {
+      const response = await apiRequest('PUT', `/api/documents/${docId}`, {
+        folderId: targetFolder.id
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
+        toast({
+          title: "Document moved",
+          description: `Document moved to ${targetFolder.name}.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to move document",
+        description: "Please try again.",
+      });
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    try {
+      const response = await apiRequest('DELETE', `/api/documents/${docId}`);
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
+        toast({
+          title: "Document deleted",
+          description: "Document has been successfully deleted.",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to delete document",
+        description: "Please try again.",
+      });
+    }
+  };
+
+  const handleDuplicateDocument = async (docId: string) => {
+    const originalDoc = caseDocuments?.find((doc: any) => doc.id === docId);
+    if (!originalDoc) return;
+
+    try {
+      const response = await apiRequest('POST', `/api/cases/${caseId}/documents/duplicate`, {
+        originalDocumentId: docId,
+        title: `${originalDoc.title} (Copy)`
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
+        toast({
+          title: "Document duplicated",
+          description: "A copy of the document has been created.",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to duplicate document",
+        description: "Please try again.",
+      });
+    }
+  };
+
+  const handleBulkMove = async () => {
+    // Move all selected documents to first folder
+    const targetFolder = documentFolders[0];
+    
+    try {
+      const response = await apiRequest('PUT', `/api/documents/bulk-move`, {
+        documentIds: selectedDocumentsForManagement,
+        folderId: targetFolder.id
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
+        setSelectedDocumentsForManagement([]);
+        toast({
+          title: "Documents moved",
+          description: `${selectedDocumentsForManagement.length} documents moved to ${targetFolder.name}.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to move documents",
+        description: "Please try again.",
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const response = await apiRequest('DELETE', `/api/documents/bulk-delete`, {
+        documentIds: selectedDocumentsForManagement
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
+        setSelectedDocumentsForManagement([]);
+        toast({
+          title: "Documents deleted",
+          description: `${selectedDocumentsForManagement.length} documents have been deleted.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to delete documents",
+        description: "Please try again.",
+      });
     }
   };
 
@@ -755,44 +986,179 @@ export function EnhancedFunctionModal({
             </div>
 
             <div className="flex justify-between items-center">
-              <h4 className="font-medium">Document Folders</h4>
+              <div className="flex items-center space-x-2">
+                <h4 className="font-medium">Document Management</h4>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="type">Type</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex space-x-2">
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setIsCreatingFolder(true)}
+                >
                   <FolderPlus className="h-4 w-4 mr-1" />
                   New Folder
                 </Button>
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <Upload className="h-4 w-4 mr-1" />
                   Upload Files
                 </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="border-dashed border-2 border-gray-300 p-4 text-center">
-                <FolderOpen className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <div className="font-medium text-sm">Evidence</div>
-                <div className="text-xs text-gray-500">12 files</div>
-              </Card>
-              <Card className="border-dashed border-2 border-gray-300 p-4 text-center">
-                <FolderOpen className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <div className="font-medium text-sm">Generated Drafts</div>
-                <div className="text-xs text-gray-500">8 files</div>
-              </Card>
+            {/* Folder Creation Input */}
+            {isCreatingFolder && (
+              <div className="flex items-center space-x-2 p-3 border rounded-lg bg-blue-50">
+                <FolderPlus className="h-4 w-4 text-blue-600" />
+                <Input
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="Enter folder name..."
+                  className="flex-1 h-8"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleCreateFolder();
+                    } else if (e.key === 'Escape') {
+                      setIsCreatingFolder(false);
+                      setNewFolderName('');
+                    }
+                  }}
+                />
+                <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+                  Create
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    setIsCreatingFolder(false);
+                    setNewFolderName('');
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+
+            {/* Folder Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              {documentFolders.map((folder) => (
+                <Card 
+                  key={folder.id} 
+                  className="border-dashed border-2 border-gray-300 p-3 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setSelectedFolder(folder.id)}
+                >
+                  <FolderOpen className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                  <div className="font-medium text-xs">{folder.name}</div>
+                  <div className="text-xs text-gray-500">{folder.documentCount} files</div>
+                </Card>
+              ))}
             </div>
 
+            {/* File Upload Area */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+              onChange={handleFileInputChange}
+              className="hidden"
+            />
+
+            {/* Documents List */}
             <div className="space-y-2">
-              <h4 className="font-medium text-sm">Recent Documents:</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-sm">
+                  {selectedFolder ? documentFolders.find(f => f.id === selectedFolder)?.name : 'All Documents'}:
+                </h4>
+                {selectedDocumentsForManagement.length > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500">
+                      {selectedDocumentsForManagement.length} selected
+                    </span>
+                    <Button size="sm" variant="outline" onClick={handleBulkMove}>
+                      Move
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleBulkDelete}>
+                      Delete
+                    </Button>
+                  </div>
+                )}
+                {selectedFolder && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setSelectedFolder(null)}
+                    className="text-xs"
+                  >
+                    ← Back to All
+                  </Button>
+                )}
+              </div>
+              
               {caseDocuments && caseDocuments.length > 0 ? (
                 <div className="max-h-60 overflow-y-auto space-y-2">
-                  {caseDocuments.slice(0, 10).map((doc: any, index: number) => (
-                    <div key={doc.id || index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center space-x-2">
+                  {getSortedDocuments().map((doc: any, index: number) => (
+                    <div 
+                      key={doc.id || index} 
+                      className={`flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors ${
+                        selectedDocumentsForManagement.includes(doc.id) ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                      onClick={(e) => {
+                        if (e.shiftKey || e.ctrlKey) {
+                          handleDocumentSelect(doc.id);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center space-x-2 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={selectedDocumentsForManagement.includes(doc.id)}
+                          onChange={() => handleDocumentSelect(doc.id)}
+                          className="w-4 h-4"
+                        />
                         <FileText className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <div className="font-medium text-sm">{doc.title}</div>
+                        <div className="flex-1 min-w-0">
+                          {editingDocument === doc.id ? (
+                            <Input
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              className="text-sm h-6"
+                              onBlur={() => handleRenameDocument(doc.id)}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleRenameDocument(doc.id);
+                                }
+                              }}
+                              autoFocus
+                            />
+                          ) : (
+                            <div 
+                              className="font-medium text-sm truncate cursor-pointer"
+                              onDoubleClick={() => {
+                                setEditingDocument(doc.id);
+                                setEditingTitle(doc.title);
+                              }}
+                            >
+                              {doc.title}
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500">
-                            {doc.documentType} • {new Date(doc.createdAt).toLocaleDateString()}
+                            {doc.documentType} • {doc.status} • {new Date(doc.createdAt).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
@@ -800,18 +1166,47 @@ export function EnhancedFunctionModal({
                         <Badge variant={doc.status === 'final' ? 'default' : 'secondary'}>
                           {doc.status}
                         </Badge>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (onDocumentGenerate) {
-                              onDocumentGenerate(doc);
-                              onClose();
-                            }
-                          }}
-                        >
-                          Open
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                              </svg>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                if (onDocumentGenerate) {
+                                  onDocumentGenerate(doc);
+                                  onClose();
+                                }
+                              }}
+                            >
+                              Open
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setEditingDocument(doc.id);
+                                setEditingTitle(doc.title);
+                              }}
+                            >
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleMoveDocument(doc.id)}>
+                              Move to Folder
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDuplicateDocument(doc.id)}>
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteDocument(doc.id)}
+                              className="text-red-600"
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   ))}
@@ -825,13 +1220,23 @@ export function EnhancedFunctionModal({
               )}
             </div>
 
-            <Button
-              onClick={() => handleGenerateDocument('Document Management Report')}
-              className="w-full"
-              disabled={generateDocumentMutation.isPending}
-            >
-              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Document Summary'}
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => handleGenerateDocument('Document Management Report')}
+                variant="outline"
+                className="flex-1"
+                disabled={generateDocumentMutation.isPending}
+              >
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Summary'}
+              </Button>
+              <Button
+                onClick={() => handleGenerateDocument('Document Index Report')}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                disabled={generateDocumentMutation.isPending}
+              >
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Create Index'}
+              </Button>
+            </div>
           </div>
         );
 

@@ -30,6 +30,11 @@ export interface IStorage {
   getDocumentsByCase(caseId: number): Promise<Document[]>;
   createDocument(document: InsertDocument): Promise<Document>;
   updateDocument(id: number, updates: Partial<Document>): Promise<Document>;
+  deleteDocument(id: number): Promise<void>;
+
+  // Folder operations
+  createFolder(folder: { caseId: number; name: string }): Promise<{ id: string; name: string; caseId: number }>;
+  getFoldersByCase(caseId: number): Promise<{ id: string; name: string; documentCount: number }[]>;
 
   // Timeline operations
   getTimelineEvents(caseId: number): Promise<TimelineEvent[]>;
@@ -42,12 +47,14 @@ export class MemStorage implements IStorage {
   private chatMessages: Map<number, ChatMessage> = new Map();
   private documents: Map<number, Document> = new Map();
   private timelineEvents: Map<number, TimelineEvent> = new Map();
+  private folders: Map<string, { id: string; name: string; caseId: number }> = new Map();
   
   private userIdCounter = 1;
   private caseIdCounter = 1;
   private messageIdCounter = 1;
   private documentIdCounter = 1;
   private timelineIdCounter = 1;
+  private folderIdCounter = 1;
 
   constructor() {
     // Initialize with sample data
@@ -313,6 +320,36 @@ export class MemStorage implements IStorage {
     };
     this.timelineEvents.set(event.id, event);
     return event;
+  }
+
+  async deleteDocument(id: number): Promise<void> {
+    this.documents.delete(id);
+  }
+
+  async createFolder(folder: { caseId: number; name: string }): Promise<{ id: string; name: string; caseId: number }> {
+    const newFolder = {
+      id: `folder_${this.folderIdCounter++}`,
+      name: folder.name,
+      caseId: folder.caseId,
+    };
+    this.folders.set(newFolder.id, newFolder);
+    return newFolder;
+  }
+
+  async getFoldersByCase(caseId: number): Promise<{ id: string; name: string; documentCount: number }[]> {
+    const caseFolders = Array.from(this.folders.values()).filter(folder => folder.caseId === caseId);
+    
+    return caseFolders.map(folder => {
+      const documentCount = Array.from(this.documents.values()).filter(
+        doc => doc.caseId === caseId && (doc as any).folderId === folder.id
+      ).length;
+      
+      return {
+        id: folder.id,
+        name: folder.name,
+        documentCount,
+      };
+    });
   }
 }
 

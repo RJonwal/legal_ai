@@ -233,17 +233,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/documents/:id", async (req, res) => {
     try {
       const documentId = parseInt(req.params.id);
-      const { title, content, status } = req.body;
+      const { title, content, status, folderId } = req.body;
 
       const document = await storage.updateDocument(documentId, {
         title,
         content,
         status,
+        folderId,
       });
 
       res.json(document);
     } catch (error) {
       res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  // Delete document
+  app.delete("/api/documents/:id", async (req, res) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      await storage.deleteDocument(documentId);
+      res.json({ message: "Document deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
+
+  // Duplicate document
+  app.post("/api/cases/:id/documents/duplicate", async (req, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const { originalDocumentId, title } = req.body;
+
+      const originalDoc = await storage.getDocument(originalDocumentId);
+      if (!originalDoc) {
+        return res.status(404).json({ message: "Original document not found" });
+      }
+
+      const duplicatedDoc = await storage.createDocument({
+        caseId,
+        title: title || `${originalDoc.title} (Copy)`,
+        content: originalDoc.content,
+        documentType: originalDoc.documentType,
+        status: "draft",
+      });
+
+      res.json(duplicatedDoc);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to duplicate document" });
+    }
+  });
+
+  // Bulk move documents
+  app.put("/api/documents/bulk-move", async (req, res) => {
+    try {
+      const { documentIds, folderId } = req.body;
+
+      const results = await Promise.all(
+        documentIds.map((id: number) => 
+          storage.updateDocument(id, { folderId })
+        )
+      );
+
+      res.json({ message: "Documents moved successfully", count: results.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to move documents" });
+    }
+  });
+
+  // Bulk delete documents
+  app.delete("/api/documents/bulk-delete", async (req, res) => {
+    try {
+      const { documentIds } = req.body;
+
+      await Promise.all(
+        documentIds.map((id: number) => storage.deleteDocument(id))
+      );
+
+      res.json({ message: "Documents deleted successfully", count: documentIds.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete documents" });
+    }
+  });
+
+  // Create folder
+  app.post("/api/cases/:id/folders", async (req, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const { name } = req.body;
+
+      const folder = await storage.createFolder({
+        caseId,
+        name,
+      });
+
+      res.json(folder);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create folder" });
+    }
+  });
+
+  // Get case folders
+  app.get("/api/cases/:id/folders", async (req, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const folders = await storage.getFoldersByCase(caseId);
+      res.json(folders);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get folders" });
     }
   });
 
