@@ -1,11 +1,4 @@
-` tags.
 
-```
-Applying toast imports and mutation updates to the case strategy modal for enhanced document generation and error handling.
-```
-
-```
-<replit_final_file>
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -788,7 +781,6 @@ export function EnhancedFunctionModal({
           <div className="space-y-4">
             <div className="bg-red-50 p-4 rounded-lg">
               <h3 className="font-medium text-red-900 mb-2">Court Preparation for {currentCase?.title}</h3>
-              ```
               <p className="text-sm text-red-700">
                 Comprehensive court preparation with customizable arguments, evidence lists, and procedural guidance.
               </p>
