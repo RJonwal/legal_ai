@@ -164,6 +164,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload documents for a case
+  app.post("/api/cases/:id/documents/upload", async (req, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      
+      // Mock file upload processing for now
+      // In a real implementation, you would use multer or similar middleware
+      const mockFiles = [
+        {
+          id: Date.now(),
+          name: "uploaded_document.pdf",
+          size: 1024 * 1024, // 1MB
+          type: "application/pdf",
+          uploadedAt: new Date().toISOString(),
+          isDuplicate: false
+        }
+      ];
+
+      // Create document records for uploaded files
+      const documents = [];
+      for (const file of mockFiles) {
+        const document = await storage.createDocument({
+          caseId,
+          title: file.name,
+          content: `Document uploaded: ${file.name}\n\nFile Details:\n- Size: ${(file.size / 1024).toFixed(1)} KB\n- Type: ${file.type}\n- Uploaded: ${new Date(file.uploadedAt).toLocaleString()}\n\nThis document has been successfully uploaded and is available for analysis and review.`,
+          documentType: 'uploaded_file',
+          status: "draft",
+        });
+        documents.push(document);
+      }
+
+      res.json({ 
+        message: "Files uploaded successfully",
+        files: mockFiles,
+        documents: documents
+      });
+    } catch (error) {
+      console.error("File upload error:", error);
+      res.status(500).json({ message: "Failed to upload files" });
+    }
+  });
+
   // Get case documents
   app.get("/api/cases/:id/documents", async (req, res) => {
     try {

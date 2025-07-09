@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -41,6 +41,9 @@ export function EnhancedFunctionModal({
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("upload");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [depositionInputs, setDepositionInputs] = useState({
     witnessName: "",
     keyTopics: "",
@@ -69,6 +72,38 @@ export function EnhancedFunctionModal({
   const { data: timelineEvents = [] } = useQuery({
     queryKey: ['/api/cases', caseId, 'timeline'],
     enabled: isOpen && functionId === 'timeline',
+  });
+
+  const uploadFileMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch(`/api/cases/${caseId}/documents/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload file');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setUploadedFiles(prev => [...prev, ...data.files]);
+      setIsUploading(false);
+      toast({
+        title: "Files uploaded successfully!",
+        description: `${data.files.length} file(s) uploaded and processed.`,
+      });
+    },
+    onError: (error: any) => {
+      setIsUploading(false);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: error.message || "Failed to upload files.",
+      });
+    },
   });
 
   const generateDocumentMutation = useMutation({
@@ -125,6 +160,56 @@ export function EnhancedFunctionModal({
 
   const handleGenerateDocument = (documentType: string) => {
     generateDocumentMutation.mutate(documentType);
+  };
+
+  const handleFileUpload = async (files: FileList) => {
+    if (!files.length) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    
+    Array.from(files).forEach((file) => {
+      formData.append('files', file);
+    });
+    
+    formData.append('caseId', caseId.toString());
+    
+    uploadFileMutation.mutate(formData);
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileUpload(files);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      handleFileUpload(files);
+    }
   };
 
   const getModalInfo = (functionId: string) => {
@@ -373,23 +458,41 @@ export function EnhancedFunctionModal({
               <TabsContent value="existing" className="space-y-4">
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Select Existing Documents:</h4>
-                  {caseDocuments.map((doc: any, index: number) => (
-                    <div key={index} className="flex items-center space-x-2 p-2 border rounded">
-                      <input
-                        type="checkbox"
-                        checked={selectedDocuments.includes(doc.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedDocuments([...selectedDocuments, doc.id]);
-                          } else {
-                            setSelectedDocuments(selectedDocuments.filter(id => id !== doc.id));
-                          }
-                        }}
-                      />
-                      <FileText className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{doc.title}</span>
+                  {caseDocuments && caseDocuments.length > 0 ? (
+                    <div className="max-h-60 overflow-y-auto space-y-2">
+                      {caseDocuments.map((doc: any, index: number) => (
+                        <div key={doc.id || index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                          <input
+                            type="checkbox"
+                            checked={selectedDocuments.includes(doc.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedDocuments([...selectedDocuments, doc.id]);
+                              } else {
+                                setSelectedDocuments(selectedDocuments.filter(id => id !== doc.id));
+                              }
+                            }}
+                          />
+                          <FileText className="h-4 w-4 text-gray-500" />
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">{doc.title}</div>
+                            <div className="text-xs text-gray-500">
+                              {doc.documentType} • {doc.status} • {new Date(doc.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <Badge variant={doc.status === 'final' ? 'default' : 'secondary'}>
+                            {doc.status}
+                          </Badge>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 text-sm">No documents found for this case</p>
+                      <p className="text-gray-400 text-xs mt-1">Upload documents or generate new ones to see them here</p>
+                    </div>
+                  )}
                 </div>
 
                 {selectedDocuments.length > 0 && (
@@ -588,20 +691,46 @@ export function EnhancedFunctionModal({
 
             <div className="space-y-2">
               <h4 className="font-medium text-sm">Recent Documents:</h4>
-              {caseDocuments.slice(0, 5).map((doc: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <div className="font-medium text-sm">{doc.title}</div>
-                      <div className="text-xs text-gray-500">{doc.documentType} • {new Date().toLocaleDateString()}</div>
+              {caseDocuments && caseDocuments.length > 0 ? (
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {caseDocuments.slice(0, 10).map((doc: any, index: number) => (
+                    <div key={doc.id || index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <div className="font-medium text-sm">{doc.title}</div>
+                          <div className="text-xs text-gray-500">
+                            {doc.documentType} • {new Date(doc.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={doc.status === 'final' ? 'default' : 'secondary'}>
+                          {doc.status}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            if (onDocumentGenerate) {
+                              onDocumentGenerate(doc);
+                              onClose();
+                            }
+                          }}
+                        >
+                          Open
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <Badge variant={doc.status === 'final' ? 'default' : 'secondary'}>
-                    {doc.status}
-                  </Badge>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-sm">No documents found for this case</p>
+                  <p className="text-gray-400 text-xs mt-1">Upload or generate documents to see them here</p>
+                </div>
+              )}
             </div>
 
             <Button
@@ -908,15 +1037,92 @@ export function EnhancedFunctionModal({
               </p>
             </div>
 
-            <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center">
-              <Upload className="mx-auto h-16 w-16 text-blue-400 mb-4" />
-              <p className="text-lg font-medium text-blue-900 mb-2">Drop files here or click to browse</p>
-              <p className="text-sm text-blue-600 mb-4">PDF, DOC, DOCX, TXT, JPG, PNG (Max 10MB each)</p>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <CloudUpload className="h-4 w-4 mr-2" />
-                Choose Files to Upload
-              </Button>
+            <div 
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                isDragging 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-blue-300 hover:border-blue-400'
+              } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                onChange={handleFileInputChange}
+                className="hidden"
+              />
+              
+              {isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-lg font-medium text-blue-900 mb-2">Uploading files...</p>
+                  <p className="text-sm text-blue-600">Please wait while we process your files</p>
+                </>
+              ) : (
+                <>
+                  <Upload className="mx-auto h-16 w-16 text-blue-400 mb-4" />
+                  <p className="text-lg font-medium text-blue-900 mb-2">
+                    {isDragging ? 'Drop files here' : 'Drop files here or click to browse'}
+                  </p>
+                  <p className="text-sm text-blue-600 mb-4">PDF, DOC, DOCX, TXT, JPG, PNG (Max 10MB each)</p>
+                  <Button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={isUploading}
+                  >
+                    <CloudUpload className="h-4 w-4 mr-2" />
+                    Choose Files to Upload
+                  </Button>
+                </>
+              )}
             </div>
+
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Recently Uploaded Files:</h4>
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <span className="text-sm font-medium">{file.name}</span>
+                          <div className="text-xs text-gray-500">
+                            {file.size && `${(file.size / 1024).toFixed(1)} KB`} • {file.type || 'Unknown type'}
+                          </div>
+                        </div>
+                        {file.isDuplicate && (
+                          <Badge variant="destructive" className="text-xs">Duplicate Found</Badge>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleGenerateDocument(`Evidence Analysis: ${file.name}`)}
+                          disabled={generateDocumentMutation.isPending}
+                        >
+                          Analyze
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleGenerateDocument(`Document Summary: ${file.name}`)}
+                          disabled={generateDocumentMutation.isPending}
+                        >
+                          Summarize
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <Card className="border-blue-200">
@@ -926,11 +1132,23 @@ export function EnhancedFunctionModal({
                     <span className="font-medium">Quick Actions</span>
                   </div>
                   <div className="space-y-2">
-                    <Button size="sm" variant="outline" className="w-full justify-start">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => handleGenerateDocument('Duplicate File Analysis')}
+                      disabled={uploadedFiles.length === 0 || generateDocumentMutation.isPending}
+                    >
                       <FileCheck className="h-4 w-4 mr-2" />
                       Scan for Duplicates
                     </Button>
-                    <Button size="sm" variant="outline" className="w-full justify-start">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => handleGenerateDocument('Auto-Categorization Report')}
+                      disabled={uploadedFiles.length === 0 || generateDocumentMutation.isPending}
+                    >
                       <Search className="h-4 w-4 mr-2" />
                       Auto-Categorize
                     </Button>
@@ -942,24 +1160,28 @@ export function EnhancedFunctionModal({
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <FolderOpen className="h-5 w-5 text-blue-500" />
-                    <span className="font-medium">Recent Uploads</span>
+                    <span className="font-medium">Upload Statistics</span>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    <p>Contract_Amendment.pdf</p>
-                    <p>Evidence_Photos.zip</p>
-                    <p>Correspondence.docx</p>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>Total files: {uploadedFiles.length}</p>
+                    <p>Session uploads: {uploadedFiles.length}</p>
+                    {uploadedFiles.length > 0 && (
+                      <p>Last upload: {new Date().toLocaleTimeString()}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <Button 
-              onClick={() => handleGenerateDocument('Document Upload Summary')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={generateDocumentMutation.isPending}
-            >
-              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Upload Summary Report'}
-            </Button>
+            {uploadedFiles.length > 0 && (
+              <Button 
+                onClick={() => handleGenerateDocument('Complete Upload Summary Report')}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={generateDocumentMutation.isPending}
+              >
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Upload Summary Report'}
+              </Button>
+            )}
           </div>
         );
 
