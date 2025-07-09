@@ -35,13 +35,16 @@ This is a comprehensive full-stack legal AI assistant that mimics ChatGPT behavi
 5. **Timeline Events**: Case milestone tracking
 
 ### Frontend Components
-1. **CaseSidebar**: Case navigation and user interface
+1. **CaseSidebar**: Case navigation and user interface with modal-based actions
 2. **ChatInterface**: AI chat with ChatGPT-like behavior and proactive messaging
-3. **DocumentCanvas**: Responsive document editor with dynamic resizing
+3. **DocumentCanvas**: Responsive document editor with dynamic resizing, court-compatible fonts, and dual download options
 4. **FunctionModal**: Modal dialogs with descriptions for specific legal functions
 5. **MessageList**: Chat message display with structured analysis and proactive case insights
 6. **ChatInput**: Consolidated Case Actions dropdown with all legal functions
-7. **ResizablePanelGroup**: Dynamic layout adjustment for chat and document canvas
+7. **ResizablePanelGroup**: Dynamic layout adjustment for chat and document canvas with auto-expansion
+8. **NewCaseModal**: Comprehensive case creation with client information and case details
+9. **SearchCasesModal**: Live search functionality with case previews and filtering
+10. **SettingsModal**: User preferences for notifications, appearance, privacy, and legal features
 
 ### Backend Services
 1. **OpenAI Service**: Proactive AI attorney with senior-level legal reasoning and strategic thinking
@@ -113,3 +116,9 @@ Preferred communication style: Simple, everyday language.
 
 Changelog:
 - July 08, 2025. Initial setup
+- July 09, 2025. Enhanced PDF formatting with court-compatible fonts (Century Schoolbook, Times New Roman, Garamond, etc.)
+- July 09, 2025. Implemented dynamic document canvas auto-expansion based on document generation state
+- July 09, 2025. Added dual download options: PDF and editable text formats via dropdown menu
+- July 09, 2025. Moved profile implementation to Sarah Johnson location in sidebar with clickable navigation
+- July 09, 2025. Improved PDF generation with professional 1-inch margins and multi-page support
+- July 09, 2025. Added font selector for court-compatible typography in document canvas

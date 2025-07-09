@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -19,7 +21,8 @@ import {
   FileText,
   AlertTriangle,
   AlertCircle,
-  Info
+  Info,
+  ChevronDown
 } from "lucide-react";
 
 interface DocumentCanvasProps {
@@ -33,9 +36,20 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   const [title, setTitle] = useState(document?.title || "");
   const [content, setContent] = useState(document?.content || "");
   const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedFont, setSelectedFont] = useState("Times New Roman");
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const documentRef = useRef<HTMLDivElement>(null);
+
+  // Court-compatible fonts
+  const courtFonts = [
+    "Times New Roman",
+    "Century Schoolbook",
+    "Garamond",
+    "Book Antiqua",
+    "Georgia",
+    "Palatino Linotype"
+  ];
 
   useEffect(() => {
     if (document) {
@@ -103,39 +117,80 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
         format: 'a4'
       });
 
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      // Calculate proper scaling for professional document layout
+      const margin = 25.4; // 1 inch margin
+      const contentWidth = pdfWidth - (2 * margin);
+      const contentHeight = pdfHeight - (2 * margin);
+      const ratio = Math.min(contentWidth / imgWidth, contentHeight / imgHeight);
+      
+      const scaledWidth = imgWidth * ratio;
+      const scaledHeight = imgHeight * ratio;
+      
+      let yPosition = margin;
+      let remainingHeight = scaledHeight;
+      
+      while (remainingHeight > 0) {
+        const heightToAdd = Math.min(remainingHeight, contentHeight);
+        
+        pdf.addImage(
+          imgData, 
+          'PNG', 
+          margin, 
+          yPosition, 
+          scaledWidth, 
+          heightToAdd,
+          undefined,
+          'FAST'
+        );
+        
+        remainingHeight -= heightToAdd;
+        
+        if (remainingHeight > 0) {
+          pdf.addPage();
+          yPosition = margin;
+        }
       }
 
       const fileName = `${title || 'document'}_${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
-      
+
       toast({
         title: "PDF Downloaded",
         description: `Document saved as ${fileName}`,
       });
     } catch (error) {
+      console.error('Error generating PDF:', error);
       toast({
-        title: "Download Failed",
-        description: "Unable to generate PDF. Please try again.",
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleDownloadEditable = () => {
+    const docContent = `${title}\n\n${content}`;
+    const blob = new Blob([docContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title || 'document'}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Editable Document Downloaded",
+      description: "Document saved as editable text file",
+    });
   };
 
   const formatDocumentContent = (content: string) => {
@@ -247,32 +302,48 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleDownloadPDF}
-              disabled={isDownloading || !document}
-              title="Download as PDF"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => window.print()}
-              disabled={!document}
-              title="Print Document"
-            >
-              <Printer className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              disabled={!document}
-              title="Share Document"
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
+            {/* Font Selector */}
+            <Select value={selectedFont} onValueChange={setSelectedFont}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select font" />
+              </SelectTrigger>
+              <SelectContent>
+                {courtFonts.map((font) => (
+                  <SelectItem key={font} value={font}>
+                    <span style={{ fontFamily: font }}>{font}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Download Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" disabled={isDownloading}>
+                  {isDownloading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-legal-blue mr-2"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download <ChevronDown className="h-4 w-4 ml-1" />
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleDownloadPDF}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadEditable}>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Download Editable
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -296,15 +367,30 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             />
           </div>
         ) : (
-          <div ref={documentRef} className="max-w-none prose prose-sm">
+          <div 
+            ref={documentRef} 
+            className="max-w-none prose prose-sm"
+            style={{ 
+              fontFamily: selectedFont,
+              fontSize: '12pt',
+              lineHeight: '1.6',
+              color: '#000000',
+              maxWidth: '8.5in',
+              margin: '0 auto',
+              padding: '1in',
+              backgroundColor: '#ffffff',
+              boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+              minHeight: '11in'
+            }}
+          >
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
-              <div className="text-sm text-gray-500 mb-4">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: selectedFont }}>{title}</h1>
+              <div className="text-sm text-gray-500 mb-4" style={{ fontFamily: selectedFont }}>
                 Generated: {new Date().toLocaleDateString()}
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4" style={{ fontFamily: selectedFont }}>
               {content ? formatDocumentContent(content) : (
                 <div className="space-y-4">
                   <div className="mb-6">

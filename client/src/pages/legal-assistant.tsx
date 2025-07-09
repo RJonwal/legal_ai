@@ -41,10 +41,19 @@ export default function LegalAssistant() {
 
   const handleDocumentGenerate = (document: any) => {
     setCurrentDocument(document);
-    // Expand canvas when document is generated
-    setChatSize(45);
-    setCanvasSize(55);
+    // Auto-expand document canvas when document is generated
+    setChatSize(35);
+    setCanvasSize(65);
   };
+
+  // Auto-adjust panel sizes based on document state
+  useEffect(() => {
+    if (!currentDocument) {
+      // When no document, give more space to chat
+      setChatSize(70);
+      setCanvasSize(30);
+    }
+  }, [currentDocument]);
 
   const handleDocumentUpdate = (document: any) => {
     setCurrentDocument(document);

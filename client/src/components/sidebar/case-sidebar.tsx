@@ -150,16 +150,19 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
 
       {/* User Profile */}
       <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center space-x-3">
+        <div 
+          className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+          onClick={() => setLocation('/profile')}
+        >
           <div className="w-8 h-8 bg-legal-blue rounded-full flex items-center justify-center">
             <User className="h-4 w-4 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.fullName || 'Loading...'}
+              Sarah Johnson
             </p>
             <p className="text-xs text-gray-500 truncate">
-              {user?.role || 'Attorney'}
+              Senior Attorney
             </p>
           </div>
         </div>
