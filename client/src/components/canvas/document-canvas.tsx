@@ -24,9 +24,6 @@ import {
   AlertCircle,
   Info,
   ChevronDown,
-  Bold,
-  Italic,
-  Underline,
   Type,
   Palette
 } from "lucide-react";
@@ -44,9 +41,6 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Times New Roman");
   const [fontSize, setFontSize] = useState(12);
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
   const [textColor, setTextColor] = useState("#000000");
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -234,24 +228,6 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     let newContent = content;
     
     switch (format) {
-      case 'bold':
-        // Apply bold formatting to selected text only
-        if (actualSelectedText) {
-          formattedText = `**${actualSelectedText}**`;
-        }
-        break;
-      case 'italic':
-        // Apply italic formatting to selected text only
-        if (actualSelectedText) {
-          formattedText = `*${actualSelectedText}*`;
-        }
-        break;
-      case 'underline':
-        // Apply underline formatting to selected text only
-        if (actualSelectedText) {
-          formattedText = `_${actualSelectedText}_`;
-        }
-        break;
       case 'heading1':
         if (actualSelectedText) {
           const prefix1 = actualStart > 0 && content[actualStart - 1] !== '\n' ? '\n' : '';
@@ -339,9 +315,6 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
         // Remove all formatting from selected text only
         if (actualSelectedText) {
           formattedText = actualSelectedText
-            .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
-            .replace(/\*(.*?)\*/g, '$1') // Remove italic
-            .replace(/_(.*?)_/g, '$1') // Remove underline
             .replace(/#{1,6}\s/g, '') // Remove headings
             .replace(/^ +/gm, '') // Remove leading spaces (alignment)
             .replace(/^    /gm, '') // Remove indentation
@@ -632,27 +605,11 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
                   style={{
                     fontFamily: selectedFont,
                     fontSize: `${fontSize}pt`,
-                    fontWeight: isBold ? 'bold' : 'normal',
-                    fontStyle: isItalic ? 'italic' : 'normal',
-                    textDecoration: isUnderline ? 'underline' : 'none',
                     color: textColor
                   }}
                 />
               </ContextMenuTrigger>
               <ContextMenuContent className="w-56">
-                <ContextMenuItem onClick={() => applyTextFormat('bold')}>
-                  <Bold className="h-4 w-4 mr-2" />
-                  Bold
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => applyTextFormat('italic')}>
-                  <Italic className="h-4 w-4 mr-2" />
-                  Italic
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => applyTextFormat('underline')}>
-                  <Underline className="h-4 w-4 mr-2" />
-                  Underline
-                </ContextMenuItem>
-                <ContextMenuSeparator />
                 <ContextMenuItem onClick={() => applyTextFormat('heading1')}>
                   <Type className="h-4 w-4 mr-2" />
                   Heading 1
