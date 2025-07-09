@@ -236,20 +236,24 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             formattedText = `${prefix3}### ${selectedText}`;
             break;
           case 'align-left':
+            // Use markdown-style left alignment
             const lines1 = selectedText.split('\n');
-            formattedText = lines1.map(line => `[LEFT] ${line}`).join('\n');
+            formattedText = lines1.map(line => line.trim()).join('\n');
             break;
           case 'align-center':
+            // Use markdown-style center alignment
             const lines2 = selectedText.split('\n');
-            formattedText = lines2.map(line => `[CENTER] ${line}`).join('\n');
+            formattedText = lines2.map(line => `<center>${line.trim()}</center>`).join('\n');
             break;
           case 'align-right':
+            // Use markdown-style right alignment
             const lines3 = selectedText.split('\n');
-            formattedText = lines3.map(line => `[RIGHT] ${line}`).join('\n');
+            formattedText = lines3.map(line => `<div align="right">${line.trim()}</div>`).join('\n');
             break;
           case 'justify':
+            // Use markdown-style justify alignment
             const lines4 = selectedText.split('\n');
-            formattedText = lines4.map(line => `[JUSTIFY] ${line}`).join('\n');
+            formattedText = lines4.map(line => `<div align="justify">${line.trim()}</div>`).join('\n');
             break;
           case 'bullet-list':
             const bulletItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
@@ -285,10 +289,9 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
               .replace(/\*(.*?)\*/g, '$1') // Remove italic
               .replace(/_(.*?)_/g, '$1') // Remove underline
               .replace(/#{1,6}\s/g, '') // Remove headings
-              .replace(/\[LEFT\]\s*/g, '') // Remove left align
-              .replace(/\[CENTER\]\s*/g, '') // Remove center align
-              .replace(/\[RIGHT\]\s*/g, '') // Remove right align
-              .replace(/\[JUSTIFY\]\s*/g, '') // Remove justify
+              .replace(/<center>(.*?)<\/center>/g, '$1') // Remove center tags
+              .replace(/<div align="right">(.*?)<\/div>/g, '$1') // Remove right align tags
+              .replace(/<div align="justify">(.*?)<\/div>/g, '$1') // Remove justify tags
               .replace(/^    /gm, '') // Remove indentation
               .replace(/^• /gm, '') // Remove bullet points
               .replace(/^\d+\.\s/gm, ''); // Remove numbered lists
