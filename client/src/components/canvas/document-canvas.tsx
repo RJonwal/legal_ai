@@ -204,117 +204,146 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     }
     
     const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = content.substring(start, end);
-      
-      if (selectedText || format.startsWith('align-') || format === 'justify' || format === 'clear-formatting') {
-        let formattedText = selectedText;
-        
-        switch (format) {
-          case 'bold':
-            formattedText = `**${selectedText}**`;
-            break;
-          case 'italic':
-            formattedText = `*${selectedText}*`;
-            break;
-          case 'underline':
-            formattedText = `_${selectedText}_`;
-            break;
-          case 'heading1':
-            // Add heading on new line if not at start
-            const prefix1 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-            formattedText = `${prefix1}# ${selectedText}`;
-            break;
-          case 'heading2':
-            const prefix2 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-            formattedText = `${prefix2}## ${selectedText}`;
-            break;
-          case 'heading3':
-            const prefix3 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
-            formattedText = `${prefix3}### ${selectedText}`;
-            break;
-          case 'align-left':
-            // For textarea, left alignment is just the normal text without extra formatting
-            const lines1 = selectedText.split('\n');
-            formattedText = lines1.map(line => line.trim()).join('\n');
-            break;
-          case 'align-center':
-            // Center text using spaces (basic text centering)
-            const lines2 = selectedText.split('\n');
-            formattedText = lines2.map(line => {
-              const trimmed = line.trim();
-              if (trimmed.length === 0) return trimmed;
-              const padding = Math.max(0, Math.floor((60 - trimmed.length) / 2));
-              return ' '.repeat(padding) + trimmed;
-            }).join('\n');
-            break;
-          case 'align-right':
-            // Right align text using spaces
-            const lines3 = selectedText.split('\n');
-            formattedText = lines3.map(line => {
-              const trimmed = line.trim();
-              if (trimmed.length === 0) return trimmed;
-              const padding = Math.max(0, 60 - trimmed.length);
-              return ' '.repeat(padding) + trimmed;
-            }).join('\n');
-            break;
-          case 'justify':
-            // For justify, just clean up the text (textarea can't do real justify)
-            const lines4 = selectedText.split('\n');
-            formattedText = lines4.map(line => line.trim()).join('\n');
-            break;
-          case 'bullet-list':
-            const bulletItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
-            formattedText = bulletItems.map(item => `• ${item}`).join('\n');
-            break;
-          case 'numbered-list':
-            const numberedItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
-            formattedText = numberedItems.map((item, index) => `${index + 1}. ${item}`).join('\n');
-            break;
-          case 'indent':
-            const indentLines = selectedText.split('\n');
-            formattedText = indentLines.map(line => `    ${line}`).join('\n');
-            break;
-          case 'outdent':
-            const outdentLines = selectedText.split('\n');
-            formattedText = outdentLines.map(line => line.replace(/^    /, '')).join('\n');
-            break;
-          case 'uppercase':
-            formattedText = selectedText.toUpperCase();
-            break;
-          case 'lowercase':
-            formattedText = selectedText.toLowerCase();
-            break;
-          case 'title-case':
-            formattedText = selectedText.replace(/\w\S*/g, (txt) => 
-              txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-            );
-            break;
-          case 'clear-formatting':
-            // Remove common formatting markers
-            formattedText = selectedText
-              .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
-              .replace(/\*(.*?)\*/g, '$1') // Remove italic
-              .replace(/_(.*?)_/g, '$1') // Remove underline
-              .replace(/#{1,6}\s/g, '') // Remove headings
-              .replace(/^ +/gm, '') // Remove leading spaces (alignment)
-              .replace(/^    /gm, '') // Remove indentation
-              .replace(/^• /gm, '') // Remove bullet points
-              .replace(/^\d+\.\s/gm, ''); // Remove numbered lists
-            break;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    
+    // If no text is selected for certain operations, return early
+    if (!selectedText && !['align-left', 'align-center', 'align-right', 'justify', 'clear-formatting'].includes(format)) {
+      return;
+    }
+    
+    let formattedText = selectedText;
+    let newContent = content;
+    
+    switch (format) {
+      case 'bold':
+        // Toggle bold state and apply visual styling
+        setIsBold(!isBold);
+        // For markdown preview, we can still add the markers
+        formattedText = `**${selectedText}**`;
+        break;
+      case 'italic':
+        // Toggle italic state and apply visual styling
+        setIsItalic(!isItalic);
+        formattedText = `*${selectedText}*`;
+        break;
+      case 'underline':
+        // Toggle underline state and apply visual styling
+        setIsUnderline(!isUnderline);
+        formattedText = `_${selectedText}_`;
+        break;
+      case 'heading1':
+        const prefix1 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+        formattedText = `${prefix1}# ${selectedText}`;
+        break;
+      case 'heading2':
+        const prefix2 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+        formattedText = `${prefix2}## ${selectedText}`;
+        break;
+      case 'heading3':
+        const prefix3 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+        formattedText = `${prefix3}### ${selectedText}`;
+        break;
+      case 'align-left':
+        // For left alignment, remove any leading spaces
+        if (selectedText) {
+          const lines = selectedText.split('\n');
+          formattedText = lines.map(line => line.trimStart()).join('\n');
         }
+        break;
+      case 'align-center':
+        // Center text using spaces
+        if (selectedText) {
+          const lines = selectedText.split('\n');
+          formattedText = lines.map(line => {
+            const trimmed = line.trim();
+            if (trimmed.length === 0) return trimmed;
+            const padding = Math.max(0, Math.floor((60 - trimmed.length) / 2));
+            return ' '.repeat(padding) + trimmed;
+          }).join('\n');
+        }
+        break;
+      case 'align-right':
+        // Right align text using spaces
+        if (selectedText) {
+          const lines = selectedText.split('\n');
+          formattedText = lines.map(line => {
+            const trimmed = line.trim();
+            if (trimmed.length === 0) return trimmed;
+            const padding = Math.max(0, 60 - trimmed.length);
+            return ' '.repeat(padding) + trimmed;
+          }).join('\n');
+        }
+        break;
+      case 'justify':
+        // For justify in textarea, just clean up spacing
+        if (selectedText) {
+          const lines = selectedText.split('\n');
+          formattedText = lines.map(line => line.trim()).join('\n');
+        }
+        break;
+      case 'bullet-list':
+        const bulletItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
+        formattedText = bulletItems.map(item => `• ${item}`).join('\n');
+        break;
+      case 'numbered-list':
+        const numberedItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
+        formattedText = numberedItems.map((item, index) => `${index + 1}. ${item}`).join('\n');
+        break;
+      case 'indent':
+        const indentLines = selectedText.split('\n');
+        formattedText = indentLines.map(line => `    ${line}`).join('\n');
+        break;
+      case 'outdent':
+        const outdentLines = selectedText.split('\n');
+        formattedText = outdentLines.map(line => line.replace(/^    /, '')).join('\n');
+        break;
+      case 'uppercase':
+        formattedText = selectedText.toUpperCase();
+        break;
+      case 'lowercase':
+        formattedText = selectedText.toLowerCase();
+        break;
+      case 'title-case':
+        formattedText = selectedText.replace(/\w\S*/g, (txt) => 
+          txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        );
+        break;
+      case 'clear-formatting':
+        // Remove all formatting and reset styles
+        setIsBold(false);
+        setIsItalic(false);
+        setIsUnderline(false);
         
-        const newContent = content.substring(0, start) + formattedText + content.substring(end);
-        setContent(newContent);
-        
-        // Update cursor position after formatting
-        setTimeout(() => {
-          textarea.focus();
-          textarea.setSelectionRange(start + formattedText.length, start + formattedText.length);
-        }, 0);
-      }
+        if (selectedText) {
+          formattedText = selectedText
+            .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+            .replace(/\*(.*?)\*/g, '$1') // Remove italic
+            .replace(/_(.*?)_/g, '$1') // Remove underline
+            .replace(/#{1,6}\s/g, '') // Remove headings
+            .replace(/^ +/gm, '') // Remove leading spaces (alignment)
+            .replace(/^    /gm, '') // Remove indentation
+            .replace(/^• /gm, '') // Remove bullet points
+            .replace(/^\d+\.\s/gm, ''); // Remove numbered lists
+        }
+        break;
+      default:
+        return;
+    }
+    
+    // Update content only if we have selected text or for alignment operations
+    if (selectedText || ['align-left', 'align-center', 'align-right', 'justify', 'clear-formatting'].includes(format)) {
+      newContent = content.substring(0, start) + formattedText + content.substring(end);
+      setContent(newContent);
+      
+      // Update cursor position after formatting
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(start + formattedText.length, start + formattedText.length);
+        }
+      }, 0);
     }
   };
 
