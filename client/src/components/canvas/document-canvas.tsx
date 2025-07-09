@@ -176,6 +176,16 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   };
 
   const handleDownloadEditable = () => {
+    // Check if we're in a browser environment
+    if (typeof document === 'undefined' || typeof window === 'undefined') {
+      toast({
+        title: "Error",
+        description: "Download not available in this environment",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const docContent = `${title}\n\n${content}`;
     const blob = new Blob([docContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
