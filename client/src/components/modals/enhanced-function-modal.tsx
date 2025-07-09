@@ -74,11 +74,17 @@ export function EnhancedFunctionModal({
   const generateDocumentMutation = useMutation({
     mutationFn: async (documentType: string) => {
       try {
-        const response = await apiRequest('POST', `/api/cases/${caseId}/documents/generate`, {
+        console.log('Generating document with type:', documentType);
+        
+        const requestBody = {
           documentType: documentType,
-          caseContext: currentCase?.description || '',
+          caseContext: currentCase?.description || currentCase?.title || 'Legal case document',
           specificInstructions: '',
-        });
+        };
+
+        console.log('Request body:', requestBody);
+
+        const response = await apiRequest('POST', `/api/cases/${caseId}/documents/generate`, requestBody);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -86,6 +92,7 @@ export function EnhancedFunctionModal({
         }
 
         const data = await response.json();
+        console.log('Generated document:', data);
         return data;
       } catch (error: any) {
         console.error("Document generation error:", error);

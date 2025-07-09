@@ -134,18 +134,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cases/:id/documents/generate", async (req, res) => {
     try {
       const caseId = parseInt(req.params.id);
-      const { type, specificInstructions } = req.body;
+      const { documentType, caseContext, specificInstructions } = req.body;
+
+      console.log('Document generation request:', { documentType, caseContext, specificInstructions });
 
       const case_ = await storage.getCase(caseId);
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
       }
 
-      const caseContext = `${case_.title} - ${case_.description}`;
       const documentResponse = await openaiService.generateDocument({
-        type,
-        caseContext,
-        specificInstructions,
+        type: documentType || 'General Document',
+        caseContext: caseContext || '',
+        specificInstructions: specificInstructions || '',
       });
 
       const document = await storage.createDocument({

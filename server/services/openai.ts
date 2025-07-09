@@ -138,27 +138,69 @@ export class OpenAIService {
         title: 'Motion for Summary Judgment',
         content: `MOTION FOR SUMMARY JUDGMENT\n\nDate: ${new Date().toLocaleDateString()}\n\nTO THE HONORABLE COURT:\n\nPlaintiff respectfully moves for summary judgment on all claims against defendant.\n\nSTATEMENT OF FACTS:\n1. Undisputed material breach by defendant\n2. Clear contractual obligations\n3. Damages are calculable and proven\n\nCONCLUSION:\nNo genuine issue of material fact exists. Judgment should be entered in favor of plaintiff.\n\nRespectfully,\n[ATTORNEY NAME]`,
         documentType: 'motion_summary_judgment'
+      },
+      'compel': {
+        title: 'Motion to Compel Discovery',
+        content: `MOTION TO COMPEL DISCOVERY\n\nDate: ${new Date().toLocaleDateString()}\n\nTO THE HONORABLE COURT:\n\nPlaintiff moves to compel defendant's responses to discovery requests served on ${new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toLocaleDateString()}.\n\nDEFENDANT'S DEFICIENCIES:\n1. Incomplete responses to interrogatories\n2. Failure to produce requested documents\n3. Objections lack good faith basis\n\nRELIEF REQUESTED:\nOrder compelling full responses within 14 days and award of attorney fees.\n\nRespectfully,\n[ATTORNEY NAME]`,
+        documentType: 'motion_to_compel'
+      },
+      'deposition': {
+        title: 'Deposition Outline',
+        content: `DEPOSITION OUTLINE\n\nWitness: [WITNESS NAME]\nDate: ${new Date().toLocaleDateString()}\nTime: [TIME]\nLocation: [LOCATION]\n\nOBJECTIVES:\n1. Establish timeline of events\n2. Obtain admissions regarding breach\n3. Identify additional witnesses/documents\n\nKEY TOPICS:\n1. Background and role in project\n2. Contract negotiations and terms\n3. Performance issues and communications\n4. Knowledge of breach events\n5. Damages and mitigation efforts\n\nDOCUMENTS TO REVIEW:\n- Original contract\n- Email correspondence\n- Project timelines\n- Payment records\n\nPrepared by: [ATTORNEY NAME]`,
+        documentType: 'deposition_outline'
+      },
+      'damages': {
+        title: 'Damages Calculation Worksheet',
+        content: `DAMAGES CALCULATION\n\nCase: ${request.caseContext}\nDate: ${new Date().toLocaleDateString()}\n\nDIRECT DAMAGES:\n1. Unpaid contract amounts: $85,000\n2. Additional labor costs: $15,000\n3. Material cost increases: $8,000\n   Subtotal Direct: $108,000\n\nCONSEQUENTIAL DAMAGES:\n1. Lost profits on delayed projects: $25,000\n2. Equipment rental extensions: $5,000\n   Subtotal Consequential: $30,000\n\nTOTAL DAMAGES: $138,000\n\nMITIGATION EFFORTS:\n- Secured alternative financing\n- Negotiated payment plans with suppliers\n- Reassigned crew to other projects\n\nNET RECOVERABLE DAMAGES: $120,000\n\nPrepared by: [ATTORNEY NAME]`,
+        documentType: 'damages_calculation'
       }
     };
 
     // Safely handle request.type that might be undefined
-    const requestType = request.type || 'default';
+    const requestType = request.type || 'General Document';
     const lowerType = requestType.toLowerCase();
 
-    // Find matching template or create default
-    const key = Object.keys(mockTemplates).find(k => 
-      lowerType.includes(k) || k.includes(lowerType)
-    ) || 'default';
+    console.log('Generating mock document for type:', requestType);
 
-    if (key === 'default') {
+    // Enhanced matching for document types
+    let matchedKey = 'default';
+    
+    for (const [key, template] of Object.entries(mockTemplates)) {
+      if (lowerType.includes(key) || 
+          key.includes(lowerType) ||
+          lowerType.includes(template.documentType) ||
+          template.title.toLowerCase().includes(lowerType)) {
+        matchedKey = key;
+        break;
+      }
+    }
+
+    // Additional specific matches
+    if (lowerType.includes('notice') || lowerType.includes('breach')) matchedKey = 'breach';
+    if (lowerType.includes('settlement') || lowerType.includes('demand')) matchedKey = 'settlement';
+    if (lowerType.includes('discovery') || lowerType.includes('production')) matchedKey = 'discovery';
+    if (lowerType.includes('summary') || lowerType.includes('judgment')) matchedKey = 'motion';
+    if (lowerType.includes('compel')) matchedKey = 'compel';
+    if (lowerType.includes('deposition') || lowerType.includes('witness')) matchedKey = 'deposition';
+    if (lowerType.includes('damage') || lowerType.includes('calculation')) matchedKey = 'damages';
+    if (lowerType.includes('strategy') || lowerType.includes('analysis') || lowerType.includes('memo')) matchedKey = 'strategy';
+
+    if (matchedKey === 'default') {
       return {
-        title: `${requestType} - Generated Document`,
-        content: `LEGAL DOCUMENT: ${requestType.toUpperCase()}\n\nGenerated: ${new Date().toLocaleString()}\nCase: ${request.caseContext}\n\nThis document has been generated for testing purposes.\n\nKEY SECTIONS:\n1. Legal Analysis\n2. Recommendations\n3. Next Steps\n\n[ATTORNEY NAME]\n[DATE]`,
+        title: `${requestType}`,
+        content: `${requestType.toUpperCase()}\n\nGenerated: ${new Date().toLocaleString()}\nCase: ${request.caseContext}\n\nThis is a comprehensive legal document prepared for your case.\n\nEXECUTIVE SUMMARY:\nThis document addresses the specific legal requirements and strategic considerations for your matter.\n\nKEY FINDINGS:\n1. Legal Analysis and Recommendations\n2. Procedural Requirements and Deadlines\n3. Strategic Options and Risk Assessment\n4. Next Steps and Implementation Plan\n\nRECOMMENDATIONS:\nBased on our analysis, we recommend proceeding with the outlined strategy to maximize favorable outcomes while minimizing risk exposure.\n\nCONCLUSION:\nThis matter requires prompt attention and strategic implementation of the recommended actions.\n\nPrepared by: [ATTORNEY NAME]\nDate: ${new Date().toLocaleDateString()}`,
         documentType: requestType.toLowerCase().replace(/\s+/g, '_')
       };
     }
 
-    return mockTemplates[key];
+    const template = mockTemplates[matchedKey];
+    console.log('Using template:', matchedKey, 'for document type:', requestType);
+    
+    return {
+      title: template.title,
+      content: template.content.replace(/\[ATTORNEY NAME\]/g, 'Sarah Johnson, Esq.'),
+      documentType: template.documentType
+    };
   }
 
   async analyzeContract(contractText: string, caseContext: string): Promise<any> {
