@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -13,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   FileText, Upload, FolderPlus, Calendar, Scale, Brain, FileCheck, BarChart3, Users, Gavel, 
-  History, Search, Lightbulb, FolderOpen, UserCheck, CloudUpload, AlertTriangle, AlertCircle, Info 
+  History, Search, Lightbulb, FolderOpen, UserCheck, CloudUpload, AlertTriangle, AlertCircle, Info,
+  Clock, TrendingUp, DollarSign, CheckCircle, Target
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
@@ -83,9 +83,14 @@ export function EnhancedFunctionModal({
   ]);
 
   const { data: currentCase } = useQuery({
-    queryKey: ['/api/cases', caseId],
-    queryFn: () => apiRequest('GET', `/api/cases/${caseId}`).then(res => res.json()),
-    enabled: isOpen && !!caseId,
+    queryKey: [`/api/cases/${caseId}`],
+    enabled: !!caseId,
+  });
+
+  const { data: caseAnalytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: [`/api/cases/${caseId}/analytics`],
+    enabled: !!caseId && functionId === 'case-analytics',
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: caseDocuments = [] } = useQuery({
@@ -105,12 +110,12 @@ export function EnhancedFunctionModal({
         method: 'POST',
         body: formData,
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to upload file');
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
@@ -120,7 +125,7 @@ export function EnhancedFunctionModal({
         title: "Files uploaded successfully!",
         description: `${data.files?.length || 0} file(s) uploaded and processed.`,
       });
-      
+
       // Refresh documents list
       queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
     },
@@ -138,7 +143,7 @@ export function EnhancedFunctionModal({
     mutationFn: async (documentType: string) => {
       try {
         console.log('Generating document with type:', documentType);
-        
+
         const requestBody = {
           documentType: documentType,
           caseContext: currentCase?.description || currentCase?.title || 'Legal case document',
@@ -206,7 +211,7 @@ export function EnhancedFunctionModal({
         });
         return;
       }
-      
+
       if (file.size > maxSize) {
         toast({
           variant: "destructive",
@@ -219,13 +224,13 @@ export function EnhancedFunctionModal({
 
     setIsUploading(true);
     const formData = new FormData();
-    
+
     Array.from(files).forEach((file) => {
       formData.append('files', file);
     });
-    
+
     formData.append('caseId', caseId.toString());
-    
+
     uploadFileMutation.mutate(formData);
   };
 
@@ -250,7 +255,7 @@ export function EnhancedFunctionModal({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       handleFileUpload(files);
@@ -267,13 +272,13 @@ export function EnhancedFunctionModal({
   // Document management handlers
   const getSortedDocuments = () => {
     if (!caseDocuments) return [];
-    
+
     let filtered = caseDocuments;
     if (selectedFolder) {
       // Filter by folder if selected
       filtered = caseDocuments.filter((doc: any) => doc.folderId === selectedFolder);
     }
-    
+
     return filtered.sort((a: any, b: any) => {
       switch (sortBy) {
         case 'name':
@@ -299,12 +304,12 @@ export function EnhancedFunctionModal({
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
-    
+
     try {
       const response = await apiRequest('POST', `/api/cases/${caseId}/folders`, {
         name: newFolderName.trim()
       });
-      
+
       if (response.ok) {
         const newFolder = await response.json();
         setDocumentFolders(prev => [...prev, { 
@@ -366,9 +371,9 @@ export function EnhancedFunctionModal({
 
   const handleMoveToFolder = async (folderId: string) => {
     if (!documentToMove) return;
-    
+
     const targetFolder = documentFolders.find(f => f.id === folderId);
-    
+
     try {
       const response = await apiRequest('PUT', `/api/documents/${documentToMove}`, {
         folderId: folderId
@@ -446,7 +451,7 @@ export function EnhancedFunctionModal({
 
   const handleBulkMoveToFolder = async (folderId: string) => {
     const targetFolder = documentFolders.find(f => f.id === folderId);
-    
+
     try {
       const response = await apiRequest('PUT', `/api/documents/bulk-move`, {
         documentIds: selectedDocumentsForManagement,
@@ -721,7 +726,7 @@ export function EnhancedFunctionModal({
                     onChange={handleFileInputChange}
                     className="hidden"
                   />
-                  
+
                   {isUploading ? (
                     <>
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -1132,7 +1137,7 @@ export function EnhancedFunctionModal({
                   </Button>
                 )}
               </div>
-              
+
               {caseDocuments && caseDocuments.length > 0 ? (
                 <div className="max-h-60 overflow-y-auto space-y-2">
                   {getSortedDocuments().map((doc: any, index: number) => (
@@ -1263,71 +1268,77 @@ export function EnhancedFunctionModal({
           </div>
         );
 
-      case 'case-analytics':
-        return (
-          <div className="space-y-4">
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <h3 className="font-medium text-orange-900 mb-2">Case Analytics for {currentCase?.title}</h3>
-              <p className="text-sm text-orange-700">
-                Comprehensive metrics, progress tracking, and financial analysis.
-              </p>
-            </div>
+      
+{/* Enhanced Case Analytics */}
+      
+       
+          
+        
+          
+            
+              
+                
+                  {caseAnalytics.timeline.phases.map((phase, index) => (
+                    {""}
+                      
+                        
+                          
+                            
+                              
+                                
+                                
+                          
+                          
+                           
+                              
+                                
+                                
+                           
+                        
+                      
+                  ))}
+                
+              
+        
+      
+/*End Analytics Section*/}
+      
+       
+          
+            
+              
+                
+                  {caseAnalytics.risks.map((risk, index) => (
+                    {""}
+                      
+                        
+                          
+                            
+                              {""}
+                          
+                          
+                            
+                              
+                                {risk.description}
+                          
+                        
+                      
+                  ))}
+                
+              
+        
+     
+      
+        
+          Generate Analytics Report
+        
 
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="border-gray-200">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-legal-blue">67%</div>
-                  <div className="text-sm text-gray-600">Case Progress</div>
-                </CardContent>
-              </Card>
-              <Card className="border-gray-200">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">$125K</div>
-                  <div className="text-sm text-gray-600">Potential Recovery</div>
-                </CardContent>
-              </Card>
-              <Card className="border-gray-200">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-red-600">45</div>
-                  <div className="text-sm text-gray-600">Days Active</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="border-gray-200">
-              <CardContent className="p-4">
-                <div className="font-medium mb-3">Case Timeline Progress</div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Discovery Phase</span>
-                    <span className="text-green-600">Complete</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '100%' }} />
-                  </div>
-                </div>
-                <div className="space-y-2 mt-3">
-                  <div className="flex justify-between text-sm">
-                    <span>Settlement Negotiations</span>
-                    <span className="text-blue-600">In Progress</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '60%' }} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Button
-              onClick={() => handleGenerateDocument('Comprehensive Case Analytics Report')}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-              disabled={generateDocumentMutation.isPending}
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Detailed Analytics Report'}
-            </Button>
-          </div>
-        );
+        
+          Export Dashboard
+        
+      
+    
+   
 
       case 'deposition-prep':
         return (
@@ -1576,7 +1587,7 @@ export function EnhancedFunctionModal({
                 onChange={handleFileInputChange}
                 className="hidden"
               />
-              
+
               {isUploading ? (
                 <>
                   <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -1723,7 +1734,7 @@ export function EnhancedFunctionModal({
                     <Badge variant="destructive">URGENT</Badge>
                   </div>
                   <div className="font-medium text-red-900">Discovery Deadline</div>
-                  <div className="text-sm text-red-700">March 30, 2024 - All discovery must be completed</div>
+                  <div className="text-sm text-red-700">March 30, 2024- All discovery must be completed</div>
                   <div className="text-xs text-red-600 mt-1">7 days remaining</div>
                 </CardContent>
               </Card>
