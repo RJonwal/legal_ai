@@ -1,12 +1,13 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Phone, MapPin, Calendar, Briefcase } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Briefcase, Edit } from "lucide-react";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ interface UserProfileModalProps {
 }
 
 export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
+  const [, setLocation] = useLocation();
+  
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
   });
@@ -23,13 +26,28 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
     enabled: isOpen,
   });
 
+  const handleEditProfile = () => {
+    onClose();
+    setLocation('/profile');
+  };
+
+  const getInitials = (firstName?: string, lastName?: string, username?: string) => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (username) {
+      return username.slice(0, 2).toUpperCase();
+    }
+    return "U";
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>User Profile</DialogTitle>
           <DialogDescription>
-            View and manage your profile information
+            View your profile information
           </DialogDescription>
         </DialogHeader>
         
@@ -37,17 +55,22 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
           {/* Profile Header */}
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-legal-blue rounded-full flex items-center justify-center">
-              <User className="h-8 w-8 text-white" />
+              <span className="text-white text-lg font-semibold">
+                {getInitials(profile?.firstName, profile?.lastName, user?.username)}
+              </span>
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-900">
-                {profile?.fullName || "Sarah Johnson"}
+                {profile?.firstName && profile?.lastName 
+                  ? `${profile.firstName} ${profile.lastName}`
+                  : user?.username || "User"
+                }
               </h3>
               <p className="text-gray-600">
-                {profile?.title || "Senior Attorney"}
+                {profile?.title || "Attorney"}
               </p>
               <Badge variant="outline" className="mt-1">
-                {profile?.department || "Legal Department"}
+                {profile?.firm || "Legal Department"}
               </Badge>
             </div>
           </div>
@@ -64,15 +87,15 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center space-x-2">
                   <Mail className="h-3 w-3 text-gray-400" />
-                  <span>{profile?.email || "sarah.johnson@lawfirm.com"}</span>
+                  <span>{profile?.email || "Not specified"}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="h-3 w-3 text-gray-400" />
-                  <span>{profile?.phone || "(555) 123-4567"}</span>
+                  <span>{profile?.phone || "Not specified"}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-3 w-3 text-gray-400" />
-                  <span>{profile?.office || "Office 425, Floor 4"}</span>
+                  <span>{profile?.office || "Not specified"}</span>
                 </div>
               </div>
             </CardContent>
@@ -88,15 +111,15 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Bar Number:</span>
-                  <span>{profile?.barNumber || "NY-123456"}</span>
+                  <span>{profile?.barNumber || "Not specified"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Years of Experience:</span>
-                  <span>{profile?.experience || "8 years"}</span>
+                  <span className="text-gray-600">Experience:</span>
+                  <span>{profile?.experience || "Not specified"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Specialization:</span>
-                  <span>{profile?.specialization || "Corporate Law"}</span>
+                  <span>{profile?.specialization || "Not specified"}</span>
                 </div>
               </div>
             </CardContent>
@@ -112,11 +135,11 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Username:</span>
-                  <span>{user?.username || "sarah.johnson"}</span>
+                  <span>{user?.username || "Not specified"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Member Since:</span>
-                  <span>{profile?.memberSince || "January 2020"}</span>
+                  <span>{profile?.memberSince || "Not specified"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Account Type:</span>
@@ -126,16 +149,11 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-2">
-            <Button variant="outline" className="flex-1">
+          {/* Action Button */}
+          <div className="flex justify-end">
+            <Button onClick={handleEditProfile} className="flex items-center gap-2">
+              <Edit className="h-4 w-4" />
               Edit Profile
-            </Button>
-            <Button variant="outline" className="flex-1">
-              Change Password
-            </Button>
-            <Button variant="outline" className="flex-1">
-              Settings
             </Button>
           </div>
         </div>
