@@ -220,28 +220,36 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             formattedText = `*${selectedText}*`;
             break;
           case 'underline':
-            formattedText = `<u>${selectedText}</u>`;
+            formattedText = `_${selectedText}_`;
             break;
           case 'heading1':
-            formattedText = `# ${selectedText}`;
+            // Add heading on new line if not at start
+            const prefix1 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+            formattedText = `${prefix1}# ${selectedText}`;
             break;
           case 'heading2':
-            formattedText = `## ${selectedText}`;
+            const prefix2 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+            formattedText = `${prefix2}## ${selectedText}`;
             break;
           case 'heading3':
-            formattedText = `### ${selectedText}`;
+            const prefix3 = start > 0 && content[start - 1] !== '\n' ? '\n' : '';
+            formattedText = `${prefix3}### ${selectedText}`;
             break;
           case 'align-left':
-            formattedText = `<div style="text-align: left;">${selectedText}</div>`;
+            const lines1 = selectedText.split('\n');
+            formattedText = lines1.map(line => `[LEFT] ${line}`).join('\n');
             break;
           case 'align-center':
-            formattedText = `<div style="text-align: center;">${selectedText}</div>`;
+            const lines2 = selectedText.split('\n');
+            formattedText = lines2.map(line => `[CENTER] ${line}`).join('\n');
             break;
           case 'align-right':
-            formattedText = `<div style="text-align: right;">${selectedText}</div>`;
+            const lines3 = selectedText.split('\n');
+            formattedText = lines3.map(line => `[RIGHT] ${line}`).join('\n');
             break;
           case 'justify':
-            formattedText = `<div style="text-align: justify;">${selectedText}</div>`;
+            const lines4 = selectedText.split('\n');
+            formattedText = lines4.map(line => `[JUSTIFY] ${line}`).join('\n');
             break;
           case 'bullet-list':
             const bulletItems = selectedText.split('\n').map(line => line.trim()).filter(line => line);
@@ -275,9 +283,15 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             formattedText = selectedText
               .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
               .replace(/\*(.*?)\*/g, '$1') // Remove italic
-              .replace(/<u>(.*?)<\/u>/g, '$1') // Remove underline
+              .replace(/_(.*?)_/g, '$1') // Remove underline
               .replace(/#{1,6}\s/g, '') // Remove headings
-              .replace(/<div[^>]*>(.*?)<\/div>/g, '$1'); // Remove div tags
+              .replace(/\[LEFT\]\s*/g, '') // Remove left align
+              .replace(/\[CENTER\]\s*/g, '') // Remove center align
+              .replace(/\[RIGHT\]\s*/g, '') // Remove right align
+              .replace(/\[JUSTIFY\]\s*/g, '') // Remove justify
+              .replace(/^    /gm, '') // Remove indentation
+              .replace(/^• /gm, '') // Remove bullet points
+              .replace(/^\d+\.\s/gm, ''); // Remove numbered lists
             break;
         }
         
