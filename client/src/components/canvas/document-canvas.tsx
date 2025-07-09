@@ -266,9 +266,9 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
 
   if (!document && !generateDocumentMutation.isPending) {
     return (
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="h-full bg-gray-50 p-4 flex flex-col">
         {/* Material Design Floating Card */}
-        <div className="absolute top-6 right-6 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 pointer-events-auto transform transition-all duration-300 hover:shadow-3xl">
+        <div className="flex-shrink-0 bg-white rounded-xl shadow-2xl border border-gray-200 transform transition-all duration-300 hover:shadow-3xl">
           <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
             <h3 className="text-base font-semibold text-gray-900 flex items-center">
               <FileText className="h-4 w-4 mr-2 text-blue-600" />
@@ -299,9 +299,9 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   }
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div className="h-full bg-gray-50 p-4 flex flex-col">
       {/* Material Design Floating Document Card */}
-      <div className="absolute top-4 right-4 bottom-4 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 pointer-events-auto overflow-hidden transform transition-all duration-300 hover:shadow-3xl">
+      <div className="flex-1 flex flex-col bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden transform transition-all duration-300 hover:shadow-3xl">
         {/* Canvas Header */}
         <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
         <div className="flex items-center justify-between">

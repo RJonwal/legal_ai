@@ -11,8 +11,8 @@ export default function LegalAssistant() {
   const [currentCaseId, setCurrentCaseId] = useState<number>(1);
   const [currentDocument, setCurrentDocument] = useState<any>(null);
   const [modalFunction, setModalFunction] = useState<string | null>(null);
-  const [chatSize, setChatSize] = useState<number>(60);
-  const [canvasSize, setCanvasSize] = useState<number>(40);
+  const [chatSize, setChatSize] = useState<number>(75);
+  const [canvasSize, setCanvasSize] = useState<number>(25);
 
   // Handle URL parameters for case selection
   useEffect(() => {
@@ -42,16 +42,16 @@ export default function LegalAssistant() {
   const handleDocumentGenerate = (document: any) => {
     setCurrentDocument(document);
     // Auto-expand document canvas when document is generated
-    setChatSize(35);
-    setCanvasSize(65);
+    setChatSize(40);
+    setCanvasSize(60);
   };
 
   // Auto-adjust panel sizes based on document state
   useEffect(() => {
     if (!currentDocument) {
       // When no document, give more space to chat
-      setChatSize(70);
-      setCanvasSize(30);
+      setChatSize(75);
+      setCanvasSize(25);
     }
   }, [currentDocument]);
 
