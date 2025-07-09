@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -22,7 +23,12 @@ import {
   AlertTriangle,
   AlertCircle,
   Info,
-  ChevronDown
+  ChevronDown,
+  Bold,
+  Italic,
+  Underline,
+  Type,
+  Palette
 } from "lucide-react";
 
 interface DocumentCanvasProps {
@@ -37,6 +43,11 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   const [content, setContent] = useState(document?.content || "");
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Times New Roman");
+  const [fontSize, setFontSize] = useState(12);
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [textColor, setTextColor] = useState("#000000");
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const documentRef = useRef<HTMLDivElement>(null);
@@ -48,7 +59,17 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     "Garamond",
     "Book Antiqua",
     "Georgia",
-    "Palatino Linotype"
+    "Palatino Linotype",
+    "Cambria",
+    "Charter",
+    "Minion Pro",
+    "Adobe Caslon Pro",
+    "Baskerville",
+    "Crimson Text",
+    "Source Serif Pro",
+    "Libre Baskerville",
+    "Playfair Display",
+    "Cormorant Garamond"
   ];
 
   useEffect(() => {
@@ -175,6 +196,48 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     }
   };
 
+  const applyTextFormat = (format: string) => {
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = content.substring(start, end);
+      
+      if (selectedText) {
+        let formattedText = selectedText;
+        
+        switch (format) {
+          case 'bold':
+            formattedText = `**${selectedText}**`;
+            break;
+          case 'italic':
+            formattedText = `*${selectedText}*`;
+            break;
+          case 'underline':
+            formattedText = `<u>${selectedText}</u>`;
+            break;
+          case 'heading':
+            formattedText = `## ${selectedText}`;
+            break;
+          case 'uppercase':
+            formattedText = selectedText.toUpperCase();
+            break;
+          case 'lowercase':
+            formattedText = selectedText.toLowerCase();
+            break;
+        }
+        
+        const newContent = content.substring(0, start) + formattedText + content.substring(end);
+        setContent(newContent);
+      }
+    }
+  };
+
+  const changeFontSize = (increase: boolean) => {
+    const newSize = increase ? Math.min(fontSize + 2, 24) : Math.max(fontSize - 2, 8);
+    setFontSize(newSize);
+  };
+
   const handleDownloadEditable = () => {
     // Check if we're in a browser environment
     if (typeof document === 'undefined' || typeof window === 'undefined') {
@@ -266,7 +329,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
 
   if (!document && !generateDocumentMutation.isPending) {
     return (
-      <div className="h-full bg-gray-50 p-1 flex flex-col">
+      <div className="h-full bg-gray-50 pt-3 px-1 pb-1 flex flex-col">
         {/* Material Design Floating Card */}
         <div className="flex-shrink-0 bg-white rounded-xl shadow-2xl border border-gray-200 transform transition-all duration-300 hover:shadow-3xl">
           <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -299,7 +362,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   }
 
   return (
-    <div className="h-full bg-gray-50 p-1 flex flex-col">
+    <div className="h-full bg-gray-50 pt-3 px-1 pb-1 flex flex-col">
       {/* Material Design Floating Document Card */}
       <div className="flex-1 flex flex-col bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden transform transition-all duration-300 hover:shadow-3xl">
         {/* Canvas Header */}
@@ -329,6 +392,20 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
                 {courtFonts.map((font) => (
                   <SelectItem key={font} value={font}>
                     <span style={{ fontFamily: font }} className="text-xs">{font}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Font Size Selector */}
+            <Select value={fontSize.toString()} onValueChange={(value) => setFontSize(parseInt(value))}>
+              <SelectTrigger className="w-[60px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24].map((size) => (
+                  <SelectItem key={size} value={size.toString()}>
+                    {size}pt
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -374,12 +451,59 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           </div>
         ) : isEditing ? (
           <div className="space-y-2">
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[300px] resize-none border-gray-300 focus:border-legal-blue focus:ring-legal-blue text-xs"
-              placeholder="Document content..."
-            />
+            <ContextMenu>
+              <ContextMenuTrigger>
+                <Textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="min-h-[300px] resize-none border-gray-300 focus:border-legal-blue focus:ring-legal-blue text-xs"
+                  placeholder="Document content..."
+                  style={{
+                    fontFamily: selectedFont,
+                    fontSize: `${fontSize}pt`,
+                    fontWeight: isBold ? 'bold' : 'normal',
+                    fontStyle: isItalic ? 'italic' : 'normal',
+                    textDecoration: isUnderline ? 'underline' : 'none',
+                    color: textColor
+                  }}
+                />
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-48">
+                <ContextMenuItem onClick={() => applyTextFormat('bold')}>
+                  <Bold className="h-4 w-4 mr-2" />
+                  Bold
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('italic')}>
+                  <Italic className="h-4 w-4 mr-2" />
+                  Italic
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('underline')}>
+                  <Underline className="h-4 w-4 mr-2" />
+                  Underline
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => applyTextFormat('heading')}>
+                  <Type className="h-4 w-4 mr-2" />
+                  Make Heading
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => applyTextFormat('uppercase')}>
+                  UPPERCASE
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => applyTextFormat('lowercase')}>
+                  lowercase
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => changeFontSize(true)}>
+                  <Type className="h-4 w-4 mr-2" />
+                  Increase Font Size
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => changeFontSize(false)}>
+                  <Type className="h-4 w-4 mr-2" />
+                  Decrease Font Size
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           </div>
         ) : (
           <div 
@@ -387,9 +511,9 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             className="max-w-none prose prose-xs"
             style={{ 
               fontFamily: selectedFont,
-              fontSize: '10pt',
+              fontSize: `${fontSize}pt`,
               lineHeight: '1.4',
-              color: '#000000',
+              color: textColor,
               padding: '0.5rem',
               backgroundColor: '#ffffff'
             }}
