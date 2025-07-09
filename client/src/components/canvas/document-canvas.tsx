@@ -266,7 +266,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
 
   if (!document && !generateDocumentMutation.isPending) {
     return (
-      <div className="h-full bg-gray-50 p-4 flex flex-col">
+      <div className="h-full bg-gray-50 p-1 flex flex-col">
         {/* Material Design Floating Card */}
         <div className="flex-shrink-0 bg-white rounded-xl shadow-2xl border border-gray-200 transform transition-all duration-300 hover:shadow-3xl">
           <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -299,11 +299,11 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   }
 
   return (
-    <div className="h-full bg-gray-50 p-4 flex flex-col">
+    <div className="h-full bg-gray-50 p-1 flex flex-col">
       {/* Material Design Floating Document Card */}
       <div className="flex-1 flex flex-col bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden transform transition-all duration-300 hover:shadow-3xl">
         {/* Canvas Header */}
-        <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
+        <div className="p-2 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
             {isEditing ? (
@@ -364,7 +364,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       </div>
 
       {/* Document Content */}
-      <div className="flex-1 overflow-y-auto p-4 bg-white min-h-0">
+      <div className="flex-1 overflow-y-auto p-2 bg-white min-h-0">
         {generateDocumentMutation.isPending ? (
           <div className="flex items-center justify-center h-32">
             <div className="text-center">
@@ -497,7 +497,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       </div>
 
       {/* Canvas Footer */}
-      <div className="p-2 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
+      <div className="p-1 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1 text-xs text-gray-500">
             <CheckCircle className="h-3 w-3 text-green-500" />
