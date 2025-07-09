@@ -528,6 +528,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Deposition preparation analysis
+  app.post("/api/cases/:id/deposition-analysis", async (req, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const { witnessName, depositionType, keyTopics, witnessRole } = req.body;
+      
+      const case_ = await storage.getCase(caseId);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+
+      // Generate deposition analysis
+      const analysis = {
+        witness: {
+          name: witnessName,
+          type: depositionType,
+          role: witnessRole,
+          credibilityFactors: ["Direct knowledge of events", "Professional experience", "No apparent bias"],
+          riskFactors: depositionType === 'fact-witness' ? ["Memory gaps possible", "Limited document knowledge"] : ["Technical complexity", "Potential bias"]
+        },
+        preparationScore: 85,
+        estimatedDuration: depositionType === 'expert-witness' ? '6-8 hours' : '3-4 hours',
+        keyStrategies: [
+          "Focus on timeline establishment",
+          "Document authentication priority",
+          "Maintain witness comfort level",
+          "Prepare for objections"
+        ],
+        suggestedDocuments: [
+          "Deposition outline",
+          "Question bank",
+          "Document checklist",
+          "Witness preparation memo"
+        ],
+        timeline: {
+          preparation: "2-3 weeks before",
+          witnessPrep: "1 week before", 
+          finalReview: "24 hours before",
+          deposition: "Day of deposition"
+        }
+      };
+
+      res.json(analysis);
+    } catch (error) {
+      console.error("Deposition analysis error:", error);
+      res.status(500).json({ message: "Failed to generate deposition analysis" });
+    }
+  });
+
   // User profile routes
   app.get("/api/user/profile", async (req, res) => {
     try {

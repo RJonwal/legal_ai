@@ -55,7 +55,17 @@ export function EnhancedFunctionModal({
     witnessName: "",
     keyTopics: "",
     specialInstructions: "",
-    depositionType: "fact-witness"
+    depositionType: "fact-witness",
+    witnessRole: "",
+    witnessBackground: "",
+    objectives: "",
+    problemAreas: "",
+    customQuestions: "",
+    depositionDate: "",
+    location: "",
+    courtReporter: "",
+    opposingCounsel: "",
+    estimatedDuration: ""
   });
   const [courtPrepInputs, setCourtPrepInputs] = useState({
     hearingType: "",
@@ -1429,65 +1439,264 @@ case 'case-analytics':
         return (
           <div className="space-y-4">
             <div className="bg-purple-50 p-4 rounded-lg">
-              <h3 className="font-medium text-purple-900 mb-2">Interactive Deposition Preparation</h3>
+              <h3 className="font-medium text-purple-900 mb-2">Interactive Deposition Preparation for {currentCase?.title}</h3>
               <p className="text-sm text-purple-700">
-                Customize your deposition strategy with witness-specific preparation and question development.
+                Comprehensive deposition strategy with witness-specific preparation, question development, and document organization.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="witness-name">Witness Name</Label>
-                <Input
-                  id="witness-name"
-                  value={depositionInputs.witnessName}
-                  onChange={(e) => setDepositionInputs(prev => ({...prev, witnessName: e.target.value}))}
-                  placeholder="e.g., John Smith"
-                />
-              </div>
-              <div>
-                <Label htmlFor="deposition-type">Deposition Type</Label>
-                <Select value={depositionInputs.depositionType} onValueChange={(value) => setDepositionInputs(prev => ({...prev, depositionType: value}))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fact-witness">Fact Witness</SelectItem>
-                    <SelectItem value="expert-witness">Expert Witness</SelectItem>
-                    <SelectItem value="party-deposition">Party Deposition</SelectItem>
-                    <SelectItem value="corporate-representative">Corporate Representative</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <Tabs defaultValue="witness-info" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="witness-info">Witness Info</TabsTrigger>
+                <TabsTrigger value="strategy">Strategy</TabsTrigger>
+                <TabsTrigger value="questions">Questions</TabsTrigger>
+                <TabsTrigger value="logistics">Logistics</TabsTrigger>
+              </TabsList>
 
-            <div>
-              <Label htmlFor="key-topics">Key Topics & Areas of Inquiry</Label>
-              <Textarea
-                id="key-topics"
-                value={depositionInputs.keyTopics}
-                onChange={(e) => setDepositionInputs(prev => ({...prev, keyTopics: e.target.value}))}
-                placeholder="e.g., Timeline of events, decision-making process, communications with opposing party..."
-                rows={3}
-              />
-            </div>
+              <TabsContent value="witness-info" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="witness-name">Witness Name *</Label>
+                    <Input
+                      id="witness-name"
+                      value={depositionInputs.witnessName}
+                      onChange={(e) => setDepositionInputs(prev => ({...prev, witnessName: e.target.value}))}
+                      placeholder="e.g., John Smith"
+                      className="border-purple-200"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="deposition-type">Deposition Type</Label>
+                    <Select value={depositionInputs.depositionType} onValueChange={(value) => setDepositionInputs(prev => ({...prev, depositionType: value}))}>
+                      <SelectTrigger className="border-purple-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fact-witness">Fact Witness</SelectItem>
+                        <SelectItem value="expert-witness">Expert Witness</SelectItem>
+                        <SelectItem value="party-deposition">Party Deposition</SelectItem>
+                        <SelectItem value="corporate-representative">Corporate Representative (30b6)</SelectItem>
+                        <SelectItem value="treating-physician">Treating Physician</SelectItem>
+                        <SelectItem value="character-witness">Character Witness</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-            <div>
-              <Label htmlFor="special-instructions">Special Instructions & Strategy Notes</Label>
-              <Textarea
-                id="special-instructions"
-                value={depositionInputs.specialInstructions}
-                onChange={(e) => setDepositionInputs(prev => ({...prev, specialInstructions: e.target.value}))}
-                placeholder="e.g., Witness is hostile, focus on document authentication, avoid leading questions on..."
-                rows={3}
-              />
-            </div>
+                <div>
+                  <Label htmlFor="witness-role">Witness Role in Case</Label>
+                  <Input
+                    id="witness-role"
+                    value={depositionInputs.witnessRole || ''}
+                    onChange={(e) => setDepositionInputs(prev => ({...prev, witnessRole: e.target.value}))}
+                    placeholder="e.g., Project Manager, Contract Negotiator, Eyewitness"
+                    className="border-purple-200"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="witness-background">Background & Credibility Factors</Label>
+                  <Textarea
+                    id="witness-background"
+                    value={depositionInputs.witnessBackground || ''}
+                    onChange={(e) => setDepositionInputs(prev => ({...prev, witnessBackground: e.target.value}))}
+                    placeholder="Education, experience, relationship to parties, potential biases..."
+                    rows={3}
+                    className="border-purple-200"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="strategy" className="space-y-4">
+                <div>
+                  <Label htmlFor="key-topics">Key Topics & Areas of Inquiry</Label>
+                  <Textarea
+                    id="key-topics"
+                    value={depositionInputs.keyTopics}
+                    onChange={(e) => setDepositionInputs(prev => ({...prev, keyTopics: e.target.value}))}
+                    placeholder="e.g., Timeline of events, decision-making process, communications with opposing party..."
+                    rows={4}
+                    className="border-purple-200"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="objectives">Deposition Objectives</Label>
+                  <Textarea
+                    id="objectives"
+                    value={depositionInputs.objectives || ''}
+                    onChange={(e) => setDepositionInputs(prev => ({...prev, objectives: e.target.value}))}
+                    placeholder="What do you hope to accomplish? Lock in testimony, gather information, impeach witness..."
+                    rows={3}
+                    className="border-purple-200"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="problem-areas">Potential Problem Areas</Label>
+                  <Textarea
+                    id="problem-areas"
+                    value={depositionInputs.problemAreas || ''}
+                    onChange={(e) => setDepositionInputs(prev => ({...prev, problemAreas: e.target.value}))}
+                    placeholder="Memory gaps, hostile witness, privilege issues, technical complexity..."
+                    rows={3}
+                    className="border-purple-200"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="special-instructions">Special Instructions & Strategy Notes</Label>
+                  <Textarea
+                    id="special-instructions"
+                    value={depositionInputs.specialInstructions}
+                    onChange={(e) => setDepositionInputs(prev => ({...prev, specialInstructions: e.target.value}))}
+                    placeholder="e.g., Witness is hostile, focus on document authentication, avoid leading questions on..."
+                    rows={3}
+                    className="border-purple-200"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="questions" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Card className="border-purple-200 bg-purple-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Search className="h-5 w-5 text-purple-600" />
+                        <span className="font-medium text-purple-900">Question Categories</span>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Background Questions</span>
+                          <Badge variant="outline">15-20</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Substantive Questions</span>
+                          <Badge variant="outline">30-50</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Document Questions</span>
+                          <Badge variant="outline">10-15</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Impeachment Questions</span>
+                          <Badge variant="outline">5-10</Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-purple-200 bg-purple-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Clock className="h-5 w-5 text-purple-600" />
+                        <span className="font-medium text-purple-900">Time Estimates</span>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Opening/Background</span>
+                          <span className="text-purple-700">30 min</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Main Testimony</span>
+                          <span className="text-purple-700">2-3 hrs</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Document Review</span>
+                          <span className="text-purple-700">45 min</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Estimated Total</span>
+                          <Badge className="bg-purple-600">3-4 hrs</Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div>
+                  <Label htmlFor="specific-questions">Custom Questions for this Witness</Label>
+                  <Textarea
+                    id="specific-questions"
+                    value={depositionInputs.customQuestions || ''}
+                    onChange={(e) => setDepositionInputs(prev => ({...prev, customQuestions: e.target.value}))}
+                    placeholder="Add specific questions you want to ask this witness..."
+                    rows={4}
+                    className="border-purple-200"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="logistics" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="deposition-date">Scheduled Date</Label>
+                    <Input
+                      id="deposition-date"
+                      type="date"
+                      value={depositionInputs.depositionDate || ''}
+                      onChange={(e) => setDepositionInputs(prev => ({...prev, depositionDate: e.target.value}))}
+                      className="border-purple-200"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={depositionInputs.location || ''}
+                      onChange={(e) => setDepositionInputs(prev => ({...prev, location: e.target.value}))}
+                      placeholder="e.g., Law office, courthouse, video conference"
+                      className="border-purple-200"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="court-reporter">Court Reporter & Recording</Label>
+                  <Input
+                    id="court-reporter"
+                    value={depositionInputs.courtReporter || ''}
+                    onChange={(e) => setDepositionInputs(prev => ({...prev, courtReporter: e.target.value}))}
+                    placeholder="Court reporter name/agency, video recording requirements"
+                    className="border-purple-200"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="opposing-counsel">Opposing Counsel</Label>
+                    <Input
+                      id="opposing-counsel"
+                      value={depositionInputs.opposingCounsel || ''}
+                      onChange={(e) => setDepositionInputs(prev => ({...prev, opposingCounsel: e.target.value}))}
+                      placeholder="Attorney name and firm"
+                      className="border-purple-200"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="estimated-duration">Estimated Duration</Label>
+                    <Select value={depositionInputs.estimatedDuration || ''} onValueChange={(value) => setDepositionInputs(prev => ({...prev, estimatedDuration: value}))}>
+                      <SelectTrigger className="border-purple-200">
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2-hours">2 hours</SelectItem>
+                        <SelectItem value="4-hours">4 hours</SelectItem>
+                        <SelectItem value="full-day">Full day (7 hours)</SelectItem>
+                        <SelectItem value="multi-day">Multiple days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
 
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 onClick={() => handleGenerateDocument(`Deposition Outline for ${depositionInputs.witnessName || 'Witness'}`)}
                 variant="outline"
                 disabled={!depositionInputs.witnessName || generateDocumentMutation.isPending}
+                className="border-purple-200 hover:bg-purple-50"
               >
                 <Users className="h-4 w-4 mr-2" />
                 {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Outline'}
@@ -1496,26 +1705,68 @@ case 'case-analytics':
                 onClick={() => handleGenerateDocument(`Question Bank - ${depositionInputs.depositionType} Deposition`)}
                 variant="outline"
                 disabled={generateDocumentMutation.isPending}
+                className="border-purple-200 hover:bg-purple-50"
               >
                 <Search className="h-4 w-4 mr-2" />
                 {generateDocumentMutation.isPending ? 'Generating...' : 'Question Bank'}
               </Button>
               <Button 
-                onClick={() => handleGenerateDocument(`Deposition Strategy Memo - ${depositionInputs.witnessName || 'Case'}`)}
+                onClick={() => handleGenerateDocument(`Witness Preparation Strategy - ${depositionInputs.witnessName || 'Case'}`)}
                 variant="outline"
                 disabled={!depositionInputs.keyTopics || generateDocumentMutation.isPending}
+                className="border-purple-200 hover:bg-purple-50"
               >
                 <Brain className="h-4 w-4 mr-2" />
-                {generateDocumentMutation.isPending ? 'Generating...' : 'Strategy Memo'}
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Prep Strategy'}
               </Button>
               <Button 
-                onClick={() => handleGenerateDocument(`Document Review Checklist for Deposition`)}
+                onClick={() => handleGenerateDocument(`Deposition Document Checklist`)}
                 variant="outline"
                 disabled={generateDocumentMutation.isPending}
+                className="border-purple-200 hover:bg-purple-50"
               >
                 <FileCheck className="h-4 w-4 mr-2" />
                 {generateDocumentMutation.isPending ? 'Generating...' : 'Document Checklist'}
               </Button>
+            </div>
+
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Target className="h-5 w-5 text-purple-600" />
+                <span className="font-medium text-purple-900">Deposition Readiness Score</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${Math.min(100, (
+                        (depositionInputs.witnessName ? 20 : 0) +
+                        (depositionInputs.keyTopics ? 20 : 0) +
+                        (depositionInputs.objectives ? 15 : 0) +
+                        (depositionInputs.depositionDate ? 15 : 0) +
+                        (depositionInputs.location ? 10 : 0) +
+                        (depositionInputs.courtReporter ? 10 : 0) +
+                        (depositionInputs.customQuestions ? 10 : 0)
+                      ))}%` 
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-purple-700">
+                  {Math.min(100, (
+                    (depositionInputs.witnessName ? 20 : 0) +
+                    (depositionInputs.keyTopics ? 20 : 0) +
+                    (depositionInputs.objectives ? 15 : 0) +
+                    (depositionInputs.depositionDate ? 15 : 0) +
+                    (depositionInputs.location ? 10 : 0) +
+                    (depositionInputs.courtReporter ? 10 : 0) +
+                    (depositionInputs.customQuestions ? 10 : 0)
+                  ))}%
+                </span>
+              </div>
+              <p className="text-xs text-purple-600 mt-1">
+                Complete all fields for comprehensive deposition preparation
+              </p>
             </div>
 
             <Button 
