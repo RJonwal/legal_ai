@@ -1,9 +1,17 @@
+` tags.
+
+```
+Applying toast imports and mutation updates to the case strategy modal for enhanced document generation and error handling.
+```
+
+```
+<replit_final_file>
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -14,6 +22,8 @@ import {
   FileText, Upload, FolderPlus, Calendar, Scale, Brain, FileCheck, BarChart3, Users, Gavel, 
   History, Search, Lightbulb, FolderOpen, UserCheck, CloudUpload, AlertTriangle, AlertCircle, Info 
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 interface FunctionModalProps {
   isOpen: boolean;
@@ -24,7 +34,15 @@ interface FunctionModalProps {
   onSendMessage?: (message: string) => void;
 }
 
-export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onDocumentGenerate, onSendMessage }: FunctionModalProps) {
+export function EnhancedFunctionModal({ 
+  isOpen, 
+  functionId, 
+  caseId, 
+  onClose, 
+  onDocumentGenerate,
+  onSendMessage,
+}: FunctionModalProps) {
+  const { toast } = useToast();
   const [contractText, setContractText] = useState("");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
@@ -46,6 +64,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
 
   const { data: currentCase } = useQuery({
     queryKey: ['/api/cases', caseId],
+    queryFn: () => apiRequest('GET', `/api/cases/${caseId}`).then(res => res.json()),
     enabled: isOpen && !!caseId,
   });
 
@@ -61,18 +80,46 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
 
   const generateDocumentMutation = useMutation({
     mutationFn: async (documentType: string) => {
-      const response = await apiRequest('POST', `/api/cases/${caseId}/generate-document`, {
-        type: documentType,
-        caseContext: currentCase?.description || '',
-        specificInstructions: '',
-      });
-      return response.json();
+      try {
+        const response = await apiRequest('POST', `/api/cases/${caseId}/documents/generate`, {
+          documentType: documentType,
+          caseContext: currentCase?.description || '',
+          specificInstructions: '',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate document');
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error: any) {
+        console.error("Document generation error:", error);
+        toast({
+          variant: "destructive",
+          title: "Error generating document.",
+          description: error.message,
+        });
+        throw error;
+      }
     },
     onSuccess: (data) => {
       if (onDocumentGenerate) {
         onDocumentGenerate(data);
+        toast({
+          title: "Document generated successfully!",
+          description: "The document has been added to the document canvas.",
+        });
       }
       onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to generate document.",
+        description: error.message || "Something went wrong. Please try again.",
+      });
     },
   });
 
@@ -137,7 +184,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 Comprehensive strategic analysis of your case with AI-powered recommendations for motions, filings, and next steps.
               </p>
             </div>
-            
+
             <div className="space-y-3">
               <Card className="border-purple-200 bg-purple-50">
                 <CardContent className="p-4">
@@ -153,7 +200,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -165,6 +212,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       onClick={() => handleGenerateDocument('Breach Notice Letter')}
                       className="bg-red-600 hover:bg-red-700 text-white"
+                      disabled={generateDocumentMutation.isPending}
                     >
                       <AlertTriangle className="h-4 w-4 mr-2" />
                       Breach Notice
@@ -173,6 +221,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       onClick={() => handleGenerateDocument('Discovery Request')}
                       variant="outline"
+                      disabled={generateDocumentMutation.isPending}
                     >
                       <Search className="h-4 w-4 mr-2" />
                       Discovery Request
@@ -181,6 +230,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       onClick={() => handleGenerateDocument('Settlement Demand Letter')}
                       className="bg-green-600 hover:bg-green-700 text-white"
+                      disabled={generateDocumentMutation.isPending}
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       Settlement Demand
@@ -189,6 +239,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       onClick={() => handleGenerateDocument('Protective Order Motion')}
                       variant="outline"
+                      disabled={generateDocumentMutation.isPending}
                     >
                       <Gavel className="h-4 w-4 mr-2" />
                       Protective Order
@@ -196,7 +247,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="border-green-200 bg-green-50">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -208,6 +259,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       onClick={() => handleGenerateDocument('Motion for Summary Judgment')}
                       variant="outline"
+                      disabled={generateDocumentMutation.isPending}
                     >
                       Summary Judgment
                     </Button>
@@ -215,6 +267,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       onClick={() => handleGenerateDocument('Motion to Compel')}
                       variant="outline"
+                      disabled={generateDocumentMutation.isPending}
                     >
                       Motion to Compel
                     </Button>
@@ -222,6 +275,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       onClick={() => handleGenerateDocument('Preliminary Injunction Motion')}
                       variant="outline"
+                      disabled={generateDocumentMutation.isPending}
                     >
                       Injunction Motion
                     </Button>
@@ -229,6 +283,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       onClick={() => handleGenerateDocument('Answer to Counterclaim')}
                       variant="outline"
+                      disabled={generateDocumentMutation.isPending}
                     >
                       Answer Counterclaim
                     </Button>
@@ -236,7 +291,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 </CardContent>
               </Card>
             </div>
-            
+
             <div className="flex space-x-2">
               <Button 
                 onClick={() => {
@@ -244,6 +299,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                   onSendMessage?.('Analyze the entire case and provide a comprehensive strategic roadmap with all necessary motions, filings, and deadlines. Include specific recommendations for settlement negotiations and trial preparation.');
                 }}
                 className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                disabled={generateDocumentMutation.isPending}
               >
                 <Brain className="h-4 w-4 mr-2" />
                 Full Strategy Analysis
@@ -252,9 +308,9 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 onClick={() => handleGenerateDocument('Complete Case Strategy Report')}
                 variant="outline"
                 className="flex-1"
+                disabled={generateDocumentMutation.isPending}
               >
-                <FileText className="h-4 w-4 mr-2" />
-                Strategy Report
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Report'}
               </Button>
             </div>
           </div>
@@ -269,14 +325,14 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 Upload new evidence, select existing files, or analyze contracts for legal issues and opportunities.
               </p>
             </div>
-            
+
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="upload">Upload New</TabsTrigger>
                 <TabsTrigger value="existing">Select Existing</TabsTrigger>
                 <TabsTrigger value="analyze">Text Analysis</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="upload" className="space-y-4">
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -287,7 +343,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                     Choose Evidence Files
                   </Button>
                 </div>
-                
+
                 {uploadedFiles.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="font-medium text-sm">Uploaded Files:</h4>
@@ -313,7 +369,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                   </div>
                 )}
               </TabsContent>
-              
+
               <TabsContent value="existing" className="space-y-4">
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Select Existing Documents:</h4>
@@ -335,17 +391,18 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                     </div>
                   ))}
                 </div>
-                
+
                 {selectedDocuments.length > 0 && (
                   <Button 
                     onClick={() => handleGenerateDocument('Multi-Document Evidence Analysis')}
                     className="w-full"
+                    disabled={generateDocumentMutation.isPending}
                   >
-                    Analyze Selected Documents ({selectedDocuments.length})
+                    {generateDocumentMutation.isPending ? 'Generating...' : `Analyze Selected Documents (${selectedDocuments.length})`}
                   </Button>
                 )}
               </TabsContent>
-              
+
               <TabsContent value="analyze" className="space-y-4">
                 <div>
                   <Label htmlFor="contract-text">Contract or Document Text:</Label>
@@ -358,13 +415,13 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                     className="w-full"
                   />
                 </div>
-                
+
                 <Button 
                   onClick={() => handleGenerateDocument('Contract Analysis Report')}
-                  disabled={!contractText.trim()}
+                  disabled={!contractText.trim() || generateDocumentMutation.isPending}
                   className="w-full"
                 >
-                  Analyze Contract Text
+                  {generateDocumentMutation.isPending ? 'Generating...' : 'Analyze Contract Text'}
                 </Button>
               </TabsContent>
             </Tabs>
@@ -396,8 +453,9 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                     size="sm" 
                     onClick={() => handleGenerateDocument('Breach Notice Letter')}
                     className="bg-red-600 hover:bg-red-700 text-white"
+                    disabled={generateDocumentMutation.isPending}
                   >
-                    Generate Breach Notice
+                    {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Breach Notice'}
                   </Button>
                 </CardContent>
               </Card>
@@ -417,15 +475,17 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       variant="outline"
                       onClick={() => handleGenerateDocument('Damages Calculation Worksheet')}
+                      disabled={generateDocumentMutation.isPending}
                     >
-                      Damages Calculator
+                      {generateDocumentMutation.isPending ? 'Generating...' : 'Damages Calculator'}
                     </Button>
                     <Button 
                       size="sm" 
                       onClick={() => handleGenerateDocument('Settlement Demand Letter')}
                       className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                      disabled={generateDocumentMutation.isPending}
                     >
-                      Settlement Demand
+                      {generateDocumentMutation.isPending ? 'Generating...' : 'Settlement Demand'}
                     </Button>
                   </div>
                 </CardContent>
@@ -446,29 +506,33 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                       size="sm" 
                       variant="outline"
                       onClick={() => handleGenerateDocument('Motion for Preliminary Injunction')}
+                      disabled={generateDocumentMutation.isPending}
                     >
-                      Injunction Motion
+                      {generateDocumentMutation.isPending ? 'Generating...' : 'Injunction Motion'}
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline"
                       onClick={() => handleGenerateDocument('Discovery Request Document')}
+                      disabled={generateDocumentMutation.isPending}
                     >
-                      Discovery Request
+                      {generateDocumentMutation.isPending ? 'Generating...' : 'Discovery Request'}
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline"
                       onClick={() => handleGenerateDocument('Legal Brief Template')}
+                      disabled={generateDocumentMutation.isPending}
                     >
-                      Legal Brief
+                      {generateDocumentMutation.isPending ? 'Generating...' : 'Legal Brief'}
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline"
                       onClick={() => handleGenerateDocument('Motion to Compel')}
+                      disabled={generateDocumentMutation.isPending}
                     >
-                      Motion to Compel
+                      {generateDocumentMutation.isPending ? 'Generating...' : 'Motion to Compel'}
                     </Button>
                   </div>
                 </CardContent>
@@ -478,8 +542,9 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
             <Button
               onClick={() => handleGenerateDocument('Comprehensive Strategy Report')}
               className="w-full bg-legal-blue hover:bg-legal-deep text-white"
+              disabled={generateDocumentMutation.isPending}
             >
-              Generate Full Strategy Report
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Full Strategy Report'}
             </Button>
           </div>
         );
@@ -542,8 +607,9 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
             <Button
               onClick={() => handleGenerateDocument('Document Management Report')}
               className="w-full"
+              disabled={generateDocumentMutation.isPending}
             >
-              Generate Document Summary
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Document Summary'}
             </Button>
           </div>
         );
@@ -606,9 +672,10 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
             <Button
               onClick={() => handleGenerateDocument('Comprehensive Case Analytics Report')}
               className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              disabled={generateDocumentMutation.isPending}
             >
               <BarChart3 className="h-4 w-4 mr-2" />
-              Generate Detailed Analytics Report
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Detailed Analytics Report'}
             </Button>
           </div>
         );
@@ -675,41 +742,43 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
               <Button 
                 onClick={() => handleGenerateDocument(`Deposition Outline for ${depositionInputs.witnessName || 'Witness'}`)}
                 variant="outline"
-                disabled={!depositionInputs.witnessName}
+                disabled={!depositionInputs.witnessName || generateDocumentMutation.isPending}
               >
                 <Users className="h-4 w-4 mr-2" />
-                Generate Outline
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Outline'}
               </Button>
               <Button 
                 onClick={() => handleGenerateDocument(`Question Bank - ${depositionInputs.depositionType} Deposition`)}
                 variant="outline"
+                disabled={generateDocumentMutation.isPending}
               >
                 <Search className="h-4 w-4 mr-2" />
-                Question Bank
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Question Bank'}
               </Button>
               <Button 
                 onClick={() => handleGenerateDocument(`Deposition Strategy Memo - ${depositionInputs.witnessName || 'Case'}`)}
                 variant="outline"
-                disabled={!depositionInputs.keyTopics}
+                disabled={!depositionInputs.keyTopics || generateDocumentMutation.isPending}
               >
                 <Brain className="h-4 w-4 mr-2" />
-                Strategy Memo
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Strategy Memo'}
               </Button>
               <Button 
                 onClick={() => handleGenerateDocument(`Document Review Checklist for Deposition`)}
                 variant="outline"
+                disabled={generateDocumentMutation.isPending}
               >
                 <FileCheck className="h-4 w-4 mr-2" />
-                Document Checklist
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Document Checklist'}
               </Button>
             </div>
 
             <Button 
               onClick={() => handleGenerateDocument(`Comprehensive Deposition Preparation Package - ${depositionInputs.witnessName || currentCase?.title}`)}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-              disabled={!depositionInputs.witnessName || !depositionInputs.keyTopics}
+              disabled={!depositionInputs.witnessName || !depositionInputs.keyTopics || generateDocumentMutation.isPending}
             >
-              Generate Complete Deposition Package
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Complete Deposition Package'}
             </Button>
           </div>
         );
@@ -719,6 +788,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
           <div className="space-y-4">
             <div className="bg-red-50 p-4 rounded-lg">
               <h3 className="font-medium text-red-900 mb-2">Court Preparation for {currentCase?.title}</h3>
+              ```
               <p className="text-sm text-red-700">
                 Comprehensive court preparation with customizable arguments, evidence lists, and procedural guidance.
               </p>
@@ -788,43 +858,43 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
               <Button 
                 onClick={() => handleGenerateDocument(`Court Brief - ${courtPrepInputs.hearingType || 'Hearing'}`)}
                 variant="outline"
-                disabled={!courtPrepInputs.hearingType}
+                disabled={!courtPrepInputs.hearingType || generateDocumentMutation.isPending}
               >
                 <Gavel className="h-4 w-4 mr-2" />
-                Generate Brief
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Brief'}
               </Button>
               <Button 
                 onClick={() => handleGenerateDocument('Evidence List and Exhibits')}
                 variant="outline"
-                disabled={!courtPrepInputs.evidenceList}
+                disabled={!courtPrepInputs.evidenceList || generateDocumentMutation.isPending}
               >
                 <FileCheck className="h-4 w-4 mr-2" />
-                Evidence List
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Evidence List'}
               </Button>
               <Button 
                 onClick={() => handleGenerateDocument('Argument Outline and Talking Points')}
                 variant="outline"
-                disabled={!courtPrepInputs.keyArguments}
+                disabled={!courtPrepInputs.keyArguments || generateDocumentMutation.isPending}
               >
                 <Scale className="h-4 w-4 mr-2" />
-                Argument Outline
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Argument Outline'}
               </Button>
               <Button 
                 onClick={() => handleGenerateDocument('Q&A Preparation Document')}
                 variant="outline"
-                disabled={!courtPrepInputs.anticipatedQuestions}
+                disabled={!courtPrepInputs.anticipatedQuestions || generateDocumentMutation.isPending}
               >
                 <Brain className="h-4 w-4 mr-2" />
-                Q&A Prep
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Q&A Prep'}
               </Button>
             </div>
 
             <Button 
               onClick={() => handleGenerateDocument(`Complete Court Preparation Package - ${courtPrepInputs.hearingType || currentCase?.title}`)}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
-              disabled={!courtPrepInputs.hearingType || !courtPrepInputs.keyArguments}
+              disabled={!courtPrepInputs.hearingType || !courtPrepInputs.keyArguments || generateDocumentMutation.isPending}
             >
-              Generate Complete Court Package
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Complete Court Package'}
             </Button>
           </div>
         );
@@ -838,7 +908,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 Upload case documents, evidence, and other files. Supports PDF, DOC, DOCX, TXT, JPG, PNG.
               </p>
             </div>
-            
+
             <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center">
               <Upload className="mx-auto h-16 w-16 text-blue-400 mb-4" />
               <p className="text-lg font-medium text-blue-900 mb-2">Drop files here or click to browse</p>
@@ -848,7 +918,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 Choose Files to Upload
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <Card className="border-blue-200">
                 <CardContent className="p-4">
@@ -868,7 +938,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="border-blue-200">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-2">
@@ -883,12 +953,13 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 </CardContent>
               </Card>
             </div>
-            
+
             <Button 
               onClick={() => handleGenerateDocument('Document Upload Summary')}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={generateDocumentMutation.isPending}
             >
-              Generate Upload Summary Report
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Upload Summary Report'}
             </Button>
           </div>
         );
@@ -902,7 +973,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 Track important dates, court deadlines, and filing requirements for this case.
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 gap-4">
               <Card className="border-red-200 bg-red-50">
                 <CardContent className="p-4">
@@ -915,7 +986,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                   <div className="text-xs text-red-600 mt-1">7 days remaining</div>
                 </CardContent>
               </Card>
-              
+
               <Card className="border-yellow-200 bg-yellow-50">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-2">
@@ -927,7 +998,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                   <div className="text-xs text-yellow-600 mt-1">23 days remaining</div>
                 </CardContent>
               </Card>
-              
+
               <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2 mb-2">
@@ -940,31 +1011,34 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 </CardContent>
               </Card>
             </div>
-            
+
             <div className="flex space-x-2">
               <Button 
                 onClick={() => handleGenerateDocument('Case Calendar Summary')}
                 variant="outline"
                 className="flex-1"
+                disabled={generateDocumentMutation.isPending}
               >
                 <Calendar className="h-4 w-4 mr-2" />
-                Calendar Summary
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Calendar Summary'}
               </Button>
               <Button 
                 onClick={() => handleGenerateDocument('Deadline Tracking Checklist')}
                 variant="outline"
                 className="flex-1"
+                disabled={generateDocumentMutation.isPending}
               >
                 <FileCheck className="h-4 w-4 mr-2" />
-                Deadline Checklist
+                {generateDocumentMutation.isPending ? 'Generating...' : 'Deadline Checklist'}
               </Button>
             </div>
-            
+
             <Button 
               onClick={() => handleGenerateDocument('Comprehensive Case Schedule')}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
+              disabled={generateDocumentMutation.isPending}
             >
-              Generate Complete Case Schedule
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Complete Case Schedule'}
             </Button>
           </div>
         );
@@ -978,7 +1052,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 Chronological events and milestones for this specific case.
               </p>
             </div>
-            
+
             <div className="space-y-3">
               {timelineEvents.length > 0 ? timelineEvents.map((event: any, index: number) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-white border rounded-lg">
@@ -1003,7 +1077,7 @@ export function EnhancedFunctionModal({ isOpen, functionId, caseId, onClose, onD
                 </div>
               )}
             </div>
-            
+
             <Button 
               onClick={() => handleGenerateDocument('Timeline Report')} 
               className="w-full"

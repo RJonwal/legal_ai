@@ -33,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: 'Search query is required' });
       }
-      
+
       const results = await storage.searchCases(query);
       res.json(results);
     } catch (error) {
@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const caseId = parseInt(req.params.id);
       const { content } = req.body;
-      
+
       if (!content) {
         return res.status(400).json({ message: "Message content is required" });
       }
