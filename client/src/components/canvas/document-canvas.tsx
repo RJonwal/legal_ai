@@ -51,6 +51,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const documentRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Court-compatible fonts
   const courtFonts = [
@@ -197,12 +198,12 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   };
 
   const applyTextFormat = (format: string) => {
-    // Check if we're in a browser environment
-    if (typeof document === 'undefined' || typeof window === 'undefined') {
+    // Check if we're in a browser environment and textarea ref exists
+    if (typeof document === 'undefined' || typeof window === 'undefined' || !textareaRef.current) {
       return;
     }
     
-    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
@@ -513,6 +514,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
             <ContextMenu>
               <ContextMenuTrigger className="flex-1 h-full">
                 <Textarea
+                  ref={textareaRef}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   className="h-full resize-none border-gray-300 focus:border-legal-blue focus:ring-legal-blue text-xs"
