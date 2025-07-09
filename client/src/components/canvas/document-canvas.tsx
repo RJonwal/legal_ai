@@ -99,7 +99,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
 
   const handleDownloadPDF = async () => {
     if (!documentRef.current) return;
-    
+
     setIsDownloading(true);
     try {
       const canvas = await html2canvas(documentRef.current, {
@@ -121,22 +121,22 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      
+
       // Calculate proper scaling for professional document layout
       const margin = 25.4; // 1 inch margin
       const contentWidth = pdfWidth - (2 * margin);
       const contentHeight = pdfHeight - (2 * margin);
       const ratio = Math.min(contentWidth / imgWidth, contentHeight / imgHeight);
-      
+
       const scaledWidth = imgWidth * ratio;
       const scaledHeight = imgHeight * ratio;
-      
+
       let yPosition = margin;
       let remainingHeight = scaledHeight;
-      
+
       while (remainingHeight > 0) {
         const heightToAdd = Math.min(remainingHeight, contentHeight);
-        
+
         pdf.addImage(
           imgData, 
           'PNG', 
@@ -147,9 +147,9 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           undefined,
           'FAST'
         );
-        
+
         remainingHeight -= heightToAdd;
-        
+
         if (remainingHeight > 0) {
           pdf.addPage();
           yPosition = margin;
@@ -196,7 +196,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     toast({
       title: "Editable Document Downloaded",
       description: "Document saved as editable text file",
@@ -206,7 +206,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   const formatDocumentContent = (content: string) => {
     // Split content into sections for better formatting
     const sections = content.split('\n\n');
-    
+
     return sections.map((section, index) => {
       if (section.includes('Critical Issue') || section.includes('CRITICAL')) {
         return (
@@ -223,7 +223,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           </Card>
         );
       }
-      
+
       if (section.includes('Moderate Issue') || section.includes('MODERATE')) {
         return (
           <Card key={index} className="border-yellow-200 bg-yellow-50 mb-4">
@@ -239,7 +239,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           </Card>
         );
       }
-      
+
       if (section.includes('Opportunity') || section.includes('FAVORABLE')) {
         return (
           <Card key={index} className="border-blue-200 bg-blue-50 mb-4">
@@ -255,7 +255,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           </Card>
         );
       }
-      
+
       return (
         <div key={index} className="mb-4">
           <p className="text-gray-700 leading-relaxed">{section}</p>
@@ -271,7 +271,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           <h3 className="text-lg font-semibold text-gray-900">Document Canvas</h3>
           <p className="text-sm text-gray-500">Generate or select a document to view and edit</p>
         </div>
-        
+
         <div className="flex-1 flex items-center justify-center p-6 min-h-0">
           <div className="text-center">
             <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -325,7 +325,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
                 ))}
               </SelectContent>
             </Select>
-            
+
             {/* Download Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -414,7 +414,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
 
                   <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-900 mb-3">Key Findings</h2>
-                    
+
                     <Card className="border-red-200 bg-red-50 mb-4">
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-2 mb-2">
