@@ -46,16 +46,32 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   const [selectedTokenPlan, setSelectedTokenPlan] = useState('');
 
   // Fetch billing data
-  const { data: billingData, isLoading } = useQuery({
+  const { data: billingData, isLoading, error: billingError } = useQuery({
     queryKey: ['/api/billing'],
-    queryFn: () => apiRequest('GET', '/api/billing').then(res => res.json()),
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/billing');
+      if (!response.ok) {
+        throw new Error('Failed to fetch billing data');
+      }
+      return response.json();
+    },
     enabled: isOpen,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: invoices = [] } = useQuery({
+  const { data: invoices = [], error: invoicesError } = useQuery({
     queryKey: ['/api/billing/invoices'],
-    queryFn: () => apiRequest('GET', '/api/billing/invoices').then(res => res.json()),
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/billing/invoices');
+      if (!response.ok) {
+        throw new Error('Failed to fetch invoices');
+      }
+      return response.json();
+    },
     enabled: isOpen,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Mutations
@@ -175,11 +191,38 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   if (isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl" aria-describedby="loading-description">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-legal-blue mx-auto mb-4"></div>
               <p>Loading billing information...</p>
+              <div id="loading-description" className="sr-only">
+                Loading your billing and subscription data
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (billingError || invoicesError) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl" aria-describedby="error-description">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Error Loading Billing Data</h3>
+              <p className="text-gray-600 mb-4">
+                {billingError?.message || invoicesError?.message || 'Unable to load billing information'}
+              </p>
+              <div id="error-description" className="sr-only">
+                Error occurred while loading billing data
+              </div>
+              <Button onClick={() => window.location.reload()}>
+                Retry
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -189,12 +232,15 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" aria-describedby="billing-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
             Billing & Subscription Management
           </DialogTitle>
+          <div id="billing-description" className="sr-only">
+            Manage your subscription, billing information, token usage, and payment methods
+          </div>
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
@@ -565,7 +611,11 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
                             {invoice.status || 'Paid'}
                           </Badge>
                         </div>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => window.open(`/api/billing/invoices/${invoice.id}/download`, '_blank')}
+                        >
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>

@@ -640,13 +640,21 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   // Billing endpoints
   app.get("/api/billing", async (req, res) => {
     try {
-      // Mock billing data
+      // Simulate realistic billing data with some variation
+      const currentDate = new Date();
+      const nextBilling = new Date(currentDate);
+      nextBilling.setMonth(nextBilling.getMonth() + 1);
+      
       const billingData = {
         subscription: {
           plan: 'Professional',
           amount: 99,
           status: 'active',
-          nextBilling: 'February 15, 2024',
+          nextBilling: nextBilling.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
           startDate: 'January 15, 2024'
         },
         paymentMethod: {
@@ -658,14 +666,23 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         tokens: {
           balance: 2500,
           used: 750,
-          resetDate: 'February 15, 2024'
+          resetDate: nextBilling.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })
         }
       };
 
+      // Add cache headers for better performance
+      res.set('Cache-Control', 'private, max-age=300'); // 5 minutes
       res.json(billingData);
     } catch (error) {
       console.error('Billing data error:', error);
-      res.status(500).json({ error: 'Failed to fetch billing data' });
+      res.status(500).json({ 
+        error: 'Failed to fetch billing data',
+        message: 'Unable to retrieve your billing information at this time. Please try again later.'
+      });
     }
   });
 
@@ -710,21 +727,36 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     try {
       const { action } = req.body;
 
+      // Validate action
+      const validActions = ['pause', 'resume', 'cancel'];
+      if (!action || !validActions.includes(action)) {
+        return res.status(400).json({ 
+          error: 'Invalid action',
+          message: 'Action must be one of: pause, resume, cancel'
+        });
+      }
+
       // Mock subscription action
       let message = '';
+      let newStatus = 'active';
+      
       switch (action) {
         case 'pause':
           message = 'Subscription paused successfully';
+          newStatus = 'paused';
           break;
         case 'resume':
           message = 'Subscription resumed successfully';
+          newStatus = 'active';
           break;
         case 'cancel':
           message = 'Subscription cancelled successfully';
+          newStatus = 'cancelled';
           break;
-        default:
-          message = 'Subscription updated successfully';
       }
+
+      const nextBilling = new Date();
+      nextBilling.setMonth(nextBilling.getMonth() + 1);
 
       res.json({ 
         success: true, 
@@ -732,13 +764,20 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         subscription: {
           plan: 'Professional',
           amount: 99,
-          status: action === 'pause' ? 'paused' : action === 'cancel' ? 'cancelled' : 'active',
-          nextBilling: 'February 15, 2024'
+          status: newStatus,
+          nextBilling: nextBilling.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })
         }
       });
     } catch (error) {
       console.error('Subscription update error:', error);
-      res.status(500).json({ error: 'Failed to update subscription' });
+      res.status(500).json({ 
+        error: 'Failed to update subscription',
+        message: 'Unable to update your subscription at this time. Please try again later.'
+      });
     }
   });
 
@@ -746,20 +785,59 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     try {
       const { number, expiry, cvv, name } = req.body;
 
+      // Validate required fields
+      if (!number || !expiry || !cvv || !name) {
+        return res.status(400).json({ 
+          error: 'Missing required fields',
+          message: 'All payment method fields are required'
+        });
+      }
+
+      // Basic validation
+      if (number.length < 13 || number.length > 19) {
+        return res.status(400).json({ 
+          error: 'Invalid card number',
+          message: 'Card number must be between 13 and 19 digits'
+        });
+      }
+
+      if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+        return res.status(400).json({ 
+          error: 'Invalid expiry date',
+          message: 'Expiry date must be in MM/YY format'
+        });
+      }
+
+      if (cvv.length < 3 || cvv.length > 4) {
+        return res.status(400).json({ 
+          error: 'Invalid CVV',
+          message: 'CVV must be 3 or 4 digits'
+        });
+      }
+
+      // Determine card brand (simplified)
+      let brand = 'Unknown';
+      if (number.startsWith('4')) brand = 'Visa';
+      else if (number.startsWith('5')) brand = 'Mastercard';
+      else if (number.startsWith('3')) brand = 'American Express';
+
       // Mock payment method update
       res.json({ 
         success: true, 
         message: 'Payment method updated successfully',
         paymentMethod: {
           last4: number.slice(-4),
-          brand: 'Visa',
+          brand,
           expiry,
           name
         }
       });
     } catch (error) {
       console.error('Payment method update error:', error);
-      res.status(500).json({ error: 'Failed to update payment method' });
+      res.status(500).json({ 
+        error: 'Failed to update payment method',
+        message: 'Unable to update your payment method at this time. Please try again later.'
+      });
     }
   });
 
@@ -767,32 +845,52 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     try {
       const { plan } = req.body;
 
+      if (!plan) {
+        return res.status(400).json({ 
+          error: 'Missing plan',
+          message: 'Token plan is required'
+        });
+      }
+
       // Mock token purchase
       const tokenPlans = {
-        '1000': { tokens: 1000, price: 19 },
-        '5000': { tokens: 5000, price: 79 },
-        '10000': { tokens: 10000, price: 149 },
-        '25000': { tokens: 25000, price: 349 }
+        '1000': { tokens: 1000, price: 19, savings: 0 },
+        '5000': { tokens: 5000, price: 79, savings: 16 },
+        '10000': { tokens: 10000, price: 149, savings: 21 },
+        '25000': { tokens: 25000, price: 349, savings: 26 }
       };
 
       const selectedPlan = tokenPlans[plan as keyof typeof tokenPlans];
 
       if (!selectedPlan) {
-        return res.status(400).json({ error: 'Invalid token plan' });
+        return res.status(400).json({ 
+          error: 'Invalid token plan',
+          message: 'Selected plan is not available',
+          availablePlans: Object.keys(tokenPlans)
+        });
       }
+
+      // Generate realistic transaction ID
+      const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       res.json({ 
         success: true, 
-        message: `${selectedPlan.tokens} tokens purchased successfully`,
+        message: `${selectedPlan.tokens.toLocaleString()} tokens purchased successfully`,
         transaction: {
+          id: transactionId,
           tokens: selectedPlan.tokens,
           amount: selectedPlan.price,
-          transactionId: `txn_${Date.now()}`
+          savings: selectedPlan.savings,
+          purchaseDate: new Date().toISOString(),
+          status: 'completed'
         }
       });
     } catch (error) {
       console.error('Token purchase error:', error);
-      res.status(500).json({ error: 'Failed to purchase tokens' });
+      res.status(500).json({ 
+        error: 'Failed to purchase tokens',
+        message: 'Unable to process your token purchase at this time. Please try again later.'
+      });
     }
   });
 
