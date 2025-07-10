@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { openaiService } from "./services/openai";
 import { insertChatMessageSchema, insertDocumentSchema, insertTimelineSchema } from "@shared/schema";
 import { z } from "zod";
+import adminRoutes from "./routes/admin";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user (mock for now)
@@ -858,7 +859,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       res.json({ 
         success: true, 
         message: 'Payment method updated successfully',
-        paymentMethod: {
+        paymentmethod: {
           last4: number.slice(-4),
           brand,
           expiry,

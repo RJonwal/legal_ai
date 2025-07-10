@@ -142,6 +142,9 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
   // Case display state - ensure proper initialization
   const displayCase = currentCaseData || currentCase;
 
+  // Use computed value to avoid initialization issues
+  const displayCase = currentCaseData || currentCase;
+
   const handleShareCase = useCallback(async () => {
     if (!displayCase) return;
 
