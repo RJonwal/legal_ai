@@ -181,9 +181,7 @@ export default function AdminDashboard() {
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min p-6"></div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
@@ -451,7 +449,6 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
-          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
