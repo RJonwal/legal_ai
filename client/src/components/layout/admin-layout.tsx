@@ -26,7 +26,8 @@ import {
   Home,
   ChevronUp,
   User2,
-  CreditCard
+  CreditCard,
+  Key
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -54,6 +55,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: CreditCard,
       url: "/admin/billing",
       isActive: location === "/admin/billing"
+    },
+    {
+      title: "API Management",
+      icon: Key,
+      url: "/admin/api-management",
+      isActive: location === "/admin/api-management"
     },
     {
       title: "System Settings",

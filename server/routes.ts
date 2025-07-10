@@ -1054,7 +1054,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       }
 
       console.log(`Updating user ${id} role to ${role}`);
-      
+
       // Mock role update
       res.json({ 
         success: true, 
@@ -1078,7 +1078,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
 
       console.log(`Updating user ${id} permissions:`, permissions);
       console.log(`Updating user ${id} limits:`, limits);
-      
+
       // Mock permissions update
       res.json({ 
         success: true, 
@@ -1150,7 +1150,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       if (permissionNames) {
         console.log(`Updating role ${id} permission names:`, permissionNames);
       }
-      
+
       res.json({ 
         success: true, 
         message: 'Role permissions and names updated successfully',
@@ -1202,7 +1202,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   app.post("/api/admin/permission-groups", async (req, res) => {
     try {
       const { name, permissions, color } = req.body;
-      
+
       const newGroup = {
         id: `group_${Date.now()}`,
         name,
@@ -1213,7 +1213,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       };
 
       console.log('Creating permission group:', newGroup);
-      
+
       res.json({ 
         success: true, 
         message: 'Permission group created successfully',
@@ -1231,7 +1231,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       const { name, permissions, permissionNames, color } = req.body;
 
       console.log(`Updating permission group ${id}:`, { name, permissions, permissionNames, color });
-      
+
       res.json({ 
         success: true, 
         message: 'Permission group updated successfully',
@@ -1352,9 +1352,9 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   app.put("/api/admin/settings", async (req, res) => {
     try {
       const { section, settings } = req.body;
-      
+
       console.log(`Updating ${section} settings:`, settings);
-      
+
       res.json({ 
         success: true, 
         message: `${section} settings updated successfully`,
@@ -1440,331 +1440,195 @@ app.post("/api/admin/impersonation/stop", (req, res) => {
 });
 
 app.get("/api/admin/impersonation/history", (req, res) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/impersonation/history 200`);
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/impersonation/history 200`);
 
-  // Mock impersonation history
-  const history = [
-    {
-      id: "imp_1",
-      targetUser: {
+    // Mock impersonation history
+    const history = [
+      {
         id: "1",
-        name: "John Doe",
-        email: "john.doe@example.com"
+        adminId: "admin_1",
+        adminName: "Admin User",
+        targetUserId: "user_123",
+        targetUserName: "John Doe",
+        targetUserEmail: "john.doe@example.com",
+        reason: "Customer support - billing inquiry",
+        startTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        endTime: new Date(Date.now() - 2 * 60 * 60 * 1000 + 15 * 60 * 1000).toISOString(),
+        duration: 15 * 60 * 1000 // 15 minutes in milliseconds
       },
-      adminUser: {
-        id: "admin_1",
-        name: "Admin User",
-        email: "admin@example.com"
+      {
+        id: "2",
+        adminId: "admin_1",
+        adminName: "Admin User",
+        targetUserId: "user_456",
+        targetUserName: "Mike Wilson",
+        targetUserEmail: "mike.wilson@legal.com",
+        reason: "Troubleshooting document generation issue",
+        startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        endTime: new Date(Date.now() - 24 * 60 * 60 * 1000 + 8 * 60 * 1000).toISOString(),
+        duration: 8 * 60 * 1000 // 8 minutes in milliseconds
+      }
+    ];
+
+    res.json(history);
+  });
+
+  // API Management endpoints
+
+  // AI Providers endpoints
+  app.get("/api/admin/ai-providers", (req, res) => {
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/ai-providers 200`);
+
+    const providers = [
+      {
+        id: "openai",
+        name: "OpenAI",
+        type: "openai",
+        apiKey: "sk-proj-xyz123...",
+        model: "gpt-4",
+        isActive: true,
+        lastTested: "2 hours ago",
+        status: "healthy"
       },
-      startTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      endTime: new Date(Date.now() - 2 * 60 * 60 * 1000 + 15 * 60 * 1000).toISOString(),
-      duration: 15 * 60, // 15 minutes in seconds
-      reason: "Customer support - billing inquiry"
-    },
-    {
-      id: "imp_2",
-      targetUser: {
-        id: "3",
-        name: "Mike Wilson",
-        email: "mike.wilson@legal.com"
+      {
+        id: "anthropic",
+        name: "Anthropic",
+        type: "anthropic",
+        apiKey: "sk-ant-api03-xyz...",
+        model: "claude-3-sonnet",
+        isActive: true,
+        lastTested: "1 day ago",
+        status: "healthy"
       },
-      adminUser: {
-        id: "admin_1",
-        name: "Admin User",
-        email: "admin@example.com"
+      {
+        id: "deepseek",
+        name: "Deepseek",
+        type: "deepseek",
+        apiKey: "",
+        baseUrl: "https://api.deepseek.com",
+        model: "deepseek-chat",
+        isActive: false,
+        lastTested: "Never",
+        status: "warning"
+      }
+    ];
+
+    res.json(providers);
+  });
+
+  app.post("/api/admin/ai-providers/:id/test", (req, res) => {
+    const { id } = req.params;
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/ai-providers/${id}/test 200`);
+
+    // Simulate test result
+    res.json({ success: true, message: "Provider test successful", responseTime: "120ms" });
+  });
+
+  // App APIs endpoints
+  app.get("/api/admin/app-apis", (req, res) => {
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/app-apis 200`);
+
+    const apis = [
+      {
+        id: "doc-service",
+        name: "Document Service",
+        description: "Convert documents to PDF",
+        endpoint: "https://api.docconvert.com/v1/pdf",
+        method: "POST",
+        headers: { "Authorization": "Bearer token", "Content-Type": "application/json" },
+        authentication: "bearer",
+        isActive: true,
+        lastUsed: "2 hours ago",
+        successRate: 98
       },
-      startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      endTime: new Date(Date.now() - 24 * 60 * 60 * 1000 + 8 * 60 * 1000).toISOString(),
-      duration: 8 * 60, // 8 minutes in seconds
-      reason: "Troubleshooting document generation issue"
-    }
-  ];
+      {
+        id: "email-service",
+        name: "Email Service",
+        description: "Send notification emails",
+        endpoint: "https://api.mailservice.com/send",
+        method: "POST",
+        headers: { "X-API-Key": "apikey123", "Content-Type": "application/json" },
+        authentication: "apikey",
+        isActive: true,
+        lastUsed: "1 day ago",
+        successRate: 85
+      }
+    ];
 
-  res.json(history);
-});
-
-  // Admin Billing Management APIs
-  app.get("/api/admin/billing/metrics", async (req, res) => {
-    try {
-      // Simulate billing metrics
-      const metrics = {
-        totalRevenue: 125000,
-        monthlyRevenue: 12500,
-        activeSubscriptions: 85,
-        churnRate: 3.2,
-        averageRevenuePerUser: 156,
-        totalCustomers: 120
-      };
-      res.json(metrics);
-    } catch (error) {
-      console.error('Admin billing metrics error:', error);
-      res.status(500).json({ error: 'Failed to fetch billing metrics' });
-    }
+    res.json(apis);
   });
 
-  app.get("/api/admin/subscription-plans", async (req, res) => {
-    try {
-      const plans = [
-        {
-          id: 'basic',
-          name: 'Basic',
-          price: 29,
-          billingPeriod: 'monthly',
-          features: ['1,000 tokens/month', 'Basic support', 'Standard templates'],
-          tokenLimit: 1000,
-          userLimit: 1,
-          isActive: true,
-          isPopular: false
-        },
-        {
-          id: 'professional',
-          name: 'Professional',
-          price: 99,
-          billingPeriod: 'monthly',
-          features: ['10,000 tokens/month', 'Priority support', 'Advanced templates', 'API access'],
-          tokenLimit: 10000,
-          userLimit: 5,
-          isActive: true,
-          isPopular: true
-        },
-        {
-          id: 'enterprise',
-          name: 'Enterprise',
-          price: 299,
-          billingPeriod: 'monthly',
-          features: ['Unlimited tokens', '24/7 support', 'Custom templates', 'White-label', 'SSO'],
-          tokenLimit: 999999,
-          userLimit: 50,
-          isActive: true,
-          isPopular: false
-        }
-      ];
-      res.json(plans);
-    } catch (error) {
-      console.error('Admin plans error:', error);
-      res.status(500).json({ error: 'Failed to fetch subscription plans' });
-    }
+  // Webhooks endpoints
+  app.get("/api/admin/webhooks", (req, res) => {
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/webhooks 200`);
+
+    const webhooks = [
+      {
+        id: "crm-sync",
+        name: "Case Management Sync",
+        url: "https://crm.example.com/webhook",
+        events: ["case.created", "case.updated", "case.completed"],
+        isActive: true,
+        secret: "webhook_secret_123",
+        retryAttempts: 3,
+        lastTriggered: "30 min ago",
+        deliveryRate: 99.2
+      },
+      {
+        id: "analytics-tracker",
+        name: "Analytics Tracker",
+        url: "https://analytics.app.com/events",
+        events: ["user.created", "document.generated", "payment.completed"],
+        isActive: true,
+        secret: "analytics_secret_456",
+        retryAttempts: 5,
+        lastTriggered: "2 hours ago",
+        deliveryRate: 97.8
+      }
+    ];
+
+    res.json(webhooks);
   });
 
-  app.post("/api/admin/subscription-plans", async (req, res) => {
-    try {
-      const planData = req.body;
-      // In a real app, this would save to database
-      console.log('Creating plan:', planData);
-      res.json({ success: true, id: `plan_${Date.now()}` });
-    } catch (error) {
-      console.error('Create plan error:', error);
-      res.status(500).json({ error: 'Failed to create plan' });
-    }
-  });
+  // Payment Gateways endpoints
+  app.get("/api/admin/payment-gateways", (req, res) => {
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/payment-gateways 200`);
 
-  app.put("/api/admin/subscription-plans/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const planData = req.body;
-      // In a real app, this would update in database
-      console.log('Updating plan:', id, planData);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Update plan error:', error);
-      res.status(500).json({ error: 'Failed to update plan' });
-    }
-  });
+    const gateways = [
+      {
+        id: "stripe",
+        name: "stripe",
+        isActive: true,
+        apiKey: "pk_live_xyz123...",
+        secretKey: "sk_live_xyz123...",
+        webhookSecret: "whsec_xyz123...",
+        environment: "production",
+        lastTransaction: "15 min ago",
+        status: "healthy"
+      },
+      {
+        id: "braintree",
+        name: "braintree",
+        isActive: true,
+        apiKey: "your_merchant_id",
+        secretKey: "your_private_key",
+        environment: "production",
+        lastTransaction: "1 hour ago",
+        status: "healthy"
+      },
+      {
+        id: "helcim",
+        name: "helcim",
+        isActive: false,
+        apiKey: "",
+        secretKey: "",
+        environment: "sandbox",
+        lastTransaction: "Never",
+        status: "warning"
+      }
+    ];
 
-  app.delete("/api/admin/subscription-plans/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      // In a real app, this would delete from database
-      console.log('Deleting plan:', id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Delete plan error:', error);
-      res.status(500).json({ error: 'Failed to delete plan' });
-    }
-  });
-
-  app.get("/api/admin/customers", async (req, res) => {
-    try {
-      const customers = [
-        {
-          id: 'cust_1',
-          name: 'Sarah Johnson',
-          email: 'sarah@lawfirm.com',
-          plan: 'Professional',
-          status: 'active',
-          nextBilling: 'Feb 15, 2024',
-          totalSpent: 1188,
-          joinDate: 'Jan 15, 2023'
-        },
-        {
-          id: 'cust_2',
-          name: 'Mike Chen',
-          email: 'mike@legalcorp.com',
-          plan: 'Enterprise',
-          status: 'active',
-          nextBilling: 'Feb 20, 2024',
-          totalSpent: 3588,
-          joinDate: 'Mar 10, 2023'
-        },
-        {
-          id: 'cust_3',
-          name: 'Emma Davis',
-          email: 'emma@attorney.com',
-          plan: 'Basic',
-          status: 'trial',
-          nextBilling: 'Feb 10, 2024',
-          totalSpent: 0,
-          joinDate: 'Jan 28, 2024'
-        },
-        {
-          id: 'cust_4',
-          name: 'Alex Smith',
-          email: 'alex@legal.org',
-          plan: 'Professional',
-          status: 'cancelled',
-          nextBilling: 'N/A',
-          totalSpent: 594,
-          joinDate: 'Jun 05, 2023'
-        },
-        {
-          id: 'cust_5',
-          name: 'Lisa Wong',
-          email: 'lisa@lawgroup.com',
-          plan: 'Professional',
-          status: 'paused',
-          nextBilling: 'Mar 01, 2024',
-          totalSpent: 891,
-          joinDate: 'Apr 20, 2023'
-        }
-      ];
-      res.json(customers);
-    } catch (error) {
-      console.error('Admin customers error:', error);
-      res.status(500).json({ error: 'Failed to fetch customers' });
-    }
-  });
-
-  app.get("/api/admin/transactions", async (req, res) => {
-    try {
-      const transactions = [
-        {
-          id: 'txn_001',
-          customerName: 'Sarah Johnson',
-          type: 'Subscription',
-          amount: 99,
-          status: 'paid',
-          date: 'Feb 01, 2024'
-        },
-        {
-          id: 'txn_002',
-          customerName: 'Mike Chen',
-          type: 'Subscription',
-          amount: 299,
-          status: 'paid',
-          date: 'Jan 30, 2024'
-        },
-        {
-          id: 'txn_003',
-          customerName: 'Emma Davis',
-          type: 'Token Purchase',
-          amount: 79,
-          status: 'paid',
-          date: 'Jan 28, 2024'
-        },
-        {
-          id: 'txn_004',
-          customerName: 'Alex Smith',
-          type: 'Subscription',
-          amount: 99,
-          status: 'failed',
-          date: 'Jan 25, 2024'
-        },
-        {
-          id: 'txn_005',
-          customerName: 'Lisa Wong',
-          type: 'Subscription',
-          amount: 99,
-          status: 'refunded',
-          date: 'Jan 20, 2024'
-        }
-      ];
-      res.json(transactions);
-    } catch (error) {
-      console.error('Admin transactions error:', error);
-      res.status(500).json({ error: 'Failed to fetch transactions' });
-    }
-  });
-
-  // Add admin routes
-  app.get("/api/admin/stats", async (req, res) => {
-    try {
-      const stats = {
-        totalCases: 120,
-        activeCases: 75,
-        pendingCases: 30,
-        closedCases: 15,
-        totalUsers: 50,
-        activeUsers: 45,
-        newUsersThisMonth: 5,
-      };
-      res.json(stats);
-    } catch (error) {
-      console.error("Admin stats error:", error);
-      res.status(500).json({ message: "Failed to fetch admin stats" });
-    }
-  });
-
-  app.get("/api/admin/cases", async (req, res) => {
-    try {
-      // Mock case data for admin panel
-      const adminCases = mockCases.map(case_ => ({
-        ...case_,
-        priority: Math.random() > 0.5 ? "high" : "medium",
-        status: Math.random() > 0.5 ? "active" : "pending"
-      }));
-      res.json(adminCases);
-    } catch (error) {
-      console.error("Admin cases error:", error);
-      res.status(500).json({ message: "Failed to fetch admin cases" });
-    }
-  });
-
-  app.get("/api/admin/users", async (req, res) => {
-    try {
-      const users = [
-        {
-          id: 1,
-          name: "Sarah Johnson",
-          email: "sarah.johnson@example.com",
-          role: "admin",
-          status: "active",
-          lastLogin: "2024-03-20T10:00:00Z",
-          createdAt: "2023-01-15T00:00:00Z"
-        },
-        {
-          id: 2,
-          name: "Michael Brown",
-          email: "michael.brown@example.com",
-          role: "user",
-          status: "active",
-          lastLogin: "2024-03-19T14:30:00Z",
-          createdAt: "2023-02-01T00:00:00Z"
-        },
-        {
-          id: 3,
-          name: "Emily Davis",
-          email: "emily.davis@example.com",
-          role: "user",
-          status: "pending",
-          lastLogin: null,
-          createdAt: "2023-03-10T00:00:00Z"
-        }
-      ];
-      res.json(users);
-    } catch (error) {
-      console.error("Admin users error:", error);
-      res.status(500).json({ message: "Failed to fetch admin users" });
-    }
+    res.json(gateways);
   });
 
   const httpServer = createServer(app);

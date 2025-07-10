@@ -18,10 +18,11 @@ import NotFound from "@/pages/not-found";
 // Import admin pages
 import AdminDashboard from "@/pages/admin/index";
 import AdminUsers from "@/pages/admin/users";
-import AdminBilling from "@/pages/admin/billing";
-import AdminSystem from "@/pages/admin/system";
 import AdminLandingConfig from "@/pages/admin/landing-config";
 import AdminAnalytics from "@/pages/admin/analytics";
+import AdminSystem from "@/pages/admin/system";
+import AdminBilling from "@/pages/admin/billing";
+import AdminAPIManagement from "@/pages/admin/api-management";
 
 import "./index.css";
 
@@ -57,6 +58,18 @@ function App() {
               </AdminLayout>
             </Route>
 
+            <Route path="/admin/api-management">
+              <AdminLayout>
+                <AdminAPIManagement />
+              </AdminLayout>
+            </Route>
+
+            <Route path="/admin/analytics">
+              <AdminLayout>
+                <AdminAnalytics />
+              </AdminLayout>
+            </Route>
+
             <Route path="/admin/system">
               <AdminLayout>
                 <AdminSystem />
@@ -66,12 +79,6 @@ function App() {
             <Route path="/admin/landing-config">
               <AdminLayout>
                 <AdminLandingConfig />
-              </AdminLayout>
-            </Route>
-
-            <Route path="/admin/analytics">
-              <AdminLayout>
-                <AdminAnalytics />
               </AdminLayout>
             </Route>
 
