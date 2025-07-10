@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -36,7 +35,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
-  
+
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
   });
@@ -140,7 +139,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
             {isEditing ? "Edit your profile information" : "View your profile information"}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Profile Header */}
           <div className="flex items-center space-x-4">
@@ -185,7 +184,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
                   }
                 </h3>
               )}
-              
+
               {isEditing ? (
                 <div className="mt-2">
                   <Label htmlFor="title" className="text-xs">Title</Label>
@@ -249,7 +248,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
                     <span className="text-sm">{profile?.email || "Not specified"}</span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Phone className="h-3 w-3 text-gray-400" />
@@ -292,7 +291,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
                     <span className="text-sm">{profile?.barNumber || "Not specified"}</span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Username:</span>
                   <span className="text-sm">{user?.username || "Not specified"}</span>

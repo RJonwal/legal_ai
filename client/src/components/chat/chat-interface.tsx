@@ -135,6 +135,8 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
     onFunctionClick(functionId);
   }, [onFunctionClick]);
 
+  const displayCase = currentCaseData || currentCase;
+
   const handleShareCase = useCallback(async () => {
     if (!displayCase) return;
     
@@ -175,8 +177,6 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
       console.error('Error bookmarking case:', error);
     }
   }, [displayCase, refetchCase]);
-
-  const displayCase = currentCaseData || currentCase;
 
   return (
     <div ref={chatInterfaceRef} className="flex-1 flex flex-col bg-white h-full" data-chat-interface="true">

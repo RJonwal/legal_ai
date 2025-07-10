@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -6,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -34,7 +39,7 @@ interface BillingModalProps {
 export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // States
   const [isUpdatingCard, setIsUpdatingCard] = useState(false);
   const [newCardData, setNewCardData] = useState({
@@ -174,7 +179,7 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   const handleUpdatePaymentMethod = () => {
     // Remove spaces and validate card number
     const cleanCardNumber = newCardData.number.replace(/\s+/g, '');
-    
+
     if (!cleanCardNumber || cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
       toast({
         variant: "destructive",
@@ -303,6 +308,9 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
             <CreditCard className="h-5 w-5" />
             Billing & Subscription Management
           </DialogTitle>
+          <DialogDescription>
+            Manage your subscription, billing information, token usage, and payment methods
+          </DialogDescription>
           <div id="billing-description" className="sr-only">
             Manage your subscription, billing information, token usage, and payment methods
           </div>
@@ -461,7 +469,7 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
                           Pause Subscription
                         </Button>
                       )}
-                      
+
                       {billingData?.subscription?.status === 'paused' && (
                         <Button
                           variant="outline"
@@ -599,7 +607,7 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
                       <SelectItem value="25000">25,000 Tokens - $349 (Save 26%)</SelectItem>
                     </SelectContent>
                   </Select>
-                  
+
                   <Button 
                     className="w-full"
                     onClick={handlePurchaseTokens}
@@ -687,7 +695,7 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
                       </div>
                     </div>
                   ))}
-                  
+
                   {invoices.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       No invoices found
