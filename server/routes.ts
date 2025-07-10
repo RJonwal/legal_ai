@@ -1140,20 +1140,24 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   app.put("/api/admin/roles/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const { permissions } = req.body;
+      const { permissions, permissionNames } = req.body;
 
       if (id === 'admin') {
         return res.status(403).json({ error: 'Cannot modify admin role' });
       }
 
       console.log(`Updating role ${id} permissions:`, permissions);
+      if (permissionNames) {
+        console.log(`Updating role ${id} permission names:`, permissionNames);
+      }
       
       res.json({ 
         success: true, 
-        message: 'Role permissions updated successfully',
+        message: 'Role permissions and names updated successfully',
         role: {
           id,
           permissions,
+          permissionNames,
           updatedAt: new Date().toISOString()
         }
       });
@@ -1218,6 +1222,31 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     } catch (error) {
       console.error('Create permission group error:', error);
       res.status(500).json({ error: 'Failed to create permission group' });
+    }
+  });
+
+  app.put("/api/admin/permission-groups/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, permissions, permissionNames, color } = req.body;
+
+      console.log(`Updating permission group ${id}:`, { name, permissions, permissionNames, color });
+      
+      res.json({ 
+        success: true, 
+        message: 'Permission group updated successfully',
+        group: {
+          id,
+          name,
+          permissions,
+          permissionNames,
+          color,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Update permission group error:', error);
+      res.status(500).json({ error: 'Failed to update permission group' });
     }
   });
 

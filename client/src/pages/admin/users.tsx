@@ -448,28 +448,28 @@ export default function AdminUsers() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">User Management</Label>
-                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                          <Input defaultValue="User Management" className="text-sm bg-white border-gray-200" disabled />
+                          <input type="checkbox" defaultChecked disabled className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">System Configuration</Label>
-                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                          <Input defaultValue="System Configuration" className="text-sm bg-white border-gray-200" disabled />
+                          <input type="checkbox" defaultChecked disabled className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Financial Reports</Label>
-                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                          <Input defaultValue="Financial Reports" className="text-sm bg-white border-gray-200" disabled />
+                          <input type="checkbox" defaultChecked disabled className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Content Management</Label>
-                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                          <Input defaultValue="Content Management" className="text-sm bg-white border-gray-200" disabled />
+                          <input type="checkbox" defaultChecked disabled className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">API Access</Label>
-                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                          <Input defaultValue="API Access" className="text-sm bg-white border-gray-200" disabled />
+                          <input type="checkbox" defaultChecked disabled className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Impersonation</Label>
-                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                          <Input defaultValue="Impersonation" className="text-sm bg-white border-gray-200" disabled />
+                          <input type="checkbox" defaultChecked disabled className="rounded ml-2" />
                         </div>
                       </div>
                     </CardContent>
@@ -485,7 +485,14 @@ export default function AdminUsers() {
                           </CardTitle>
                           <CardDescription>Advanced legal features</CardDescription>
                         </div>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            // Save role permissions changes
+                            console.log('Saving Professional User role permissions');
+                          }}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                       </div>
@@ -493,28 +500,28 @@ export default function AdminUsers() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Unlimited Cases</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="Unlimited Cases" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Advanced AI Features</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="Advanced AI Features" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Document Generation</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="Document Generation" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Priority Support</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="Priority Support" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">API Access (Limited)</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="API Access (Limited)" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Billing Access</Label>
-                          <input type="checkbox" className="rounded" />
+                          <Input defaultValue="Billing Access" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" className="rounded ml-2" />
                         </div>
                       </div>
                     </CardContent>
@@ -530,7 +537,14 @@ export default function AdminUsers() {
                           </CardTitle>
                           <CardDescription>Basic legal assistance</CardDescription>
                         </div>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            // Save role permissions changes
+                            console.log('Saving Pro Se User role permissions');
+                          }}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                       </div>
@@ -538,28 +552,28 @@ export default function AdminUsers() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Limited Cases (5/month)</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="Limited Cases (5/month)" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Basic AI Assistance</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="Basic AI Assistance" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Document Templates</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="Document Templates" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Email Support</Label>
-                          <input type="checkbox" defaultChecked className="rounded" />
+                          <Input defaultValue="Email Support" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" defaultChecked className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">API Access</Label>
-                          <input type="checkbox" className="rounded" />
+                          <Input defaultValue="API Access" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" className="rounded ml-2" />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Export Data</Label>
-                          <input type="checkbox" className="rounded" />
+                          <Input defaultValue="Export Data" className="text-sm bg-white border-gray-200" />
+                          <input type="checkbox" className="rounded ml-2" />
                         </div>
                       </div>
                     </CardContent>
@@ -722,24 +736,54 @@ export default function AdminUsers() {
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium">Legal Assistants</CardTitle>
-                        <Button size="sm" variant="ghost">
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="ghost">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Legal Assistants Group</DialogTitle>
+                              <DialogDescription>Customize permission names and settings</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="rounded" />
+                                  <Input defaultValue="Case viewing" className="text-sm" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="rounded" />
+                                  <Input defaultValue="Document editing" className="text-sm" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" className="rounded" />
+                                  <Input defaultValue="Client communication" className="text-sm" />
+                                </div>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline">Cancel</Button>
+                              <Button>Save Changes</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-xs text-gray-600 mb-3">3 members</p>
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <input type="checkbox" defaultChecked className="rounded text-xs" disabled />
                           <span>Case viewing</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <input type="checkbox" defaultChecked className="rounded text-xs" disabled />
                           <span>Document editing</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded text-xs" />
+                          <input type="checkbox" className="rounded text-xs" disabled />
                           <span>Client communication</span>
                         </div>
                       </div>
@@ -750,24 +794,54 @@ export default function AdminUsers() {
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium">Paralegals</CardTitle>
-                        <Button size="sm" variant="ghost">
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="ghost">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Paralegals Group</DialogTitle>
+                              <DialogDescription>Customize permission names and settings</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="rounded" />
+                                  <Input defaultValue="Full case access" className="text-sm" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="rounded" />
+                                  <Input defaultValue="Document management" className="text-sm" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="rounded" />
+                                  <Input defaultValue="Timeline management" className="text-sm" />
+                                </div>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline">Cancel</Button>
+                              <Button>Save Changes</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-xs text-gray-600 mb-3">2 members</p>
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <input type="checkbox" defaultChecked className="rounded text-xs" disabled />
                           <span>Full case access</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <input type="checkbox" defaultChecked className="rounded text-xs" disabled />
                           <span>Document management</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <input type="checkbox" defaultChecked className="rounded text-xs" disabled />
                           <span>Timeline management</span>
                         </div>
                       </div>
@@ -778,24 +852,54 @@ export default function AdminUsers() {
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium">Trial Users</CardTitle>
-                        <Button size="sm" variant="ghost">
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="ghost">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Trial Users Group</DialogTitle>
+                              <DialogDescription>Customize permission names and settings</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="rounded" />
+                                  <Input defaultValue="Limited case access" className="text-sm" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" className="rounded" />
+                                  <Input defaultValue="Basic AI features" className="text-sm" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" className="rounded" />
+                                  <Input defaultValue="Export functionality" className="text-sm" />
+                                </div>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline">Cancel</Button>
+                              <Button>Save Changes</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-xs text-gray-600 mb-3">8 members</p>
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <input type="checkbox" defaultChecked className="rounded text-xs" disabled />
                           <span>Limited case access</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded text-xs" />
+                          <input type="checkbox" className="rounded text-xs" disabled />
                           <span>Basic AI features</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded text-xs" />
+                          <input type="checkbox" className="rounded text-xs" disabled />
                           <span>Export functionality</span>
                         </div>
                       </div>
