@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import AdminUsersContent from "@/pages/admin/users";
 import {
   Sidebar,
   SidebarContent,
@@ -320,20 +321,7 @@ export default function AdminDashboard() {
 
           {/* Users Tab */}
           <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage platform users and their permissions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">User Management Panel</h3>
-                  <p className="text-gray-600 mb-4">Advanced user management features coming soon</p>
-                  <Button variant="outline">View User Analytics</Button>
-                </div>
-              </CardContent>
-            </Card>
+            <AdminUsersContent />
           </TabsContent>
 
           {/* Cases Tab */}
