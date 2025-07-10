@@ -10,7 +10,7 @@ import SearchCases from "@/pages/search-cases";
 import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
-import AdminDashboard from "@/pages/admin/dashboard";
+import AdminDashboard from "@/pages/admin/index";
 import AdminUsers from "@/pages/admin/users";
 import AdminSystem from "@/pages/admin/system";
 import LandingConfig from "@/pages/admin/landing-config";

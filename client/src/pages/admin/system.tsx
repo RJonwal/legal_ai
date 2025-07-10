@@ -27,6 +27,8 @@ export default function AdminSystem() {
   const [activeTab, setActiveTab] = useState("security");
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [apiRateLimit, setApiRateLimit] = useState("1000");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const systemStatus = {
     database: { status: "healthy", uptime: "99.9%", lastBackup: "2 hours ago" },
