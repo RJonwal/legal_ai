@@ -52,20 +52,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get specific case
+  // Get single case
   app.get("/api/cases/:id", async (req, res) => {
     try {
       const caseId = parseInt(req.params.id);
       const case_ = await storage.getCase(caseId);
+
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
       }
-      
-      // Update last accessed time when case is viewed
-      await storage.updateCaseLastAccessed(caseId);
-      
-      res.json(case_);
+
+      // Update last accessed time
+      await storage.updateCase(caseId, {
+        lastAccessedAt: new Date()
+      });
+
+      // Return updated case with lastAccessedAt
+      const updatedCase = await storage.getCase(caseId);
+      res.json(updatedCase);
     } catch (error) {
+      console.error("Get case error:", error);
       res.status(500).json({ message: "Failed to get case" });
     }
   });
@@ -208,7 +214,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       const numFiles = Math.floor(Math.random() * 3) + 1;
       const mockFiles = [];
 
-      for (let i = 0; i < numFiles; i++) {
+      for (let i = 0; < numFiles; i++) {
         const randomFile = mockFileTypes[Math.floor(Math.random() * mockFileTypes.length)];
         mockFiles.push({
           id: Date.now() + i,
@@ -655,12 +661,12 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   app.get("/api/billing", async (req, res) => {
     try {
       console.log('Fetching billing data...');
-      
+
       // Simulate realistic billing data with some variation
       const currentDate = new Date();
       const nextBilling = new Date(currentDate);
       nextBilling.setMonth(nextBilling.getMonth() + 1);
-      
+
       const billingData = {
         subscription: {
           plan: 'Professional',
@@ -706,7 +712,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   app.get("/api/billing/invoices", async (req, res) => {
     try {
       console.log('Fetching invoice data...');
-      
+
       // Mock invoice data
       const invoices = [
         {
@@ -762,7 +768,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       // Mock subscription action
       let message = '';
       let newStatus = 'active';
-      
+
       switch (action) {
         case 'pause':
           message = 'Subscription paused successfully';
@@ -855,6 +861,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
           name
         }
       });
+    ```text
     } catch (error) {
       console.error('Payment method update error:', error);
       res.status(500).json({ 
@@ -954,7 +961,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  
+
 
   const httpServer = createServer(app);
   return httpServer;

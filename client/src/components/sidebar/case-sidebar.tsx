@@ -121,8 +121,8 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {case_.title || 'Untitled Case'}
                       </p>
-                      {index === 0 && (
-                        <div className="w-2 h-2 bg-green-500 rounded-full ml-2 mt-1 flex-shrink-0" title="Most recently accessed" />
+                      {currentCaseId === case_.id && (
+                        <div className="w-2 h-2 bg-green-500 rounded-full ml-2 mt-1 flex-shrink-0" title="Currently active case" />
                       )}
                     </div>
                     <p className="text-xs text-gray-500 truncate">

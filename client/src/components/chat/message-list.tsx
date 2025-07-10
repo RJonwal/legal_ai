@@ -1,8 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, User, AlertTriangle, AlertCircle, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Bot, User, AlertTriangle, AlertCircle, Info, Calendar, FileText, Clock, CheckCircle } from "lucide-react";
 import { ChatMessage } from "@/lib/types";
 
 interface MessageListProps {
@@ -24,6 +29,150 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
       minute: '2-digit',
       hour12: true,
     });
+  };
+
+  const [interactiveStates, setInteractiveStates] = useState<Record<string, any>>({});
+
+  const updateInteractiveState = (messageId: string, key: string, value: any) => {
+    setInteractiveStates(prev => ({
+      ...prev,
+      [messageId]: {
+        ...prev[messageId],
+        [key]: value
+      }
+    }));
+  };
+
+  const getInteractiveState = (messageId: string, key: string, defaultValue: any = '') => {
+    return interactiveStates[messageId]?.[key] ?? defaultValue;
+  };
+
+  const renderInteractiveCard = (messageId: string, type: string, data: any) => {
+    switch (type) {
+      case 'deadline_tracker':
+        return (
+          <Card className="border-blue-200 bg-blue-50 mt-3">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <Calendar className="h-4 w-4 text-blue-500" />
+                <span className="text-sm font-medium text-blue-800">Deadline Tracker</span>
+              </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-blue-700 mb-1 block">Task</label>
+                    <Input 
+                      placeholder="Enter task"
+                      value={getInteractiveState(messageId, 'task')}
+                      onChange={(e) => updateInteractiveState(messageId, 'task', e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-blue-700 mb-1 block">Due Date</label>
+                    <Input 
+                      type="date"
+                      value={getInteractiveState(messageId, 'dueDate')}
+                      onChange={(e) => updateInteractiveState(messageId, 'dueDate', e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    checked={getInteractiveState(messageId, 'urgent', false)}
+                    onCheckedChange={(checked) => updateInteractiveState(messageId, 'urgent', checked)}
+                  />
+                  <label className="text-xs text-blue-700">Mark as urgent</label>
+                </div>
+                <Button size="sm" className="w-full">Add to Calendar</Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'document_request':
+        return (
+          <Card className="border-green-200 bg-green-50 mt-3">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <FileText className="h-4 w-4 text-green-500" />
+                <span className="text-sm font-medium text-green-800">Document Request</span>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-green-700 mb-1 block">Document Type</label>
+                  <Select 
+                    value={getInteractiveState(messageId, 'docType')}
+                    onValueChange={(value) => updateInteractiveState(messageId, 'docType', value)}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Select document type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="motion">Motion</SelectItem>
+                      <SelectItem value="brief">Brief</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="letter">Letter</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-green-700 mb-1 block">Special Instructions</label>
+                  <Textarea 
+                    placeholder="Any specific requirements..."
+                    value={getInteractiveState(messageId, 'instructions')}
+                    onChange={(e) => updateInteractiveState(messageId, 'instructions', e.target.value)}
+                    className="min-h-16 text-sm"
+                  />
+                </div>
+                <Button size="sm" className="w-full">Generate Document</Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'strategy_checklist':
+        const checklistItems = data.items || ['Review case files', 'Prepare witness list', 'Draft motions', 'Schedule depositions'];
+        return (
+          <Card className="border-purple-200 bg-purple-50 mt-3">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <CheckCircle className="h-4 w-4 text-purple-500" />
+                <span className="text-sm font-medium text-purple-800">Case Strategy Checklist</span>
+              </div>
+              <div className="space-y-2">
+                {checklistItems.map((item: string, index: number) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Checkbox 
+                      checked={getInteractiveState(messageId, `checklist_${index}`, false)}
+                      onCheckedChange={(checked) => updateInteractiveState(messageId, `checklist_${index}`, checked)}
+                    />
+                    <label className="text-xs text-purple-700">{item}</label>
+                  </div>
+                ))}
+                <div className="mt-3 pt-2 border-t border-purple-200">
+                  <Input 
+                    placeholder="Add custom task..."
+                    value={getInteractiveState(messageId, 'customTask')}
+                    onChange={(e) => updateInteractiveState(messageId, 'customTask', e.target.value)}
+                    className="h-8 text-sm"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && getInteractiveState(messageId, 'customTask')) {
+                        // Add to checklist logic here
+                        updateInteractiveState(messageId, 'customTask', '');
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        return null;
+    }
   };
 
   const renderMessageContent = (message: ChatMessage) => {
@@ -79,9 +228,15 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
             </Card>
           </div>
           
+          {/* Interactive deadline tracker for contract disputes */}
+          {renderInteractiveCard(message.id, 'deadline_tracker', {})}
+          
           <p className="text-gray-900 mt-3">
             I'll generate a detailed analysis document in the canvas for your review. Would you like me to also prepare a breach notification letter?
           </p>
+          
+          {/* Interactive document request */}
+          {renderInteractiveCard(message.id, 'document_request', {})}
         </div>
       );
     }
@@ -120,7 +275,11 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
               color: 'yellow'
             }
           ],
-          description: `I'm ready to help with contract analysis, breach documentation, and litigation strategy for ${clientName}. Use Case Actions below for specific tasks.`
+          description: `I'm ready to help with contract analysis, breach documentation, and litigation strategy for ${clientName}. Use Case Actions below for specific tasks.`,
+          interactive: 'strategy_checklist',
+          interactiveData: {
+            items: ['Review contract sections 4.2 and 7.1', 'Calculate liquidated damages', 'Draft breach notice', 'Prepare discovery requests']
+          }
         };
       
       case 'corporate law':
@@ -140,7 +299,9 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
               color: 'yellow'
             }
           ],
-          description: `I'm ready to assist with corporate governance, merger documentation, and regulatory compliance for ${clientName}. Let me know how I can help advance this transaction.`
+          description: `I'm ready to assist with corporate governance, merger documentation, and regulatory compliance for ${clientName}. Let me know how I can help advance this transaction.`,
+          interactive: 'deadline_tracker',
+          interactiveData: {}
         };
       
       case 'estate law':
@@ -161,7 +322,9 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
               color: 'blue'
             }
           ],
-          description: `I'm ready to help with will preparation, trust structures, and estate tax planning for ${clientName}. Use Case Actions for document generation.`
+          description: `I'm ready to help with will preparation, trust structures, and estate tax planning for ${clientName}. Use Case Actions for document generation.`,
+          interactive: 'document_request',
+          interactiveData: {}
         };
       
       default:
@@ -222,6 +385,9 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
                   <p className="text-gray-700 text-sm">
                     {caseMessage.description}
                   </p>
+                  
+                  {/* Render interactive elements based on case type */}
+                  {caseMessage.interactive && renderInteractiveCard('initial-message', caseMessage.interactive, caseMessage.interactiveData)}
                 </div>
               </CardContent>
             </Card>
