@@ -964,6 +964,379 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
+  // User management routes
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = [
+        {
+          id: "1",
+          name: "John Doe",
+          email: "john.doe@example.com",
+          role: "pro_user",
+          status: "active",
+          subscription: "Professional",
+          joinDate: "2024-01-15",
+          lastActive: "2 hours ago",
+          permissions: {
+            caseManagement: true,
+            documentAccess: true,
+            aiFeatures: true,
+            billingAccess: false,
+            exportData: true
+          },
+          limits: {
+            casesPerMonth: 50,
+            tokensPerMonth: 10000,
+            storageGB: 10
+          }
+        },
+        {
+          id: "2",
+          name: "Sarah Johnson",
+          email: "sarah.johnson@law.com",
+          role: "admin",
+          status: "active",
+          subscription: "Admin",
+          joinDate: "2023-11-20",
+          lastActive: "30 minutes ago",
+          permissions: {
+            caseManagement: true,
+            documentAccess: true,
+            aiFeatures: true,
+            billingAccess: true,
+            exportData: true,
+            userManagement: true,
+            systemConfig: true
+          },
+          limits: {
+            casesPerMonth: 999999,
+            tokensPerMonth: 999999,
+            storageGB: 1000
+          }
+        },
+        {
+          id: "3",
+          name: "Mike Wilson",
+          email: "mike.wilson@legal.com",
+          role: "free_user",
+          status: "inactive",
+          subscription: "Pro Se",
+          joinDate: "2024-02-10",
+          lastActive: "3 days ago",
+          permissions: {
+            caseManagement: true,
+            documentAccess: true,
+            aiFeatures: false,
+            billingAccess: false,
+            exportData: false
+          },
+          limits: {
+            casesPerMonth: 5,
+            tokensPerMonth: 1000,
+            storageGB: 1
+          }
+        }
+      ];
+      res.json(users);
+    } catch (error) {
+      console.error("Admin users error:", error);
+      res.status(500).json({ message: "Failed to fetch admin users" });
+    }
+  });
+
+  app.put("/api/admin/users/:id/role", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+
+      if (!['admin', 'pro_user', 'free_user'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role' });
+      }
+
+      console.log(`Updating user ${id} role to ${role}`);
+      
+      // Mock role update
+      res.json({ 
+        success: true, 
+        message: `User role updated to ${role}`,
+        user: {
+          id,
+          role,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Role update error:', error);
+      res.status(500).json({ error: 'Failed to update user role' });
+    }
+  });
+
+  app.put("/api/admin/users/:id/permissions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { permissions, limits } = req.body;
+
+      console.log(`Updating user ${id} permissions:`, permissions);
+      console.log(`Updating user ${id} limits:`, limits);
+      
+      // Mock permissions update
+      res.json({ 
+        success: true, 
+        message: 'User permissions updated successfully',
+        user: {
+          id,
+          permissions,
+          limits,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Permissions update error:', error);
+      res.status(500).json({ error: 'Failed to update user permissions' });
+    }
+  });
+
+  app.get("/api/admin/roles", async (req, res) => {
+    try {
+      const roles = [
+        {
+          id: 'admin',
+          name: 'Admin',
+          description: 'Full platform access',
+          permissions: [
+            'user_management', 'system_configuration', 'financial_reports',
+            'content_management', 'api_access', 'impersonation'
+          ],
+          isEditable: false
+        },
+        {
+          id: 'pro_user',
+          name: 'Professional User',
+          description: 'Advanced legal features',
+          permissions: [
+            'unlimited_cases', 'advanced_ai', 'document_generation',
+            'priority_support', 'api_access_limited', 'billing_access'
+          ],
+          isEditable: true
+        },
+        {
+          id: 'free_user',
+          name: 'Pro Se User',
+          description: 'Basic legal assistance',
+          permissions: [
+            'limited_cases', 'basic_ai', 'document_templates',
+            'email_support', 'export_data'
+          ],
+          isEditable: true
+        }
+      ];
+      res.json(roles);
+    } catch (error) {
+      console.error('Roles fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch roles' });
+    }
+  });
+
+  app.put("/api/admin/roles/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { permissions } = req.body;
+
+      if (id === 'admin') {
+        return res.status(403).json({ error: 'Cannot modify admin role' });
+      }
+
+      console.log(`Updating role ${id} permissions:`, permissions);
+      
+      res.json({ 
+        success: true, 
+        message: 'Role permissions updated successfully',
+        role: {
+          id,
+          permissions,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Role update error:', error);
+      res.status(500).json({ error: 'Failed to update role' });
+    }
+  });
+
+  app.get("/api/admin/permission-groups", async (req, res) => {
+    try {
+      const groups = [
+        {
+          id: 'legal_assistants',
+          name: 'Legal Assistants',
+          members: 3,
+          permissions: ['case_viewing', 'document_editing'],
+          color: 'purple'
+        },
+        {
+          id: 'paralegals',
+          name: 'Paralegals',
+          members: 2,
+          permissions: ['full_case_access', 'document_management', 'timeline_management'],
+          color: 'green'
+        },
+        {
+          id: 'trial_users',
+          name: 'Trial Users',
+          members: 8,
+          permissions: ['limited_case_access', 'basic_ai_features'],
+          color: 'orange'
+        }
+      ];
+      res.json(groups);
+    } catch (error) {
+      console.error('Permission groups error:', error);
+      res.status(500).json({ error: 'Failed to fetch permission groups' });
+    }
+  });
+
+  app.post("/api/admin/permission-groups", async (req, res) => {
+    try {
+      const { name, permissions, color } = req.body;
+      
+      const newGroup = {
+        id: `group_${Date.now()}`,
+        name,
+        permissions,
+        color: color || 'blue',
+        members: 0,
+        createdAt: new Date().toISOString()
+      };
+
+      console.log('Creating permission group:', newGroup);
+      
+      res.json({ 
+        success: true, 
+        message: 'Permission group created successfully',
+        group: newGroup
+      });
+    } catch (error) {
+      console.error('Create permission group error:', error);
+      res.status(500).json({ error: 'Failed to create permission group' });
+    }
+  });
+
+  app.get("/api/admin/user-analytics", async (req, res) => {
+    try {
+      const analytics = {
+        totalUsers: 1247,
+        activeUsers: 856,
+        newThisMonth: 143,
+        churnRate: 3.2,
+        roleDistribution: {
+          admin: 12,
+          pro_user: 456,
+          free_user: 779
+        },
+        activityDistribution: {
+          high: 72, // percentage
+          medium: 18,
+          low: 7,
+          inactive: 3
+        },
+        topUsers: [
+          {
+            id: '1',
+            name: 'Sarah Johnson',
+            email: 'sarah.johnson@law.com',
+            role: 'pro_user',
+            casesCreated: 24,
+            aiInteractions: 156,
+            lastActive: '2 hours ago'
+          },
+          {
+            id: '2',
+            name: 'Michael Wilson',
+            email: 'michael.wilson@legal.org',
+            role: 'free_user',
+            casesCreated: 18,
+            aiInteractions: 89,
+            lastActive: '1 day ago'
+          },
+          {
+            id: '3',
+            name: 'Emily Davis',
+            email: 'emily.davis@attorney.com',
+            role: 'pro_user',
+            casesCreated: 15,
+            aiInteractions: 67,
+            lastActive: '3 hours ago'
+          }
+        ]
+      };
+      res.json(analytics);
+    } catch (error) {
+      console.error('User analytics error:', error);
+      res.status(500).json({ error: 'Failed to fetch user analytics' });
+    }
+  });
+
+  app.get("/api/admin/settings", async (req, res) => {
+    try {
+      const settings = {
+        defaults: {
+          role: 'free_user',
+          trialPeriod: 14,
+          caseLimit: 5,
+          tokenLimit: 1000,
+          emailVerificationRequired: true,
+          autoActivate: true,
+          sendWelcomeEmail: true,
+          require2FA: false
+        },
+        security: {
+          passwordPolicy: 'strong',
+          sessionTimeout: 60,
+          maxLoginAttempts: 5,
+          lockoutDuration: 30,
+          ipRestriction: false,
+          deviceRegistration: false,
+          loginNotifications: true,
+          auditLogging: true
+        },
+        limits: {
+          freeUsers: { cases: 5, tokens: 1000, storage: 1 },
+          proUsers: { cases: 50, tokens: 10000, storage: 10 },
+          system: { maxFileSize: 100, apiRateLimit: 100, concurrentSessions: 3 }
+        },
+        notifications: {
+          usageLimitWarnings: true,
+          accountExpiryAlerts: true,
+          systemMaintenance: true,
+          securityAlerts: true,
+          featureUpdates: false,
+          weeklyReports: false
+        }
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error('Settings fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+  });
+
+  app.put("/api/admin/settings", async (req, res) => {
+    try {
+      const { section, settings } = req.body;
+      
+      console.log(`Updating ${section} settings:`, settings);
+      
+      res.json({ 
+        success: true, 
+        message: `${section} settings updated successfully`,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Settings update error:', error);
+      res.status(500).json({ error: 'Failed to update settings' });
+    }
+  });
+
   // Bookmark case
   app.post('/api/cases/:id/bookmark', async (req, res) => {
     try {

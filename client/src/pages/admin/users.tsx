@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -51,39 +52,95 @@ export default function AdminUsers() {
     reason: string;
   } | null>(null);
 
-  // Mock user data
-  const users: User[] = [
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john.doe@example.com",
-      role: "pro_user",
-      status: "active",
-      subscription: "Professional",
-      joinDate: "2024-01-15",
-      lastActive: "2 hours ago"
+  const queryClient = useQueryClient();
+
+  // Fetch users data
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/users');
+      if (!response.ok) throw new Error('Failed to fetch users');
+      return response.json();
     },
-    {
-      id: "2",
-      name: "Sarah Johnson",
-      email: "sarah.johnson@law.com",
-      role: "admin",
-      status: "active",
-      subscription: "Admin",
-      joinDate: "2023-11-20",
-      lastActive: "30 minutes ago"
+  });
+
+  // Fetch user analytics
+  const { data: analytics = null } = useQuery({
+    queryKey: ['admin-user-analytics'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/user-analytics');
+      if (!response.ok) throw new Error('Failed to fetch analytics');
+      return response.json();
     },
-    {
-      id: "3",
-      name: "Mike Wilson",
-      email: "mike.wilson@legal.com",
-      role: "free_user",
-      status: "inactive",
-      subscription: "Pro Se",
-      joinDate: "2024-02-10",
-      lastActive: "3 days ago"
-    }
-  ];
+  });
+
+  // Fetch roles
+  const { data: roles = [] } = useQuery({
+    queryKey: ['admin-roles'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/roles');
+      if (!response.ok) throw new Error('Failed to fetch roles');
+      return response.json();
+    },
+  });
+
+  // Fetch permission groups
+  const { data: permissionGroups = [] } = useQuery({
+    queryKey: ['admin-permission-groups'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/permission-groups');
+      if (!response.ok) throw new Error('Failed to fetch permission groups');
+      return response.json();
+    },
+  });
+
+  // Update user role mutation
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      if (!response.ok) throw new Error('Failed to update role');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+
+  // Update user permissions mutation
+  const updatePermissionsMutation = useMutation({
+    mutationFn: async ({ userId, permissions, limits }: { userId: string; permissions: any; limits: any }) => {
+      const response = await fetch(`/api/admin/users/${userId}/permissions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions, limits }),
+      });
+      if (!response.ok) throw new Error('Failed to update permissions');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+
+  // Update role permissions mutation
+  const updateRolePermissionsMutation = useMutation({
+    mutationFn: async ({ roleId, permissions }: { roleId: string; permissions: string[] }) => {
+      const response = await fetch(`/api/admin/roles/${roleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions }),
+      });
+      if (!response.ok) throw new Error('Failed to update role permissions');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+    },
+  });
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -371,61 +428,380 @@ export default function AdminUsers() {
 
         {/* Roles & Permissions Tab */}
         <TabsContent value="roles">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-6">
+            {/* Role Definitions */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-yellow-600" />
-                  Admin
-                </CardTitle>
-                <CardDescription>Full platform access</CardDescription>
+                <CardTitle>Role Definitions</CardTitle>
+                <CardDescription>Configure platform roles and their permissions</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>✓ User management</li>
-                  <li>✓ System configuration</li>
-                  <li>✓ Financial reports</li>
-                  <li>✓ Content management</li>
-                  <li>✓ API access</li>
-                </ul>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card className="border-yellow-200 bg-yellow-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Crown className="h-5 w-5 text-yellow-600" />
+                        Admin
+                      </CardTitle>
+                      <CardDescription>Full platform access</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">User Management</Label>
+                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">System Configuration</Label>
+                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Financial Reports</Label>
+                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Content Management</Label>
+                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">API Access</Label>
+                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Impersonation</Label>
+                          <input type="checkbox" defaultChecked disabled className="rounded" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <Shield className="h-5 w-5 text-blue-600" />
+                            Professional User
+                          </CardTitle>
+                          <CardDescription>Advanced legal features</CardDescription>
+                        </div>
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Unlimited Cases</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Advanced AI Features</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Document Generation</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Priority Support</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">API Access (Limited)</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Billing Access</Label>
+                          <input type="checkbox" className="rounded" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-gray-200 bg-gray-50">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <Users className="h-5 w-5 text-gray-600" />
+                            Pro Se User
+                          </CardTitle>
+                          <CardDescription>Basic legal assistance</CardDescription>
+                        </div>
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Limited Cases (5/month)</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Basic AI Assistance</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Document Templates</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Email Support</Label>
+                          <input type="checkbox" defaultChecked className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">API Access</Label>
+                          <input type="checkbox" className="rounded" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Export Data</Label>
+                          <input type="checkbox" className="rounded" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </CardContent>
             </Card>
 
+            {/* User Role Assignments */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  Professional User
-                </CardTitle>
-                <CardDescription>Advanced legal features</CardDescription>
+                <CardTitle>User Role Assignments</CardTitle>
+                <CardDescription>Manage individual user role assignments and permissions</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>✓ Unlimited cases</li>
-                  <li>✓ Advanced AI features</li>
-                  <li>✓ Document generation</li>
-                  <li>✓ Priority support</li>
-                  <li>✓ API access (limited)</li>
-                </ul>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Current Role</TableHead>
+                      <TableHead>Custom Permissions</TableHead>
+                      <TableHead>Last Modified</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-blue-600">
+                                {user.name.split(' ').map(n => n[0]).join('')}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium">{user.name}</p>
+                              <p className="text-sm text-gray-600">{user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Select defaultValue={user.role}>
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin">
+                                <div className="flex items-center gap-2">
+                                  <Crown className="h-4 w-4 text-yellow-600" />
+                                  Admin
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="pro_user">
+                                <div className="flex items-center gap-2">
+                                  <Shield className="h-4 w-4 text-blue-600" />
+                                  Professional User
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="free_user">
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-4 w-4 text-gray-600" />
+                                  Pro Se User
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline">
+                                <Settings className="h-4 w-4 mr-1" />
+                                Custom
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>Custom Permissions for {user.name}</DialogTitle>
+                                <DialogDescription>
+                                  Override role-based permissions with custom settings
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-sm">Case Management</Label>
+                                    <input type="checkbox" defaultChecked className="rounded" />
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-sm">Document Access</Label>
+                                    <input type="checkbox" defaultChecked className="rounded" />
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-sm">AI Features</Label>
+                                    <input type="checkbox" className="rounded" />
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-sm">Billing Access</Label>
+                                    <input type="checkbox" className="rounded" />
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-sm">Export Data</Label>
+                                    <input type="checkbox" className="rounded" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <Label htmlFor="case-limit">Case Limit (per month)</Label>
+                                  <Input id="case-limit" type="number" defaultValue="10" />
+                                </div>
+                                <div>
+                                  <Label htmlFor="token-limit">Token Limit (per month)</Label>
+                                  <Input id="token-limit" type="number" defaultValue="5000" />
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button variant="outline">Cancel</Button>
+                                <Button>Save Permissions</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-gray-600">2 days ago</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-red-600">
+                              <UserX className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
 
+            {/* Permission Groups */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-gray-600" />
-                  Pro Se User
-                </CardTitle>
-                <CardDescription>Basic legal assistance</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Permission Groups</CardTitle>
+                    <CardDescription>Create and manage custom permission groups</CardDescription>
+                  </div>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Group
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>✓ Limited cases (5/month)</li>
-                  <li>✓ Basic AI assistance</li>
-                  <li>✓ Document templates</li>
-                  <li>✓ Email support</li>
-                  <li>✗ No API access</li>
-                </ul>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Card className="border-purple-200 bg-purple-50">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium">Legal Assistants</CardTitle>
+                        <Button size="sm" variant="ghost">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-xs text-gray-600 mb-3">3 members</p>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <span>Case viewing</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <span>Document editing</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" className="rounded text-xs" />
+                          <span>Client communication</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-green-200 bg-green-50">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium">Paralegals</CardTitle>
+                        <Button size="sm" variant="ghost">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-xs text-gray-600 mb-3">2 members</p>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <span>Full case access</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <span>Document management</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <span>Timeline management</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium">Trial Users</CardTitle>
+                        <Button size="sm" variant="ghost">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-xs text-gray-600 mb-3">8 members</p>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" defaultChecked className="rounded text-xs" />
+                          <span>Limited case access</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" className="rounded text-xs" />
+                          <span>Basic AI features</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" className="rounded text-xs" />
+                          <span>Export functionality</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -433,20 +809,271 @@ export default function AdminUsers() {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Analytics</CardTitle>
-              <CardDescription>Insights into user behavior and platform usage</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <UserCheck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">User Analytics Dashboard</h3>
-                <p className="text-gray-600 mb-4">Detailed user behavior analytics and engagement metrics</p>
-                <Button variant="outline">View Full Analytics</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* User Metrics Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Users</p>
+                      <p className="text-2xl font-bold">1,247</p>
+                    </div>
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">+12% from last month</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Active Users</p>
+                      <p className="text-2xl font-bold">856</p>
+                    </div>
+                    <UserCheck className="h-8 w-8 text-green-600" />
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">+8% from last month</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">New This Month</p>
+                      <p className="text-2xl font-bold">143</p>
+                    </div>
+                    <UserX className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">+23% from last month</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Churn Rate</p>
+                      <p className="text-2xl font-bold">3.2%</p>
+                    </div>
+                    <AlertTriangle className="h-8 w-8 text-red-600" />
+                  </div>
+                  <p className="text-xs text-red-600 mt-1">+0.3% from last month</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* User Activity Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Registration Trends</CardTitle>
+                  <CardDescription>New user registrations over time</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <UserCheck className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">Chart visualization placeholder</p>
+                      <p className="text-xs text-gray-500">Registration trends: +15% growth</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Activity Distribution</CardTitle>
+                  <CardDescription>User engagement levels and activity patterns</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">High Activity (Daily)</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div className="bg-green-600 h-2 rounded-full" style={{ width: '72%' }}></div>
+                        </div>
+                        <span className="text-sm font-medium">72%</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Medium Activity (Weekly)</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: '18%' }}></div>
+                        </div>
+                        <span className="text-sm font-medium">18%</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Low Activity (Monthly)</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '7%' }}></div>
+                        </div>
+                        <span className="text-sm font-medium">7%</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Inactive</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div className="bg-red-600 h-2 rounded-full" style={{ width: '3%' }}></div>
+                        </div>
+                        <span className="text-sm font-medium">3%</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Role Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>User Role Distribution</CardTitle>
+                <CardDescription>Breakdown of users by role and subscription type</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Crown className="h-8 w-8 text-yellow-600" />
+                    </div>
+                    <p className="text-2xl font-bold">12</p>
+                    <p className="text-sm text-gray-600">Admin Users</p>
+                    <p className="text-xs text-gray-500">1% of total</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Shield className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <p className="text-2xl font-bold">456</p>
+                    <p className="text-sm text-gray-600">Professional Users</p>
+                    <p className="text-xs text-gray-500">37% of total</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Users className="h-8 w-8 text-gray-600" />
+                    </div>
+                    <p className="text-2xl font-bold">779</p>
+                    <p className="text-sm text-gray-600">Pro Se Users</p>
+                    <p className="text-xs text-gray-500">62% of total</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Top Users Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Most Active Users</CardTitle>
+                <CardDescription>Users with highest platform engagement this month</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Cases Created</TableHead>
+                      <TableHead>AI Interactions</TableHead>
+                      <TableHead>Last Active</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-blue-600">SJ</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">Sarah Johnson</p>
+                            <p className="text-sm text-gray-600">sarah.johnson@law.com</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-blue-600" />
+                          <span>Professional</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">24</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">156</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-600">2 hours ago</span>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-green-600">MW</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">Michael Wilson</p>
+                            <p className="text-sm text-gray-600">michael.wilson@legal.org</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-gray-600" />
+                          <span>Pro Se</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">18</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">89</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-600">1 day ago</span>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-purple-600">ED</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">Emily Davis</p>
+                            <p className="text-sm text-gray-600">emily.davis@attorney.com</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-blue-600" />
+                          <span>Professional</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">15</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">67</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-600">3 hours ago</span>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Impersonation Tab */}
@@ -525,20 +1152,301 @@ export default function AdminUsers() {
 
         {/* Settings Tab */}
         <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Settings</CardTitle>
-              <CardDescription>Configure user defaults and restrictions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Settings className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">User Configuration</h3>
-                <p className="text-gray-600 mb-4">Manage default user settings and platform restrictions</p>
-                <Button variant="outline">Configure Settings</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* Default User Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Default User Settings</CardTitle>
+                <CardDescription>Configure default settings for new user accounts</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="default-role">Default Role for New Users</Label>
+                      <Select defaultValue="free_user">
+                        <SelectTrigger id="default-role">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free_user">Pro Se User</SelectItem>
+                          <SelectItem value="pro_user">Professional User</SelectItem>
+                          <SelectItem value="admin">Admin (Restricted)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="trial-period">Trial Period (days)</Label>
+                      <Input id="trial-period" type="number" defaultValue="14" />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="default-case-limit">Default Case Limit</Label>
+                      <Input id="default-case-limit" type="number" defaultValue="5" />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="default-token-limit">Default Token Limit</Label>
+                      <Input id="default-token-limit" type="number" defaultValue="1000" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Email Verification Required</Label>
+                        <p className="text-xs text-gray-600">Require email verification for new accounts</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Auto-activate Accounts</Label>
+                        <p className="text-xs text-gray-600">Automatically activate verified accounts</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Send Welcome Email</Label>
+                        <p className="text-xs text-gray-600">Send welcome email to new users</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Enable Two-Factor Auth</Label>
+                        <p className="text-xs text-gray-600">Require 2FA for all users</p>
+                      </div>
+                      <input type="checkbox" className="rounded" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t">
+                  <Button>Save Default Settings</Button>
+                  <Button variant="outline">Reset to Defaults</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Security Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Security & Access Control</CardTitle>
+                <CardDescription>Configure security policies and access restrictions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="password-policy">Password Policy</Label>
+                      <Select defaultValue="strong">
+                        <SelectTrigger id="password-policy">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basic">Basic (8+ characters)</SelectItem>
+                          <SelectItem value="strong">Strong (12+ chars, mixed case, numbers)</SelectItem>
+                          <SelectItem value="enterprise">Enterprise (16+ chars, symbols required)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
+                      <Input id="session-timeout" type="number" defaultValue="60" />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="max-login-attempts">Max Login Attempts</Label>
+                      <Input id="max-login-attempts" type="number" defaultValue="5" />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="lockout-duration">Account Lockout Duration (minutes)</Label>
+                      <Input id="lockout-duration" type="number" defaultValue="30" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">IP Restriction</Label>
+                        <p className="text-xs text-gray-600">Restrict access by IP address</p>
+                      </div>
+                      <input type="checkbox" className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Device Registration</Label>
+                        <p className="text-xs text-gray-600">Require device registration</p>
+                      </div>
+                      <input type="checkbox" className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Login Notifications</Label>
+                        <p className="text-xs text-gray-600">Email notifications for new logins</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Audit Logging</Label>
+                        <p className="text-xs text-gray-600">Log all user actions</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t">
+                  <Button>Apply Security Settings</Button>
+                  <Button variant="outline">Test Configuration</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Usage Limits */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Usage Limits & Quotas</CardTitle>
+                <CardDescription>Set platform-wide usage limits and quotas</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-900">Pro Se Users</h4>
+                    <div>
+                      <Label htmlFor="free-cases">Cases per month</Label>
+                      <Input id="free-cases" type="number" defaultValue="5" />
+                    </div>
+                    <div>
+                      <Label htmlFor="free-tokens">Tokens per month</Label>
+                      <Input id="free-tokens" type="number" defaultValue="1000" />
+                    </div>
+                    <div>
+                      <Label htmlFor="free-storage">Storage limit (GB)</Label>
+                      <Input id="free-storage" type="number" defaultValue="1" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-900">Professional Users</h4>
+                    <div>
+                      <Label htmlFor="pro-cases">Cases per month</Label>
+                      <Input id="pro-cases" type="number" defaultValue="50" />
+                    </div>
+                    <div>
+                      <Label htmlFor="pro-tokens">Tokens per month</Label>
+                      <Input id="pro-tokens" type="number" defaultValue="10000" />
+                    </div>
+                    <div>
+                      <Label htmlFor="pro-storage">Storage limit (GB)</Label>
+                      <Input id="pro-storage" type="number" defaultValue="10" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-900">System Limits</h4>
+                    <div>
+                      <Label htmlFor="max-file-size">Max file size (MB)</Label>
+                      <Input id="max-file-size" type="number" defaultValue="100" />
+                    </div>
+                    <div>
+                      <Label htmlFor="api-rate-limit">API rate limit (req/min)</Label>
+                      <Input id="api-rate-limit" type="number" defaultValue="100" />
+                    </div>
+                    <div>
+                      <Label htmlFor="concurrent-sessions">Max concurrent sessions</Label>
+                      <Input id="concurrent-sessions" type="number" defaultValue="3" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t">
+                  <Button>Update Limits</Button>
+                  <Button variant="outline">View Usage Reports</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notification Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>System Notifications</CardTitle>
+                <CardDescription>Configure automatic notifications and alerts</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Usage Limit Warnings</Label>
+                        <p className="text-xs text-gray-600">Notify users at 80% of limit</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Account Expiry Alerts</Label>
+                        <p className="text-xs text-gray-600">Notify before account expiration</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">System Maintenance</Label>
+                        <p className="text-xs text-gray-600">Notify about scheduled maintenance</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Security Alerts</Label>
+                        <p className="text-xs text-gray-600">Notify about security events</p>
+                      </div>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Feature Updates</Label>
+                        <p className="text-xs text-gray-600">Notify about new features</p>
+                      </div>
+                      <input type="checkbox" className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Weekly Reports</Label>
+                        <p className="text-xs text-gray-600">Send weekly usage reports</p>
+                      </div>
+                      <input type="checkbox" className="rounded" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t">
+                  <Button>Save Notification Settings</Button>
+                  <Button variant="outline">Send Test Notification</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
