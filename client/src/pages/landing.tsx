@@ -398,7 +398,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold"
+              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold bg-transparent"
             >
               Schedule Demo
             </Button>
@@ -475,8 +475,6 @@ export default function Landing() {
               <span>SOC 2 Compliant</span>
               <Globe className="h-4 w-4" />
               <span>GDPR Ready</span>
-              <Award className="h-4 w-4" />
-              <span>ABA Certified</span>
             </div>
           </div>
         </div>
