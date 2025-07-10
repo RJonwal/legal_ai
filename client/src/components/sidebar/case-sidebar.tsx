@@ -7,6 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/ui/logo";
+import { NewCaseModal } from "@/components/modals/new-case-modal";
+import { SearchCasesModal } from "@/components/modals/search-cases-modal";
+import { SettingsModal } from "@/components/modals/settings-modal";
+import { UserProfileModal } from "@/components/modals/user-profile-modal";
+import { BillingModal } from "@/components/modals/billing-modal";
 import { 
   Search, 
   Plus, 
@@ -16,7 +21,9 @@ import {
   MoreVertical,
   CreditCard,
   FileText,
-  Users
+  Users,
+  User,
+  FolderOpen
 } from "lucide-react";
 interface CaseSidebarProps {
   currentCaseId?: number;
@@ -92,7 +99,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
         </div>
 
         <div className="space-y-2">
-          {cases && cases.length > 0 ? cases.map((case_: any, index: number) => (
+          {cases && cases.length > 0 ? cases.slice(0, 3).map((case_: any, index: number) => (
             <Card 
               key={case_.id}
               className={`cursor-pointer hover:bg-gray-50 transition-colors relative ${
