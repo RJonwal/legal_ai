@@ -135,12 +135,8 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
     onFunctionClick(functionId);
   }, [onFunctionClick]);
 
-  // Case display state
-  const [displayCase, setDisplayCase] = useState<any>(currentCase);
-
-  // State for modal management
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState<any>(null);
+  // Use computed value instead of state to avoid initialization issues
+  const displayCase = currentCaseData || currentCase;
 
   const handleShareCase = useCallback(async () => {
     if (!displayCase) return;

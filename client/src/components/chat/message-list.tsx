@@ -176,72 +176,151 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
   };
 
   const renderMessageContent = (message: ChatMessage) => {
-    // Check if message contains structured analysis
-    if (message.role === 'assistant' && message.content.includes('Critical Issue')) {
-      return (
-        <div className="space-y-3">
-          <p className="text-gray-900 mb-3">
-            I've analyzed the contract and identified several key issues. Here's my analysis:
-          </p>
-          
-          <div className="space-y-3">
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="p-3">
-                <div className="flex items-center space-x-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                  <Badge variant="destructive" className="text-xs">
-                    Critical Issue
-                  </Badge>
-                </div>
-                <p className="text-sm text-red-700">
-                  Section 4.2 - Delivery timeline breach (30 days overdue)
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardContent className="p-3">
-                <div className="flex items-center space-x-2 mb-2">
-                  <AlertCircle className="h-4 w-4 text-yellow-500" />
-                  <Badge className="text-xs bg-yellow-100 text-yellow-800">
-                    Moderate Issue
-                  </Badge>
-                </div>
-                <p className="text-sm text-yellow-700">
-                  Section 7.1 - Unclear termination clause language
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-blue-200 bg-blue-50">
-              <CardContent className="p-3">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Info className="h-4 w-4 text-blue-500" />
-                  <Badge className="text-xs bg-blue-100 text-blue-800">
-                    Opportunity
-                  </Badge>
-                </div>
-                <p className="text-sm text-blue-700">
-                  Section 9.3 - Liquidated damages clause favorable to client
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Interactive deadline tracker for contract disputes */}
-          {renderInteractiveCard(message.id, 'deadline_tracker', {})}
-          
-          <p className="text-gray-900 mt-3">
-            I'll generate a detailed analysis document in the canvas for your review. Would you like me to also prepare a breach notification letter?
-          </p>
-          
-          {/* Interactive document request */}
-          {renderInteractiveCard(message.id, 'document_request', {})}
-        </div>
-      );
+    // Check for various legal scenarios and render interactive cards
+    if (message.content.includes('contract analysis') || message.content.includes('contract dispute')) {
+      return renderContractAnalysisMessage(message);
     }
 
-    return <p className="text-gray-900">{message.content}</p>;
+    if (message.content.includes('discovery') || message.content.includes('evidence')) {
+      return renderDiscoveryMessage(message);
+    }
+
+    if (message.content.includes('deposition') || message.content.includes('witness')) {
+      return renderDepositionPrepMessage(message);
+    }
+
+    if (message.content.includes('settlement') || message.content.includes('negotiate')) {
+      return renderSettlementMessage(message);
+    }
+
+    // Default proactive attorney response for any case-related query
+    if (message.role === 'assistant' && currentCase) {
+      return renderProactiveAttorneyResponse(message);
+    }
+
+    return (
+      <div className="text-gray-900 whitespace-pre-wrap">
+        {message.content}
+      </div>
+    );
+  };
+
+  const renderProactiveAttorneyResponse = (message: ChatMessage) => {
+    return (
+      <div className="space-y-4">
+        <div className="text-gray-900 whitespace-pre-wrap">
+          {message.content}
+        </div>
+
+        {/* Proactive Attorney Actions */}
+        <Card className="border-legal-blue bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <Brain className="h-4 w-4 text-legal-blue" />
+              <span className="text-sm font-medium text-legal-blue">Recommended Actions</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-legal-blue border-legal-blue hover:bg-legal-blue hover:text-white"
+                onClick={() => updateInteractiveState(message.id, 'action', 'document_review')}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Review Documents
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-legal-blue border-legal-blue hover:bg-legal-blue hover:text-white"
+                onClick={() => updateInteractiveState(message.id, 'action', 'deadline_tracker')}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Set Deadlines
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Case Strategy Widget */}
+        {renderInteractiveCard(message.id, 'case_strategy', {})}
+      </div>
+    );
+  };
+
+  const renderDiscoveryMessage = (message: ChatMessage) => {
+    return (
+      <div className="space-y-4">
+        <div className="text-gray-900 whitespace-pre-wrap">
+          {message.content}
+        </div>
+
+        {/* Discovery Management */}
+        {renderInteractiveCard(message.id, 'discovery_tracker', {})}
+
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="flex items-center space-x-2 mb-2">
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <span className="text-sm font-medium text-yellow-800">Discovery Deadlines</span>
+          </div>
+          <p className="text-sm text-yellow-700">
+            Initial disclosures due in 14 days. Document production requests should be served within 30 days.
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  const renderDepositionPrepMessage = (message: ChatMessage) => {
+    return (
+      <div className="space-y-4">
+        <div className="text-gray-900 whitespace-pre-wrap">
+          {message.content}
+        </div>
+
+        {/* Deposition Preparation */}
+        {renderInteractiveCard(message.id, 'deposition_prep', {})}
+
+        <Card className="border-purple-200 bg-purple-50">
+          <CardContent className="p-3">
+            <div className="flex items-center space-x-2 mb-2">
+              <UserCheck className="h-4 w-4 text-purple-600" />
+              <Badge className="text-xs bg-purple-100 text-purple-800">
+                Witness Prep
+              </Badge>
+            </div>
+            <p className="text-sm text-purple-700">
+              Schedule mock deposition session. Review key documents with witness.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderSettlementMessage = (message: ChatMessage) => {
+    return (
+      <div className="space-y-4">
+        <div className="text-gray-900 whitespace-pre-wrap">
+          {message.content}
+        </div>
+
+        {/* Settlement Calculator */}
+        {renderInteractiveCard(message.id, 'settlement_calculator', {})}
+
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-3">
+            <div className="flex items-center space-x-2 mb-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-800">Settlement Strategy</span>
+            </div>
+            <p className="text-sm text-green-700">
+              Consider mediation before trial. Analyze comparable case settlements.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   };
 
   const generateCaseSpecificMessage = () => {
@@ -256,7 +335,7 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
     const caseType = currentCase.caseType?.toLowerCase() || '';
     const caseTitle = currentCase.title || 'Current Case';
     const clientName = currentCase.clientName || 'Client';
-    
+
     switch (caseType) {
       case 'contract dispute':
         return {
@@ -281,7 +360,7 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
             items: ['Review contract sections 4.2 and 7.1', 'Calculate liquidated damages', 'Draft breach notice', 'Prepare discovery requests']
           }
         };
-      
+
       case 'corporate law':
         return {
           greeting: `Good morning! I've reviewed the ${caseTitle} matter and identified key strategic considerations:`,
@@ -303,7 +382,7 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
           interactive: 'deadline_tracker',
           interactiveData: {}
         };
-      
+
       case 'estate law':
       case 'estate planning':
         return {
@@ -326,7 +405,7 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
           interactive: 'document_request',
           interactiveData: {}
         };
-      
+
       default:
         return {
           greeting: `Good morning! I've reviewed the ${caseTitle} matter and I'm ready to provide comprehensive legal support:`,
@@ -361,7 +440,7 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
                   <p className="text-gray-900 font-medium">
                     {caseMessage.greeting}
                   </p>
-                  
+
                   {caseMessage.alerts.length > 0 && (
                     <div className="space-y-2">
                       {caseMessage.alerts.map((alert, index) => (
@@ -381,11 +460,11 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
                       ))}
                     </div>
                   )}
-                  
+
                   <p className="text-gray-700 text-sm">
                     {caseMessage.description}
                   </p>
-                  
+
                   {/* Render interactive elements based on case type */}
                   {caseMessage.interactive && renderInteractiveCard('initial-message', caseMessage.interactive, caseMessage.interactiveData)}
                 </div>
@@ -412,7 +491,7 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
               </AvatarFallback>
             </Avatar>
           )}
-          
+
           <div className="flex-1 max-w-3xl">
             <Card className={`${
               message.role === 'user' 
