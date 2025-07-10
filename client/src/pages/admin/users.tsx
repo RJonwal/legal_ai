@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Users, 
   Shield, 
@@ -18,7 +20,11 @@ import {
   Crown,
   Edit,
   Trash2,
-  Mail
+  Mail,
+  UserX,
+  AlertTriangle,
+  Clock,
+  Eye
 } from "lucide-react";
 
 interface User {
@@ -37,6 +43,13 @@ export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [impersonationTarget, setImpersonationTarget] = useState<User | null>(null);
+  const [impersonationReason, setImpersonationReason] = useState("");
+  const [currentImpersonation, setCurrentImpersonation] = useState<{
+    user: User;
+    startTime: Date;
+    reason: string;
+  } | null>(null);
 
   // Mock user data
   const users: User[] = [
@@ -89,8 +102,66 @@ export default function AdminUsers() {
     }
   };
 
+  const handleImpersonateUser = (user: User) => {
+    if (!impersonationReason.trim()) {
+      alert("Please provide a reason for impersonation");
+      return;
+    }
+    
+    setCurrentImpersonation({
+      user,
+      startTime: new Date(),
+      reason: impersonationReason
+    });
+    setImpersonationTarget(null);
+    setImpersonationReason("");
+    
+    // In a real implementation, this would make an API call to start impersonation
+    console.log(`Starting impersonation of user ${user.name} (${user.email})`);
+    console.log(`Reason: ${impersonationReason}`);
+  };
+
+  const handleStopImpersonation = () => {
+    if (currentImpersonation) {
+      const duration = Date.now() - currentImpersonation.startTime.getTime();
+      console.log(`Stopping impersonation of ${currentImpersonation.user.name} after ${Math.round(duration / 1000)} seconds`);
+      setCurrentImpersonation(null);
+    }
+  };
+
+  const canImpersonate = (user: User) => {
+    return user.role !== 'admin' && user.status === 'active';
+  };
+
   return (
     <div className="space-y-6">
+      {/* Impersonation Banner */}
+      {currentImpersonation && (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-orange-800">
+                Currently impersonating <strong>{currentImpersonation.user.name}</strong> ({currentImpersonation.user.email})
+              </span>
+              <Badge variant="outline" className="text-orange-700 border-orange-300">
+                <Clock className="h-3 w-3 mr-1" />
+                Started: {currentImpersonation.startTime.toLocaleTimeString()}
+              </Badge>
+            </div>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleStopImpersonation}
+              className="text-orange-700 border-orange-300 hover:bg-orange-100"
+            >
+              <UserX className="h-4 w-4 mr-1" />
+              Stop Impersonation
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
@@ -103,7 +174,7 @@ export default function AdminUsers() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             All Users
@@ -111,6 +182,10 @@ export default function AdminUsers() {
           <TabsTrigger value="roles" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Roles & Permissions
+          </TabsTrigger>
+          <TabsTrigger value="impersonation" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Impersonation
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <UserCheck className="h-4 w-4" />
@@ -220,6 +295,67 @@ export default function AdminUsers() {
                           <Button size="sm" variant="outline">
                             <Mail className="h-4 w-4" />
                           </Button>
+                          {canImpersonate(user) && (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-blue-600 hover:bg-blue-50"
+                                  onClick={() => setImpersonationTarget(user)}
+                                  disabled={!!currentImpersonation}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Impersonate User</DialogTitle>
+                                  <DialogDescription>
+                                    You are about to impersonate <strong>{user.name}</strong> ({user.email}). 
+                                    This action will be logged and monitored.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div>
+                                    <Label htmlFor="impersonation-reason">Reason for impersonation *</Label>
+                                    <Input
+                                      id="impersonation-reason"
+                                      placeholder="e.g., Customer support request, troubleshooting issue..."
+                                      value={impersonationReason}
+                                      onChange={(e) => setImpersonationReason(e.target.value)}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                  <Alert>
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertDescription>
+                                      <strong>Important:</strong> During impersonation, you will have full access to this user's account. 
+                                      All actions will be logged and attributed to your admin account.
+                                    </AlertDescription>
+                                  </Alert>
+                                </div>
+                                <DialogFooter>
+                                  <Button 
+                                    variant="outline" 
+                                    onClick={() => {
+                                      setImpersonationTarget(null);
+                                      setImpersonationReason("");
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button 
+                                    onClick={() => handleImpersonateUser(user)}
+                                    disabled={!impersonationReason.trim()}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    Start Impersonation
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
                           <Button size="sm" variant="outline" className="text-red-600">
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -311,6 +447,80 @@ export default function AdminUsers() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Impersonation Tab */}
+        <TabsContent value="impersonation">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Impersonation Management</CardTitle>
+                <CardDescription>Monitor and manage user impersonation sessions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {currentImpersonation ? (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Active Impersonation Session</h3>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Eye className="h-4 w-4 text-orange-600" />
+                            <span className="font-medium">Impersonating: {currentImpersonation.user.name}</span>
+                          </div>
+                          <p className="text-sm text-gray-600">Email: {currentImpersonation.user.email}</p>
+                          <p className="text-sm text-gray-600">Started: {currentImpersonation.startTime.toLocaleString()}</p>
+                          <p className="text-sm text-gray-600">Reason: {currentImpersonation.reason}</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleStopImpersonation}
+                          className="text-orange-700 border-orange-300 hover:bg-orange-100"
+                        >
+                          <UserX className="h-4 w-4 mr-2" />
+                          Stop Impersonation
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Eye className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No Active Impersonation</h3>
+                    <p className="text-gray-600 mb-4">Use the eye icon in the Users tab to start impersonating a user</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Impersonation History</CardTitle>
+                <CardDescription>Recent impersonation sessions and audit log</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Mock impersonation history */}
+                  <div className="border rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">John Doe (john.doe@example.com)</span>
+                      <Badge variant="outline">2 hours ago</Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">Duration: 15 minutes</p>
+                    <p className="text-sm text-gray-600">Reason: Customer support - billing inquiry</p>
+                  </div>
+                  <div className="border rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Mike Wilson (mike.wilson@legal.com)</span>
+                      <Badge variant="outline">1 day ago</Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">Duration: 8 minutes</p>
+                    <p className="text-sm text-gray-600">Reason: Troubleshooting document generation issue</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Settings Tab */}

@@ -994,8 +994,92 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  // Mount admin routes with proper middleware
+  // Admin routes
   app.use("/api/admin", adminRoutes);
+
+// Impersonation routes
+app.post("/api/admin/impersonation/start", (req, res) => {
+  const { userId, reason } = req.body;
+
+  // Log the impersonation start
+  console.log(`${new Date().toLocaleTimeString()} [express] Starting impersonation of user ${userId}`);
+  console.log(`Reason: ${reason}`);
+
+  // In a real implementation, you would:
+  // 1. Validate admin permissions
+  // 2. Create impersonation session in database
+  // 3. Set session tokens/cookies
+  // 4. Log the action for audit
+
+  res.json({ 
+    success: true, 
+    message: "Impersonation started successfully",
+    sessionId: `imp_${Date.now()}`,
+    startTime: new Date().toISOString()
+  });
+});
+
+app.post("/api/admin/impersonation/stop", (req, res) => {
+  const { sessionId } = req.body;
+
+  console.log(`${new Date().toLocaleTimeString()} [express] Stopping impersonation session ${sessionId}`);
+
+  // In a real implementation, you would:
+  // 1. Clear impersonation session
+  // 2. Restore admin session
+  // 3. Log the action for audit
+  // 4. Calculate session duration
+
+  res.json({ 
+    success: true, 
+    message: "Impersonation stopped successfully",
+    endTime: new Date().toISOString()
+  });
+});
+
+app.get("/api/admin/impersonation/history", (req, res) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/impersonation/history 200`);
+
+  // Mock impersonation history
+  const history = [
+    {
+      id: "imp_1",
+      targetUser: {
+        id: "1",
+        name: "John Doe",
+        email: "john.doe@example.com"
+      },
+      adminUser: {
+        id: "admin_1",
+        name: "Admin User",
+        email: "admin@example.com"
+      },
+      startTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      endTime: new Date(Date.now() - 2 * 60 * 60 * 1000 + 15 * 60 * 1000).toISOString(),
+      duration: 15 * 60, // 15 minutes in seconds
+      reason: "Customer support - billing inquiry"
+    },
+    {
+      id: "imp_2",
+      targetUser: {
+        id: "3",
+        name: "Mike Wilson",
+        email: "mike.wilson@legal.com"
+      },
+      adminUser: {
+        id: "admin_1",
+        name: "Admin User",
+        email: "admin@example.com"
+      },
+      startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      endTime: new Date(Date.now() - 24 * 60 * 60 * 1000 + 8 * 60 * 1000).toISOString(),
+      duration: 8 * 60, // 8 minutes in seconds
+      reason: "Troubleshooting document generation issue"
+    }
+  ];
+
+  res.json(history);
+});
 
   // Admin Billing Management APIs
   app.get("/api/admin/billing/metrics", async (req, res) => {
