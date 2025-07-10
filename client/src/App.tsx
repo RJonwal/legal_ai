@@ -1,9 +1,8 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Router, Route, Switch } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLayout from "@/components/layout/mobile-layout";
 import AdminLayout from "@/components/layout/admin-layout";
 
@@ -28,7 +27,7 @@ import "./index.css";
 const queryClient = new QueryClient();
 
 function App() {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -37,32 +36,32 @@ function App() {
           <Switch>
             {/* Landing page */}
             <Route path="/" component={LandingPage} />
-            
+
             {/* Admin routes with layout */}
             <Route path="/admin">
               <AdminLayout>
                 <AdminDashboard />
               </AdminLayout>
             </Route>
-            
+
             <Route path="/admin/users">
               <AdminLayout>
                 <AdminUsers />
               </AdminLayout>
             </Route>
-            
+
             <Route path="/admin/system">
               <AdminLayout>
                 <AdminSystem />
               </AdminLayout>
             </Route>
-            
+
             <Route path="/admin/landing-config">
               <AdminLayout>
                 <AdminLandingConfig />
               </AdminLayout>
             </Route>
-            
+
             <Route path="/admin/analytics">
               <AdminLayout>
                 <AdminAnalytics />
@@ -75,7 +74,7 @@ function App() {
             <Route path="/search-cases" component={SearchCases} />
             <Route path="/profile" component={Profile} />
             <Route path="/settings" component={Settings} />
-            
+
             {/* 404 page */}
             <Route component={NotFound} />
           </Switch>
