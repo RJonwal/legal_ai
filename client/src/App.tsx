@@ -18,6 +18,7 @@ import LandingConfig from "@/pages/admin/landing-config";
 function Router() {
   return (
     <Switch>
+      <Route path="/" component={Landing} />
       <Route path="/legal-assistant" component={LegalAssistant} />
       <Route path="/new-case" component={NewCase} />
       <Route path="/search-cases" component={SearchCases} />

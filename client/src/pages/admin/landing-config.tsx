@@ -519,3 +519,276 @@ export default function LandingConfig() {
     </div>
   );
 }
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Save, Eye, Upload } from "lucide-react";
+import { useLocation } from "wouter";
+
+export default function LandingConfig() {
+  const [, setLocation] = useLocation();
+  const [config, setConfig] = useState({
+    hero: {
+      title: "Revolutionary AI Legal Assistant",
+      subtitle: "Empowering lawyers and pro se litigants with intelligent case management",
+      ctaText: "Start Your Legal Journey",
+      backgroundImage: null
+    },
+    features: [
+      {
+        id: "1",
+        title: "AI-Powered Legal Analysis",
+        description: "Advanced AI that thinks like a senior attorney",
+        enabled: true
+      },
+      {
+        id: "2",
+        title: "Document Generation",
+        description: "Generate court-ready legal documents instantly",
+        enabled: true
+      },
+      {
+        id: "3",
+        title: "Case Strategy Planning",
+        description: "Comprehensive case analysis with strategic recommendations",
+        enabled: true
+      }
+    ],
+    contact: {
+      phone: "+1 (555) 123-LEGAL",
+      email: "contact@legalai.com",
+      address: "123 Legal District, Suite 500, New York, NY 10001"
+    }
+  });
+
+  const handleSave = () => {
+    console.log("Saving landing page configuration:", config);
+    // Here you would typically save to your backend
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => setLocation("/admin")}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Admin
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Landing Page Configuration</h1>
+              <p className="text-gray-600 mt-2">Customize your landing page content and appearance</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline">
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </Button>
+            <Button onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+          </div>
+        </div>
+
+        <Tabs defaultValue="hero" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="hero">Hero Section</TabsTrigger>
+            <TabsTrigger value="features">Features</TabsTrigger>
+            <TabsTrigger value="contact">Contact Info</TabsTrigger>
+            <TabsTrigger value="seo">SEO Settings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="hero" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Hero Section</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="hero-title">Main Title</Label>
+                  <Input
+                    id="hero-title"
+                    value={config.hero.title}
+                    onChange={(e) => setConfig({
+                      ...config,
+                      hero: { ...config.hero, title: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="hero-subtitle">Subtitle</Label>
+                  <Textarea
+                    id="hero-subtitle"
+                    value={config.hero.subtitle}
+                    onChange={(e) => setConfig({
+                      ...config,
+                      hero: { ...config.hero, subtitle: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="hero-cta">Call to Action Text</Label>
+                  <Input
+                    id="hero-cta"
+                    value={config.hero.ctaText}
+                    onChange={(e) => setConfig({
+                      ...config,
+                      hero: { ...config.hero, ctaText: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label>Background Image</Label>
+                  <div className="mt-2">
+                    <Button variant="outline">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Image
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="features" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Features Section</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {config.features.map((feature, index) => (
+                    <div key={feature.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold">Feature {index + 1}</h3>
+                        <Switch
+                          checked={feature.enabled}
+                          onCheckedChange={(checked) => {
+                            const newFeatures = [...config.features];
+                            newFeatures[index].enabled = checked;
+                            setConfig({ ...config, features: newFeatures });
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <Label>Title</Label>
+                          <Input
+                            value={feature.title}
+                            onChange={(e) => {
+                              const newFeatures = [...config.features];
+                              newFeatures[index].title = e.target.value;
+                              setConfig({ ...config, features: newFeatures });
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label>Description</Label>
+                          <Textarea
+                            value={feature.description}
+                            onChange={(e) => {
+                              const newFeatures = [...config.features];
+                              newFeatures[index].description = e.target.value;
+                              setConfig({ ...config, features: newFeatures });
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="contact" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="contact-phone">Phone Number</Label>
+                  <Input
+                    id="contact-phone"
+                    value={config.contact.phone}
+                    onChange={(e) => setConfig({
+                      ...config,
+                      contact: { ...config.contact, phone: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-email">Email Address</Label>
+                  <Input
+                    id="contact-email"
+                    type="email"
+                    value={config.contact.email}
+                    onChange={(e) => setConfig({
+                      ...config,
+                      contact: { ...config.contact, email: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-address">Address</Label>
+                  <Textarea
+                    id="contact-address"
+                    value={config.contact.address}
+                    onChange={(e) => setConfig({
+                      ...config,
+                      contact: { ...config.contact, address: e.target.value }
+                    })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="seo" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>SEO Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="seo-title">Page Title</Label>
+                  <Input
+                    id="seo-title"
+                    placeholder="LegalAI Pro - Revolutionary AI Legal Assistant"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="seo-description">Meta Description</Label>
+                  <Textarea
+                    id="seo-description"
+                    placeholder="Empowering lawyers and pro se litigants with AI-powered case management..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="seo-keywords">Keywords</Label>
+                  <Input
+                    id="seo-keywords"
+                    placeholder="legal AI, case management, document generation, attorney"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
