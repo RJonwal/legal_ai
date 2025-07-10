@@ -1,9 +1,25 @@
 
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { 
   Users, 
   Settings, 
@@ -17,11 +33,15 @@ import {
   Activity,
   TrendingUp,
   UserCheck,
-  AlertTriangle
+  AlertTriangle,
+  Home,
+  ChevronUp,
+  User2
 } from "lucide-react";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [, setLocation] = useLocation();
 
   // Mock data for dashboard
   const stats = {
@@ -40,26 +60,128 @@ export default function AdminDashboard() {
     { id: 4, type: "document_generated", user: "anna.wilson@firm.com", time: "18 minutes ago" }
   ];
 
+  const navigationItems = [
+    {
+      title: "Dashboard",
+      icon: Home,
+      url: "/admin",
+      isActive: true
+    },
+    {
+      title: "User Management",
+      icon: Users,
+      url: "/admin/users"
+    },
+    {
+      title: "System Settings",
+      icon: Settings,
+      url: "/admin/system"
+    },
+    {
+      title: "Landing Config",
+      icon: Globe,
+      url: "/admin/landing-config"
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-2">Manage your LegalAI Pro platform</p>
+    <SidebarProvider>
+      <Sidebar variant="inset">
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <div>
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <Shield className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">LegalAI Pro</span>
+                    <span className="truncate text-xs">Admin Panel</span>
+                  </div>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {navigationItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={item.isActive}
+                      onClick={() => setLocation(item.url)}
+                    >
+                      <div className="cursor-pointer">
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <Activity />
+                    <span>View Logs</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <Database />
+                    <span>Database Status</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <Mail />
+                    <span>Email Settings</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <User2 />
+                <span>Admin User</span>
+                <ChevronUp className="ml-auto" />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="h-4 w-px bg-sidebar-border" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600 text-sm">Manage your LegalAI Pro platform</p>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline">
-              <Settings className="mr-2 h-4 w-4" />
-              System Settings
-            </Button>
-            <Button>
-              <Activity className="mr-2 h-4 w-4" />
-              View Logs
-            </Button>
-          </div>
-        </div>
+        </header>
+
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min p-6"></div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6">
@@ -329,7 +451,9 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
