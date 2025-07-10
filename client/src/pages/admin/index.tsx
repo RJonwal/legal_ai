@@ -61,27 +61,32 @@ export default function AdminDashboard() {
     { id: 4, type: "document_generated", user: "anna.wilson@firm.com", time: "18 minutes ago" }
   ];
 
+  const [, navigate] = useLocation();
+  
   const navigationItems = [
     {
       title: "Dashboard",
       icon: Home,
       url: "/admin",
-      isActive: true
+      isActive: window.location.pathname === "/admin"
     },
     {
       title: "User Management",
       icon: Users,
-      url: "/admin/users"
+      url: "/admin/users",
+      isActive: window.location.pathname === "/admin/users"
     },
     {
       title: "System Settings",
       icon: Settings,
-      url: "/admin/system"
+      url: "/admin/system",
+      isActive: window.location.pathname === "/admin/system"
     },
     {
       title: "Landing Config",
       icon: Globe,
-      url: "/admin/landing-config"
+      url: "/admin/landing-config",
+      isActive: window.location.pathname === "/admin/landing-config"
     }
   ];
 
@@ -116,9 +121,11 @@ export default function AdminDashboard() {
                     <SidebarMenuButton 
                       asChild 
                       isActive={item.isActive}
-                      onClick={() => setLocation(item.url)}
                     >
-                      <div className="cursor-pointer">
+                      <div 
+                        className="cursor-pointer" 
+                        onClick={() => navigate(item.url)}
+                      >
                         <item.icon />
                         <span>{item.title}</span>
                       </div>
