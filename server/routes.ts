@@ -26,6 +26,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get recent cases (top 3 most recently accessed)
+  app.get("/api/cases/recent", async (req, res) => {
+    try {
+      const recentCases = await storage.getRecentCases(1, 3); // Get top 3 recent cases for user
+      res.json(recentCases);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get recent cases" });
+    }
+  });
+
   // Search cases
   app.get("/api/cases/search", async (req, res) => {
     try {
@@ -50,6 +60,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
       }
+      
+      // Update last accessed time when case is viewed
+      await storage.updateCaseLastAccessed(caseId);
+      
       res.json(case_);
     } catch (error) {
       res.status(500).json({ message: "Failed to get case" });

@@ -25,6 +25,28 @@ interface CaseSidebarProps {
   onCaseSelect: (caseId: number) => void;
 }
 
+// Function to get relative time from a given date
+const getRelativeTime = (date: any) => {
+  if (!date) return 'N/A';
+
+  const now = new Date();
+  const diff = now.getTime() - new Date(date).getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) {
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  } else if (minutes > 0) {
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  } else {
+    return 'Just now';
+  }
+};
+
 export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
   const [, setLocation] = useLocation();
   const [newCaseOpen, setNewCaseOpen] = useState(false);
@@ -32,7 +54,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [userProfileOpen, setUserProfileOpen] = useState(false);
   const [billingOpen, setBillingOpen] = useState(false);
-  
+
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
   });
@@ -75,12 +97,12 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
         <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
           Recent Cases
         </div>
-        
+
         <div className="space-y-2">
-          {cases && cases.length > 0 ? cases.map((case_: any) => (
+          {cases && cases.length > 0 ? cases.map((case_: any, index: number) => (
             <Card 
               key={case_.id}
-              className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+              className={`cursor-pointer hover:bg-gray-50 transition-colors relative ${
                 currentCaseId === case_.id ? 'ring-2 ring-legal-blue bg-legal-blue/5' : ''
               }`}
               onClick={(e) => {
@@ -95,19 +117,27 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
                     <FolderOpen className="h-4 w-4 text-legal-blue" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {case_.title || 'Untitled Case'}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {case_.title || 'Untitled Case'}
+                      </p>
+                      {index === 0 && (
+                        <div className="w-2 h-2 bg-green-500 rounded-full ml-2 mt-1 flex-shrink-0" title="Most recently accessed" />
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 truncate">
                       {case_.clientName || 'No client specified'}
                     </p>
-                    <div className="mt-2">
+                    <div className="mt-2 flex items-center justify-between">
                       <Badge 
                         variant="secondary" 
                         className={`text-xs ${getCaseTypeColor(case_.caseType || 'general')}`}
                       >
                         {case_.caseType || 'General'}
                       </Badge>
+                      <span className="text-xs text-gray-400">
+                        {getRelativeTime(case_.lastAccessedAt || case_.updatedAt)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -115,7 +145,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
             </Card>
           )) : (
             <div className="text-center py-4">
-              <p className="text-sm text-gray-500">No cases available</p>
+              <p className="text-sm text-gray-500">No recent cases</p>
               <Button
                 variant="outline"
                 size="sm"
@@ -151,7 +181,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
             <Search className="h-4 w-4 mr-2" />
             Search Cases
           </Button>
-          
+
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
@@ -160,7 +190,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
             <CreditCard className="h-4 w-4 mr-2" />
             Billing
           </Button>
-          
+
           <Button
             variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"

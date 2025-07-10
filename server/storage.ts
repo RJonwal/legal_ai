@@ -39,6 +39,9 @@ export interface IStorage {
   // Timeline operations
   getTimelineEvents(caseId: number): Promise<TimelineEvent[]>;
   createTimelineEvent(event: InsertTimelineEvent): Promise<TimelineEvent>;
+
+  getRecentCases(userId: number, limit?: number): Promise<Case[]>;
+  updateCaseLastAccessed(caseId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -48,7 +51,7 @@ export class MemStorage implements IStorage {
   private documents: Map<number, Document> = new Map();
   private timelineEvents: Map<number, TimelineEvent> = new Map();
   private folders: Map<string, { id: string; name: string; caseId: number }> = new Map();
-  
+
   private userIdCounter = 1;
   private caseIdCounter = 1;
   private messageIdCounter = 1;
@@ -284,7 +287,32 @@ export class MemStorage implements IStorage {
   }
 
   async getCasesByUser(userId: number): Promise<Case[]> {
-    return Array.from(this.cases.values()).filter(case_ => case_.assignedAttorney === userId);
+    return Array.from(this.cases.values()).filter(
+      (case_) => case_.assignedAttorney === userId
+    );
+  }
+
+  async getRecentCases(userId: number, limit: number = 3): Promise<Case[]> {
+    const userCases = Array.from(this.cases.values()).filter(
+      (case_) => case_.assignedAttorney === userId
+    );
+
+    // Sort by lastAccessedAt (most recent first), then by updatedAt as fallback
+    return userCases
+      .sort((a, b) => {
+        const aAccessed = (a as any).lastAccessedAt || a.updatedAt;
+        const bAccessed = (b as any).lastAccessedAt || b.updatedAt;
+        return new Date(bAccessed).getTime() - new Date(aAccessed).getTime();
+      })
+      .slice(0, limit);
+  }
+
+  async updateCaseLastAccessed(caseId: number): Promise<void> {
+    const case_ = this.cases.get(caseId);
+    if (case_) {
+      (case_ as any).lastAccessedAt = new Date();
+      this.cases.set(caseId, case_);
+    }
   }
 
   async createCase(insertCase: InsertCase): Promise<Case> {
@@ -306,7 +334,7 @@ export class MemStorage implements IStorage {
   async updateCase(id: number, updates: Partial<Case>): Promise<Case> {
     const existing = this.cases.get(id);
     if (!existing) throw new Error("Case not found");
-    
+
     const updated: Case = {
       ...existing,
       ...updates,
@@ -333,7 +361,7 @@ export class MemStorage implements IStorage {
 
   async searchCases(query: string): Promise<Case[]> {
     const allCases = Array.from(this.cases.values());
-    
+
     if (!query.trim()) {
       return allCases;
     }
@@ -393,7 +421,7 @@ export class MemStorage implements IStorage {
   async updateDocument(id: number, updates: Partial<Document>): Promise<Document> {
     const existing = this.documents.get(id);
     if (!existing) throw new Error("Document not found");
-    
+
     const updated: Document = {
       ...existing,
       ...updates,
@@ -438,12 +466,12 @@ export class MemStorage implements IStorage {
 
   async getFoldersByCase(caseId: number): Promise<{ id: string; name: string; documentCount: number }[]> {
     const caseFolders = Array.from(this.folders.values()).filter(folder => folder.caseId === caseId);
-    
+
     return caseFolders.map(folder => {
       const documentCount = Array.from(this.documents.values()).filter(
         doc => doc.caseId === caseId && (doc as any).folderId === folder.id
       ).length;
-      
+
       return {
         id: folder.id,
         name: folder.name,
