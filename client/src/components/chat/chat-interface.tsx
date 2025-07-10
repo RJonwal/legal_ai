@@ -53,7 +53,7 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
       // Clear messages when switching cases
       setMessages([]);
       setCurrentCaseData(null);
-      
+
       // Refetch case and message data
       refetchCase();
       refetchChatMessages();
@@ -135,18 +135,23 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
     onFunctionClick(functionId);
   }, [onFunctionClick]);
 
-  const displayCase = currentCaseData || currentCase;
+  // Case display state
+  const [displayCase, setDisplayCase] = useState<any>(currentCase);
+
+  // State for modal management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<any>(null);
 
   const handleShareCase = useCallback(async () => {
     if (!displayCase) return;
-    
+
     try {
       const shareData = {
         title: `Legal Case: ${displayCase.title}`,
         text: `Case #${displayCase.caseNumber} - ${displayCase.description}`,
         url: window.location.href
       };
-      
+
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
@@ -164,7 +169,7 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
 
   const handleBookmarkCase = useCallback(async () => {
     if (!displayCase) return;
-    
+
     try {
       const response = await apiRequest('POST', `/api/cases/${displayCase.id}/bookmark`, {});
       if (response.ok) {
