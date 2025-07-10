@@ -135,6 +135,47 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
     onFunctionClick(functionId);
   }, [onFunctionClick]);
 
+  const handleShareCase = useCallback(async () => {
+    if (!displayCase) return;
+    
+    try {
+      const shareData = {
+        title: `Legal Case: ${displayCase.title}`,
+        text: `Case #${displayCase.caseNumber} - ${displayCase.description}`,
+        url: window.location.href
+      };
+      
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(
+          `${shareData.title}\n${shareData.text}\n${shareData.url}`
+        );
+        // You can add a toast notification here
+        console.log('Case details copied to clipboard');
+      }
+    } catch (error) {
+      console.error('Error sharing case:', error);
+    }
+  }, [displayCase]);
+
+  const handleBookmarkCase = useCallback(async () => {
+    if (!displayCase) return;
+    
+    try {
+      const response = await apiRequest('POST', `/api/cases/${displayCase.id}/bookmark`, {});
+      if (response.ok) {
+        console.log('Case bookmarked successfully');
+        // You can add a toast notification here
+        // Optionally refetch case data to update bookmark status
+        refetchCase();
+      }
+    } catch (error) {
+      console.error('Error bookmarking case:', error);
+    }
+  }, [displayCase, refetchCase]);
+
   const displayCase = currentCaseData || currentCase;
 
   return (
@@ -153,10 +194,20 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleShareCase()}
+              title="Share case"
+            >
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => handleBookmarkCase()}
+              title="Bookmark case"
+            >
               <Bookmark className="h-4 w-4" />
             </Button>
           </div>

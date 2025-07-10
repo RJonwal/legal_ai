@@ -3,23 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { NewCaseModal } from "@/components/modals/new-case-modal";
-import { SearchCasesModal } from "@/components/modals/search-cases-modal";
-import { SettingsModal } from "@/components/modals/settings-modal";
-import { UserProfileModal } from "@/components/modals/user-profile-modal";
-import { BillingModal } from "@/components/modals/billing-modal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Logo } from "@/components/ui/logo";
 import { 
-  FolderOpen, 
-  Gavel, 
-  Plus, 
   Search, 
+  Plus, 
   Settings, 
-  User,
-  CreditCard
+  Calendar, 
+  Clock, 
+  MoreVertical,
+  CreditCard,
+  FileText,
+  Users
 } from "lucide-react";
-
 interface CaseSidebarProps {
   currentCaseId?: number;
   onCaseSelect: (caseId: number) => void;
@@ -81,15 +79,10 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-legal-blue rounded-lg flex items-center justify-center">
-            <Gavel className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">LegalAI</h1>
-            <p className="text-xs text-gray-500">Assistant</p>
-          </div>
+        <div className="mb-4">
+          <Logo size="md" className="mb-2" />
         </div>
+
       </div>
 
       {/* Cases */}

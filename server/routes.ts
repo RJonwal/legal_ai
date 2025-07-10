@@ -80,6 +80,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/cases/:id/messages", async (req, res) => {
     try {
       const caseId = parseInt(req.params.id);
+      if (isNaN(caseId)) {
+        return res.status(400).json({ error: 'Invalid case ID' });
+      }
+
       const messages = await storage.getChatMessages(caseId);
       res.json(messages);
     } catch (error) {
@@ -960,6 +964,35 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
+  // Bookmark case
+  app.post('/api/cases/:id/bookmark', async (req, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      if (isNaN(caseId)) {
+        return res.status(400).json({ error: 'Invalid case ID' });
+      }
+
+      const existingCase = await storage.getCase(caseId);
+      if (!existingCase) {
+        return res.status(404).json({ error: 'Case not found' });
+      }
+
+      // Toggle bookmark status
+      const updatedCase = await storage.updateCase(caseId, {
+        bookmarked: !existingCase.bookmarked,
+        updatedAt: new Date()
+      });
+
+      res.json({ 
+        success: true, 
+        bookmarked: updatedCase.bookmarked,
+        message: updatedCase.bookmarked ? 'Case bookmarked' : 'Bookmark removed'
+      });
+    } catch (error) {
+      console.error('Error bookmarking case:', error);
+      res.status(500).json({ error: 'Failed to bookmark case' });
+    }
+  });
 
 
   const httpServer = createServer(app);
