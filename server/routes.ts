@@ -997,6 +997,290 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   // Mount admin routes with proper middleware
   app.use("/api/admin", adminRoutes);
 
+  // Admin Billing Management APIs
+  app.get("/api/admin/billing/metrics", async (req, res) => {
+    try {
+      // Simulate billing metrics
+      const metrics = {
+        totalRevenue: 125000,
+        monthlyRevenue: 12500,
+        activeSubscriptions: 85,
+        churnRate: 3.2,
+        averageRevenuePerUser: 156,
+        totalCustomers: 120
+      };
+      res.json(metrics);
+    } catch (error) {
+      console.error('Admin billing metrics error:', error);
+      res.status(500).json({ error: 'Failed to fetch billing metrics' });
+    }
+  });
+
+  app.get("/api/admin/subscription-plans", async (req, res) => {
+    try {
+      const plans = [
+        {
+          id: 'basic',
+          name: 'Basic',
+          price: 29,
+          billingPeriod: 'monthly',
+          features: ['1,000 tokens/month', 'Basic support', 'Standard templates'],
+          tokenLimit: 1000,
+          userLimit: 1,
+          isActive: true,
+          isPopular: false
+        },
+        {
+          id: 'professional',
+          name: 'Professional',
+          price: 99,
+          billingPeriod: 'monthly',
+          features: ['10,000 tokens/month', 'Priority support', 'Advanced templates', 'API access'],
+          tokenLimit: 10000,
+          userLimit: 5,
+          isActive: true,
+          isPopular: true
+        },
+        {
+          id: 'enterprise',
+          name: 'Enterprise',
+          price: 299,
+          billingPeriod: 'monthly',
+          features: ['Unlimited tokens', '24/7 support', 'Custom templates', 'White-label', 'SSO'],
+          tokenLimit: 999999,
+          userLimit: 50,
+          isActive: true,
+          isPopular: false
+        }
+      ];
+      res.json(plans);
+    } catch (error) {
+      console.error('Admin plans error:', error);
+      res.status(500).json({ error: 'Failed to fetch subscription plans' });
+    }
+  });
+
+  app.post("/api/admin/subscription-plans", async (req, res) => {
+    try {
+      const planData = req.body;
+      // In a real app, this would save to database
+      console.log('Creating plan:', planData);
+      res.json({ success: true, id: `plan_${Date.now()}` });
+    } catch (error) {
+      console.error('Create plan error:', error);
+      res.status(500).json({ error: 'Failed to create plan' });
+    }
+  });
+
+  app.put("/api/admin/subscription-plans/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const planData = req.body;
+      // In a real app, this would update in database
+      console.log('Updating plan:', id, planData);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Update plan error:', error);
+      res.status(500).json({ error: 'Failed to update plan' });
+    }
+  });
+
+  app.delete("/api/admin/subscription-plans/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      // In a real app, this would delete from database
+      console.log('Deleting plan:', id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Delete plan error:', error);
+      res.status(500).json({ error: 'Failed to delete plan' });
+    }
+  });
+
+  app.get("/api/admin/customers", async (req, res) => {
+    try {
+      const customers = [
+        {
+          id: 'cust_1',
+          name: 'Sarah Johnson',
+          email: 'sarah@lawfirm.com',
+          plan: 'Professional',
+          status: 'active',
+          nextBilling: 'Feb 15, 2024',
+          totalSpent: 1188,
+          joinDate: 'Jan 15, 2023'
+        },
+        {
+          id: 'cust_2',
+          name: 'Mike Chen',
+          email: 'mike@legalcorp.com',
+          plan: 'Enterprise',
+          status: 'active',
+          nextBilling: 'Feb 20, 2024',
+          totalSpent: 3588,
+          joinDate: 'Mar 10, 2023'
+        },
+        {
+          id: 'cust_3',
+          name: 'Emma Davis',
+          email: 'emma@attorney.com',
+          plan: 'Basic',
+          status: 'trial',
+          nextBilling: 'Feb 10, 2024',
+          totalSpent: 0,
+          joinDate: 'Jan 28, 2024'
+        },
+        {
+          id: 'cust_4',
+          name: 'Alex Smith',
+          email: 'alex@legal.org',
+          plan: 'Professional',
+          status: 'cancelled',
+          nextBilling: 'N/A',
+          totalSpent: 594,
+          joinDate: 'Jun 05, 2023'
+        },
+        {
+          id: 'cust_5',
+          name: 'Lisa Wong',
+          email: 'lisa@lawgroup.com',
+          plan: 'Professional',
+          status: 'paused',
+          nextBilling: 'Mar 01, 2024',
+          totalSpent: 891,
+          joinDate: 'Apr 20, 2023'
+        }
+      ];
+      res.json(customers);
+    } catch (error) {
+      console.error('Admin customers error:', error);
+      res.status(500).json({ error: 'Failed to fetch customers' });
+    }
+  });
+
+  app.get("/api/admin/transactions", async (req, res) => {
+    try {
+      const transactions = [
+        {
+          id: 'txn_001',
+          customerName: 'Sarah Johnson',
+          type: 'Subscription',
+          amount: 99,
+          status: 'paid',
+          date: 'Feb 01, 2024'
+        },
+        {
+          id: 'txn_002',
+          customerName: 'Mike Chen',
+          type: 'Subscription',
+          amount: 299,
+          status: 'paid',
+          date: 'Jan 30, 2024'
+        },
+        {
+          id: 'txn_003',
+          customerName: 'Emma Davis',
+          type: 'Token Purchase',
+          amount: 79,
+          status: 'paid',
+          date: 'Jan 28, 2024'
+        },
+        {
+          id: 'txn_004',
+          customerName: 'Alex Smith',
+          type: 'Subscription',
+          amount: 99,
+          status: 'failed',
+          date: 'Jan 25, 2024'
+        },
+        {
+          id: 'txn_005',
+          customerName: 'Lisa Wong',
+          type: 'Subscription',
+          amount: 99,
+          status: 'refunded',
+          date: 'Jan 20, 2024'
+        }
+      ];
+      res.json(transactions);
+    } catch (error) {
+      console.error('Admin transactions error:', error);
+      res.status(500).json({ error: 'Failed to fetch transactions' });
+    }
+  });
+
+  // Add admin routes
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      const stats = {
+        totalCases: 120,
+        activeCases: 75,
+        pendingCases: 30,
+        closedCases: 15,
+        totalUsers: 50,
+        activeUsers: 45,
+        newUsersThisMonth: 5,
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error("Admin stats error:", error);
+      res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  app.get("/api/admin/cases", async (req, res) => {
+    try {
+      // Mock case data for admin panel
+      const adminCases = mockCases.map(case_ => ({
+        ...case_,
+        priority: Math.random() > 0.5 ? "high" : "medium",
+        status: Math.random() > 0.5 ? "active" : "pending"
+      }));
+      res.json(adminCases);
+    } catch (error) {
+      console.error("Admin cases error:", error);
+      res.status(500).json({ message: "Failed to fetch admin cases" });
+    }
+  });
+
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = [
+        {
+          id: 1,
+          name: "Sarah Johnson",
+          email: "sarah.johnson@example.com",
+          role: "admin",
+          status: "active",
+          lastLogin: "2024-03-20T10:00:00Z",
+          createdAt: "2023-01-15T00:00:00Z"
+        },
+        {
+          id: 2,
+          name: "Michael Brown",
+          email: "michael.brown@example.com",
+          role: "user",
+          status: "active",
+          lastLogin: "2024-03-19T14:30:00Z",
+          createdAt: "2023-02-01T00:00:00Z"
+        },
+        {
+          id: 3,
+          name: "Emily Davis",
+          email: "emily.davis@example.com",
+          role: "user",
+          status: "pending",
+          lastLogin: null,
+          createdAt: "2023-03-10T00:00:00Z"
+        }
+      ];
+      res.json(users);
+    } catch (error) {
+      console.error("Admin users error:", error);
+      res.status(500).json({ message: "Failed to fetch admin users" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

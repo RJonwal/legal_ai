@@ -1,4 +1,3 @@
-
 import { useLocation } from "wouter";
 import {
   Sidebar,
@@ -89,7 +88,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-        
+
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>

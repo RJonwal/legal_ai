@@ -18,6 +18,7 @@ import NotFound from "@/pages/not-found";
 // Import admin pages
 import AdminDashboard from "@/pages/admin/index";
 import AdminUsers from "@/pages/admin/users";
+import AdminBilling from "@/pages/admin/billing";
 import AdminSystem from "@/pages/admin/system";
 import AdminLandingConfig from "@/pages/admin/landing-config";
 import AdminAnalytics from "@/pages/admin/analytics";
@@ -47,6 +48,12 @@ function App() {
             <Route path="/admin/users">
               <AdminLayout>
                 <AdminUsers />
+              </AdminLayout>
+            </Route>
+
+            <Route path="/admin/billing">
+              <AdminLayout>
+                <AdminBilling />
               </AdminLayout>
             </Route>
 
