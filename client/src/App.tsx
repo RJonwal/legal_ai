@@ -9,7 +9,6 @@ import NewCase from "@/pages/new-case";
 import SearchCases from "@/pages/search-cases";
 import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
-import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
 function Router() {
