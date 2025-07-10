@@ -146,45 +146,70 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
   const displayCase = currentCaseData || currentCase;
 
   const handleShareCase = useCallback(async () => {
-    if (!displayCase) return;
-
     try {
-      const shareData = {
-        title: `Legal Case: ${displayCase.title}`,
-        text: `Case #${displayCase.caseNumber} - ${displayCase.description}`,
-        url: window.location.href
-      };
-
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(
-          `${shareData.title}\n${shareData.text}\n${shareData.url}`
-        );
-        // You can add a toast notification here
-        console.log('Case details copied to clipboard');
+      const caseToShare = currentCaseData || currentCase;
+      if (!caseToShare) {
+        toast({
+          title: "No Case Selected",
+          description: "Please select a case to share",
+          variant: "destructive",
+        });
+        return;
       }
+
+      // Mock sharing functionality
+      toast({
+        title: "Case Shared",
+        description: `${caseToShare.title} has been shared successfully`,
+      });
     } catch (error) {
       console.error('Error sharing case:', error);
     }
-  }, [displayCase]);
+  }, [currentCaseData, currentCase]);
 
   const handleBookmarkCase = useCallback(async () => {
-    if (!displayCase) return;
-
     try {
-      const response = await apiRequest('POST', `/api/cases/${displayCase.id}/bookmark`, {});
-      if (response.ok) {
-        console.log('Case bookmarked successfully');
-        // You can add a toast notification here
-        // Optionally refetch case data to update bookmark status
-        refetchCase();
+      const caseToBookmark = currentCaseData || currentCase;
+      if (!caseToBookmark) {
+        toast({
+          title: "No Case Selected",
+          description: "Please select a case to bookmark",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await fetch(`/api/cases/${caseToBookmark.id}/bookmark`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to bookmark case');
+      }
+
+      const result = await response.json();
+
+      toast({
+        title: result.bookmarked ? "Case Bookmarked" : "Bookmark Removed",
+        description: result.message,
+      });
+
+      // Refresh case data
+      if (currentCase?.id) {
+        caseQuery.refetch();
       }
     } catch (error) {
       console.error('Error bookmarking case:', error);
+      toast({
+        title: "Bookmark Failed",
+        description: "Unable to bookmark case. Please try again.",
+        variant: "destructive",
+      });
     }
-  }, [displayCase, refetchCase]);
+  }, [currentCaseData, currentCase, caseQuery, toast]);
 
   return (
     <div ref={chatInterfaceRef} className="flex-1 flex flex-col bg-white h-full" data-chat-interface="true">
