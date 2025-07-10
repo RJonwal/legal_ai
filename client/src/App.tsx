@@ -10,6 +10,10 @@ import SearchCases from "@/pages/search-cases";
 import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
+import AdminDashboard from "@/pages/admin/dashboard";
+import AdminUsers from "@/pages/admin/users";
+import AdminSystem from "@/pages/admin/system";
+import LandingConfig from "@/pages/admin/landing-config";
 
 function Router() {
   return (
@@ -19,7 +23,11 @@ function Router() {
       <Route path="/search-cases" component={SearchCases} />
       <Route path="/profile" component={Profile} />
       <Route path="/settings" component={Settings} />
-      <Route path="/" component={Landing} />
+      <Route path="/landing" component={Landing} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/system" component={AdminSystem} />
+      <Route path="/admin/landing-config" component={LandingConfig} />
       <Route component={NotFound} />
     </Switch>
   );

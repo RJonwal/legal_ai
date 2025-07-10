@@ -858,8 +858,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       // Mock payment method update
       res.json({ 
         success: true, 
-        message: 'Payment method updated successfully',
-        paymentmethod: {
+        message: 'Payment method updated successfully',        paymentmethod: {
           last4: number.slice(-4),
           brand,
           expiry,
@@ -995,6 +994,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
+  // Mount admin routes with proper middleware
+  app.use("/api/admin", adminRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

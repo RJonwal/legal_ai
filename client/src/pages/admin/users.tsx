@@ -1,0 +1,340 @@
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  Users, 
+  Search, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Shield, 
+  Mail, 
+  Phone,
+  UserCheck,
+  UserX,
+  Crown,
+  Settings
+} from "lucide-react";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'pro_user' | 'free_user';
+  status: 'active' | 'inactive' | 'suspended';
+  subscription: string;
+  joinDate: string;
+  lastActive: string;
+}
+
+export default function AdminUsers() {
+  const [activeTab, setActiveTab] = useState("users");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  // Mock user data
+  const users: User[] = [
+    {
+      id: "1",
+      name: "John Doe",
+      email: "john.doe@example.com",
+      role: "pro_user",
+      status: "active",
+      subscription: "Professional",
+      joinDate: "2024-01-15",
+      lastActive: "2 hours ago"
+    },
+    {
+      id: "2",
+      name: "Sarah Johnson",
+      email: "sarah.johnson@law.com",
+      role: "admin",
+      status: "active",
+      subscription: "Admin",
+      joinDate: "2023-11-20",
+      lastActive: "30 minutes ago"
+    },
+    {
+      id: "3",
+      name: "Mike Wilson",
+      email: "mike.wilson@legal.com",
+      role: "free_user",
+      status: "inactive",
+      subscription: "Pro Se",
+      joinDate: "2024-02-10",
+      lastActive: "3 days ago"
+    }
+  ];
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin': return <Crown className="h-4 w-4 text-yellow-600" />;
+      case 'pro_user': return <Shield className="h-4 w-4 text-blue-600" />;
+      default: return <Users className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active': return <Badge className="bg-green-100 text-green-800">Active</Badge>;
+      case 'inactive': return <Badge variant="secondary">Inactive</Badge>;
+      case 'suspended': return <Badge variant="destructive">Suspended</Badge>;
+      default: return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            <p className="text-gray-600 mt-2">Manage platform users, roles, and permissions</p>
+          </div>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add New User
+          </Button>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              All Users
+            </TabsTrigger>
+            <TabsTrigger value="roles" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Roles & Permissions
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4" />
+              User Analytics
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              User Settings
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Users List Tab */}
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Directory</CardTitle>
+                <CardDescription>Manage all platform users</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Filters */}
+                <div className="flex gap-4 mb-6">
+                  <div className="flex-1">
+                    <Label htmlFor="search">Search Users</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="search"
+                        placeholder="Search by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="role-filter">Role</Label>
+                    <Select value={filterRole} onValueChange={setFilterRole}>
+                      <SelectTrigger id="role-filter" className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Roles</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="pro_user">Pro User</SelectItem>
+                        <SelectItem value="free_user">Free User</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="status-filter">Status</Label>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger id="status-filter" className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="suspended">Suspended</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Users Table */}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Subscription</TableHead>
+                      <TableHead>Last Active</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-blue-600">
+                                {user.name.split(' ').map(n => n[0]).join('')}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium">{user.name}</p>
+                              <p className="text-sm text-gray-600">{user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getRoleIcon(user.role)}
+                            <span className="capitalize">{user.role.replace('_', ' ')}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(user.status)}</TableCell>
+                        <TableCell>{user.subscription}</TableCell>
+                        <TableCell>{user.lastActive}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-red-600">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Roles & Permissions Tab */}
+          <TabsContent value="roles">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="h-5 w-5 text-yellow-600" />
+                    Admin
+                  </CardTitle>
+                  <CardDescription>Full platform access</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ User management</li>
+                    <li>✓ System configuration</li>
+                    <li>✓ Financial reports</li>
+                    <li>✓ Content management</li>
+                    <li>✓ API access</li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                    Professional User
+                  </CardTitle>
+                  <CardDescription>Advanced legal features</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ Unlimited cases</li>
+                    <li>✓ Advanced AI features</li>
+                    <li>✓ Document generation</li>
+                    <li>✓ Priority support</li>
+                    <li>✓ API access (limited)</li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-gray-600" />
+                    Pro Se User
+                  </CardTitle>
+                  <CardDescription>Basic legal assistance</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ Limited cases (5/month)</li>
+                    <li>✓ Basic AI assistance</li>
+                    <li>✓ Document templates</li>
+                    <li>✓ Email support</li>
+                    <li>✗ No API access</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Analytics</CardTitle>
+                <CardDescription>Insights into user behavior and platform usage</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <UserCheck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">User Analytics Dashboard</h3>
+                  <p className="text-gray-600 mb-4">Detailed user behavior analytics and engagement metrics</p>
+                  <Button variant="outline">View Full Analytics</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Settings</CardTitle>
+                <CardDescription>Configure user defaults and restrictions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Settings className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">User Configuration</h3>
+                  <p className="text-gray-600 mb-4">Manage default user settings and platform restrictions</p>
+                  <Button variant="outline">Configure Settings</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
