@@ -214,7 +214,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       const numFiles = Math.floor(Math.random() * 3) + 1;
       const mockFiles = [];
 
-      for (let i = 0; < numFiles; i++) {
+      for (let i = 0; i < numFiles; i++) {
         const randomFile = mockFileTypes[Math.floor(Math.random() * mockFileTypes.length)];
         mockFiles.push({
           id: Date.now() + i,
