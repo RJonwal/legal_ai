@@ -640,6 +640,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   // Billing endpoints
   app.get("/api/billing", async (req, res) => {
     try {
+      console.log('Fetching billing data...');
+      
       // Simulate realistic billing data with some variation
       const currentDate = new Date();
       const nextBilling = new Date(currentDate);
@@ -676,6 +678,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
 
       // Add cache headers for better performance
       res.set('Cache-Control', 'private, max-age=300'); // 5 minutes
+      console.log('Billing data sent successfully');
       res.json(billingData);
     } catch (error) {
       console.error('Billing data error:', error);
@@ -688,6 +691,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
 
   app.get("/api/billing/invoices", async (req, res) => {
     try {
+      console.log('Fetching invoice data...');
+      
       // Mock invoice data
       const invoices = [
         {
@@ -716,10 +721,14 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         }
       ];
 
+      console.log(`Returning ${invoices.length} invoices`);
       res.json(invoices);
     } catch (error) {
       console.error('Invoice data error:', error);
-      res.status(500).json({ error: 'Failed to fetch invoices' });
+      res.status(500).json({ 
+        error: 'Failed to fetch invoices',
+        message: 'Unable to retrieve your invoice history at this time. Please try again later.'
+      });
     }
   });
 

@@ -47,9 +47,9 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
 
   // Fetch billing data
   const { data: billingData, isLoading, error: billingError } = useQuery({
-    queryKey: ['/api/billing'],
+    queryKey: ['billing'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/billing');
+      const response = await fetch('/api/billing');
       if (!response.ok) {
         throw new Error('Failed to fetch billing data');
       }
@@ -61,9 +61,9 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   });
 
   const { data: invoices = [], error: invoicesError } = useQuery({
-    queryKey: ['/api/billing/invoices'],
+    queryKey: ['billing-invoices'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/billing/invoices');
+      const response = await fetch('/api/billing/invoices');
       if (!response.ok) {
         throw new Error('Failed to fetch invoices');
       }
@@ -77,32 +77,50 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   // Mutations
   const updateSubscriptionMutation = useMutation({
     mutationFn: async (action: string) => {
-      const response = await apiRequest('POST', '/api/billing/subscription', { action });
+      const response = await fetch('/api/billing/subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update subscription');
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/billing'] });
+      queryClient.invalidateQueries({ queryKey: ['billing'] });
       toast({
         title: "Subscription Updated",
         description: "Your subscription has been updated successfully.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update subscription.",
+        description: error.message || "Failed to update subscription.",
       });
     },
   });
 
   const updatePaymentMethodMutation = useMutation({
     mutationFn: async (cardData: any) => {
-      const response = await apiRequest('POST', '/api/billing/payment-method', cardData);
+      const response = await fetch('/api/billing/payment-method', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cardData),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update payment method');
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/billing'] });
+      queryClient.invalidateQueries({ queryKey: ['billing'] });
       setIsUpdatingCard(false);
       setNewCardData({ number: '', expiry: '', cvv: '', name: '' });
       toast({
@@ -110,32 +128,41 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
         description: "Your payment method has been updated successfully.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update payment method.",
+        description: error.message || "Failed to update payment method.",
       });
     },
   });
 
   const purchaseTokensMutation = useMutation({
     mutationFn: async (plan: string) => {
-      const response = await apiRequest('POST', '/api/billing/tokens', { plan });
+      const response = await fetch('/api/billing/tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plan }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to purchase tokens');
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/billing'] });
+      queryClient.invalidateQueries({ queryKey: ['billing'] });
       toast({
         title: "Tokens Purchased",
         description: "Your tokens have been added to your account.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to purchase tokens.",
+        description: error.message || "Failed to purchase tokens.",
       });
     },
   });
@@ -145,15 +172,50 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
   };
 
   const handleUpdatePaymentMethod = () => {
-    if (!newCardData.number || !newCardData.expiry || !newCardData.cvv || !newCardData.name) {
+    // Remove spaces and validate card number
+    const cleanCardNumber = newCardData.number.replace(/\s+/g, '');
+    
+    if (!cleanCardNumber || cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
       toast({
         variant: "destructive",
-        title: "Invalid Card Data",
-        description: "Please fill in all card details.",
+        title: "Invalid Card Number",
+        description: "Please enter a valid card number (13-19 digits).",
       });
       return;
     }
-    updatePaymentMethodMutation.mutate(newCardData);
+
+    if (!newCardData.expiry || !/^\d{2}\/\d{2}$/.test(newCardData.expiry)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Expiry Date",
+        description: "Please enter expiry in MM/YY format.",
+      });
+      return;
+    }
+
+    if (!newCardData.cvv || newCardData.cvv.length < 3 || newCardData.cvv.length > 4) {
+      toast({
+        variant: "destructive",
+        title: "Invalid CVV",
+        description: "Please enter a valid CVV (3-4 digits).",
+      });
+      return;
+    }
+
+    if (!newCardData.name || newCardData.name.trim().length < 2) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Name",
+        description: "Please enter the cardholder's name.",
+      });
+      return;
+    }
+
+    updatePaymentMethodMutation.mutate({
+      ...newCardData,
+      number: cleanCardNumber,
+      name: newCardData.name.trim()
+    });
   };
 
   const handlePurchaseTokens = () => {
@@ -215,12 +277,15 @@ export function BillingModal({ isOpen, onClose }: BillingModalProps) {
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Error Loading Billing Data</h3>
               <p className="text-gray-600 mb-4">
-                {billingError?.message || invoicesError?.message || 'Unable to load billing information'}
+                {(billingError as Error)?.message || (invoicesError as Error)?.message || 'Unable to load billing information'}
               </p>
               <div id="error-description" className="sr-only">
                 Error occurred while loading billing data
               </div>
-              <Button onClick={() => window.location.reload()}>
+              <Button onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['billing'] });
+                queryClient.invalidateQueries({ queryKey: ['billing-invoices'] });
+              }}>
                 Retry
               </Button>
             </div>
