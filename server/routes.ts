@@ -861,7 +861,6 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
           name
         }
       });
-    ```text
     } catch (error) {
       console.error('Payment method update error:', error);
       res.status(500).json({ 
@@ -901,7 +900,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       }
 
       // Generate realistic transaction ID
-      const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
       res.json({ 
         success: true, 

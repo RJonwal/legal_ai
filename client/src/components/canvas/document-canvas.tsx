@@ -308,7 +308,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
         break;
       case 'title-case':
         formattedText = actualSelectedText.replace(/\w\S*/g, (txt) => 
-          txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+          txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
         );
         break;
       case 'clear-formatting':
