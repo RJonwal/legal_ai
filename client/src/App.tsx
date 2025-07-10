@@ -1,45 +1,86 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { Router, Route, Switch } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Landing from "@/pages/landing";
+import { useMobile } from "@/hooks/use-mobile";
+import MobileLayout from "@/components/layout/mobile-layout";
+import AdminLayout from "@/components/layout/admin-layout";
+
+// Import pages
+import LandingPage from "@/pages/landing";
 import LegalAssistant from "@/pages/legal-assistant";
 import NewCase from "@/pages/new-case";
 import SearchCases from "@/pages/search-cases";
 import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
+
+// Import admin pages
 import AdminDashboard from "@/pages/admin/index";
 import AdminUsers from "@/pages/admin/users";
 import AdminSystem from "@/pages/admin/system";
-import LandingConfig from "@/pages/admin/landing-config";
+import AdminLandingConfig from "@/pages/admin/landing-config";
+import AdminAnalytics from "@/pages/admin/analytics";
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/legal-assistant" component={LegalAssistant} />
-      <Route path="/new-case" component={NewCase} />
-      <Route path="/search-cases" component={SearchCases} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/settings" component={Settings} />
-      <Route path="/landing" component={Landing} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/users" component={AdminUsers} />
-      <Route path="/admin/system" component={AdminSystem} />
-      <Route path="/admin/landing-config" component={LandingConfig} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+import "./index.css";
+
+const queryClient = new QueryClient();
 
 function App() {
+  const isMobile = useMobile();
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <Router>
+          <Switch>
+            {/* Landing page */}
+            <Route path="/" component={LandingPage} />
+            
+            {/* Admin routes with layout */}
+            <Route path="/admin">
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </Route>
+            
+            <Route path="/admin/users">
+              <AdminLayout>
+                <AdminUsers />
+              </AdminLayout>
+            </Route>
+            
+            <Route path="/admin/system">
+              <AdminLayout>
+                <AdminSystem />
+              </AdminLayout>
+            </Route>
+            
+            <Route path="/admin/landing-config">
+              <AdminLayout>
+                <AdminLandingConfig />
+              </AdminLayout>
+            </Route>
+            
+            <Route path="/admin/analytics">
+              <AdminLayout>
+                <AdminAnalytics />
+              </AdminLayout>
+            </Route>
+
+            {/* Main app routes */}
+            <Route path="/legal-assistant" component={LegalAssistant} />
+            <Route path="/new-case" component={NewCase} />
+            <Route path="/search-cases" component={SearchCases} />
+            <Route path="/profile" component={Profile} />
+            <Route path="/settings" component={Settings} />
+            
+            {/* 404 page */}
+            <Route component={NotFound} />
+          </Switch>
+        </Router>
         <Toaster />
-        <Router />
       </TooltipProvider>
     </QueryClientProvider>
   );
