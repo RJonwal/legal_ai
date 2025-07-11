@@ -2638,8 +2638,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
           category: 'Revenue',
           subcategory: 'Token Purchases',
           amount: 4290,
-          percentage: 1```text
-4.3,
+          percentage: 14.3,
           trend: 'up',
           trendValue: 8.2
         },
