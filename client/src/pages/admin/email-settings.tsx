@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -149,8 +149,8 @@ export default function EmailSettings() {
     variables: [] as string[]
   });
 
-  // Default configuration
-  const defaultConfig: EmailConfig = {
+  // Default configuration - moved to useMemo to prevent recreation
+  const defaultConfig: EmailConfig = useMemo(() => ({
     smtp: {
       host: 'smtp.gmail.com',
       port: 587,
@@ -257,7 +257,7 @@ export default function EmailSettings() {
         showTypingIndicator: true
       }
     }
-  };
+  }), []);
 
   // Fetch email configuration
   const { data: emailConfig, isLoading } = useQuery({
@@ -268,9 +268,6 @@ export default function EmailSettings() {
       return response.json();
     },
   });
-
-  // Use the fetched config or default config
-  const currentConfig = emailConfig || defaultConfig;
 
   // Update configuration mutation
   const updateConfigMutation = useMutation({
@@ -311,14 +308,6 @@ export default function EmailSettings() {
     },
   });
 
-  if (isLoading) {
-    return <div className="p-6">Loading email settings...</div>;
-  }
-
-  const handleUpdateConfig = (updates: Partial<EmailConfig>) => {
-    updateConfigMutation.mutate(updates);
-  };
-
   // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (template: Omit<EmailTemplate, 'id' | 'lastModified'>) => {
@@ -340,6 +329,18 @@ export default function EmailSettings() {
       toast({ title: "Failed to create template", variant: "destructive" });
     },
   });
+
+  // Use the fetched config or default config
+  const currentConfig = emailConfig || defaultConfig;
+
+  // Early return after all hooks are declared
+  if (isLoading) {
+    return <div className="p-6">Loading email settings...</div>;
+  }
+
+  const handleUpdateConfig = (updates: Partial<EmailConfig>) => {
+    updateConfigMutation.mutate(updates);
+  };
 
   const addOperationalEmail = () => {
     if (!newOperationalEmail.trim()) return;
