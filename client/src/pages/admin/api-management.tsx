@@ -1048,99 +1048,96 @@ export default function APIManagement() {
                       <DialogDescription>Configure a new webhook endpoint</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={(e) => {e.preventDefault(); setNewWebhookDialogOpen(false);}}>
-                    <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 160px)' }}>
-                      <div>
-                        <Label htmlFor="webhook-name">Webhook Name</Label>
-                        <Input id="webhook-name" placeholder="e.g., Case Status Updates" />
-                      </div>
-                      <div>
-                        <Label htmlFor="webhook-url">Endpoint URL</Label>
-                        <Input id="webhook-url" placeholder="https://example.com/webhook" />
-                      </div>
-                      <div>
-                        <Label htmlFor="webhook-secret">Secret Key</Label>
-                        <Input id="webhook-secret" placeholder="Optional webhook secret" />
-                      </div>
-                      <div>
-                        <Label>Events to Send</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto border rounded-lg p-3">
-                          {availableWebhookEvents.map((event) => (
-                            <div key={event} className="flex items-center space-x-2">
-                              <input type="checkbox" id={event} className="rounded" />
-                              <Label htmlFor={event} className="text-xs">{event}</Label>
-                            </div>
-                          ))}
+                      <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 160px)' }}>
+                        <div>
+                          <Label htmlFor="webhook-name">Webhook Name</Label>
+                          <Input id="webhook-name" placeholder="e.g., Case Status Updates" />
                         </div>
-                      </div>
-
-                      <div>
-                        <Label>Data Sharing Controls</Label>
-                        <div className="space-y-3 mt-2 border rounded-lg p-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label className="text-sm">Include User PII</Label>
-                              <p className="text-xs text-gray-600">Share personally identifiable information</p>
-                            </div>
-                            <Switch id="include-pii" />
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label className="text-sm">Include Payment Data</Label>
-                              <p className="text-xs text-gray-600">Share payment and billing information</p>
-                            </div>
-                            <Switch id="include-payment" />
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label className="text-sm">Include Document Content</Label>
-                              <p className="text-xs text-gray-600">Share full document content</p>
-                            </div>
-                            <Switch id="include-content" />
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label className="text-sm">Include Case Details</Label>
-                              <p className="text-xs text-gray-600">Share detailed case information</p>
-                            </div>
-                            <Switch id="include-case-details" defaultChecked />
-                          </div>
-
-                          <div>
-                            <Label htmlFor="data-retention">Data Retention (days)</Label>
-                            <Input id="data-retention" type="number" defaultValue="30" placeholder="30" />
-                          </div>
-
-                          <div>
-                            <Label htmlFor="webhook-filter">Event Filter (JSON)</Label>
-                            <Textarea 
-                              id="webhook-filter" 
-                              placeholder='{"user.role": "admin", "case.priority": "high"}'
-                              rows={3}
-                            />
+                        <div>
+                          <Label htmlFor="webhook-url">Endpoint URL</Label>
+                          <Input id="webhook-url" placeholder="https://example.com/webhook" />
+                        </div>
+                        <div>
+                          <Label htmlFor="webhook-secret">Secret Key</Label>
+                          <Input id="webhook-secret" placeholder="Optional webhook secret" />
+                        </div>
+                        <div>
+                          <Label>Events to Send</Label>
+                          <div className="grid grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto border rounded-lg p-3">
+                            {availableWebhookEvents.map((event) => (
+                              <div key={event} className="flex items-center space-x-2">
+                                <input type="checkbox" id={event} className="rounded" />
+                                <Label htmlFor={event} className="text-xs">{event}</Label>
+                              </div>
+                            ))}
                           </div>
                         </div>
+
+                        <div>
+                          <Label>Data Sharing Controls</Label>
+                          <div className="space-y-3 mt-2 border rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Include User PII</Label>
+                                <p className="text-xs text-gray-600">Share personally identifiable information</p>
+                              </div>
+                              <Switch id="include-pii" />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Include Payment Data</Label>
+                                <p className="text-xs text-gray-600">Share payment and billing information</p>
+                              </div>
+                              <Switch id="include-payment" />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Include Document Content</Label>
+                                <p className="text-xs text-gray-600">Share full document content</p>
+                              </div>
+                              <Switch id="include-content" />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Include Case Details</Label>
+                                <p className="text-xs text-gray-600">Share detailed case information</p>
+                              </div>
+                              <Switch id="include-case-details" defaultChecked />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="data-retention">Data Retention (days)</Label>
+                              <Input id="data-retention" type="number" defaultValue="30" placeholder="30" />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="webhook-filter">Event Filter (JSON)</Label>
+                              <Textarea 
+                                id="webhook-filter" 
+                                placeholder='{"user.role": "admin", "case.priority": "high"}'
+                                rows={3}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="retry-attempts">Retry Attempts</Label>
+                          <Select defaultValue="3">
+                            <SelectTrigger id="retry-attempts">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">No retries</SelectItem>
+                              <SelectItem value="3">3 attempts</SelectItem>
+                              <SelectItem value="5">5 attempts</SelectItem>
+                              <SelectItem value="10">10 attempts</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <div>
-                        <Label htmlFor="retry-attempts">Retry Attempts</Label>
-                        <Select defaultValue="3">
-                          <SelectTrigger id="retry-attempts">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="0">No retries</SelectItem>
-                            <SelectItem value="3">3 attempts</SelectItem>
-                            <SelectItem value="5">5 attempts</SelectItem>
-                            <SelectItem value="10">10 attempts</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    
-</div>
-                      </div>
-                    </div>
                     </form>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setNewWebhookDialogOpen(false)}>Cancel</Button>
