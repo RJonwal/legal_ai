@@ -273,6 +273,15 @@ export default function APIManagement() {
     'api.rate_limit_exceeded', 'api.error', 'security.login_attempt', 'security.breach_detected'
   ];
 
+  // Add a state variable to track the currently edited webhook
+  const [editingWebhook, setEditingWebhook] = useState<WebhookConfig | null>(null);
+
+  // Function to handle editing a webhook
+  const handleEditWebhook = (webhook: WebhookConfig) => {
+    setEditingWebhook(webhook);
+    // You can also open a dialog or modal here to edit the webhook
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -836,7 +845,8 @@ export default function APIManagement() {
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="api-name">API Name</Label>
+                        ```text
+<Label htmlFor="api-name">API Name</Label>
                         <Input id="api-name" placeholder="e.g., Document Service" />
                       </div>
                       <div>
@@ -1178,7 +1188,21 @@ export default function APIManagement() {
                           )}
                           {testWebhookMutation.isPending ? 'Testing...' : 'Test'}
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditWebhook({
+                            id: 'crm-sync',
+                            name: 'Case Management Sync',
+                            url: 'https://crm.example.com/webhook',
+                            events: ['case.created', 'case.updated', 'case.completed'],
+                            isActive: true,
+                            secret: '',
+                            retryAttempts: 3,
+                            lastTriggered: '30 min ago',
+                            deliveryRate: 99.2
+                          })}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="outline" className="text-red-600">
@@ -1223,7 +1247,7 @@ export default function APIManagement() {
                           size="sm" 
                           variant="outline" 
                           className="flex-1"
-                          onClick={() => testWebhookMutation.mutate('crm-sync')}
+                          onClick={() => testWebhookMutation.mutate('analytics-tracker')}
                           disabled={testWebhookMutation.isPending}
                         >
                           {testWebhookMutation.isPending ? (
@@ -1233,7 +1257,21 @@ export default function APIManagement() {
                           )}
                           {testWebhookMutation.isPending ? 'Testing...' : 'Test'}
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditWebhook({
+                            id: 'analytics-tracker',
+                            name: 'Analytics Tracker',
+                            url: 'https://analytics.app.com/events',
+                            events: ['user.created', 'document.generated', 'payment.completed'],
+                            isActive: true,
+                            secret: '',
+                            retryAttempts: 3,
+                            lastTriggered: '2 hours ago',
+                            deliveryRate: 97.8
+                          })}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="outline" className="text-red-600">
