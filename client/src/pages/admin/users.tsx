@@ -105,8 +105,13 @@ export default function AdminUsers() {
       if (!response.ok) throw new Error('Failed to update role');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      console.log('Role updated successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error updating role:', error);
+      alert('Failed to update user role. Please try again.');
     },
   });
 
@@ -121,8 +126,13 @@ export default function AdminUsers() {
       if (!response.ok) throw new Error('Failed to update permissions');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      console.log('Permissions updated successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error updating permissions:', error);
+      alert('Failed to update user permissions. Please try again.');
     },
   });
 
@@ -137,8 +147,95 @@ export default function AdminUsers() {
       if (!response.ok) throw new Error('Failed to update role permissions');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+      console.log('Role permissions updated successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error updating role permissions:', error);
+      alert('Failed to update role permissions. Please try again.');
+    },
+  });
+
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: any) => {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      if (!response.ok) throw new Error('Failed to create user');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      console.log('User created successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error creating user:', error);
+      alert('Failed to create user. Please try again.');
+    },
+  });
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete user');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      console.log('User deleted successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error deleting user:', error);
+      alert('Failed to delete user. Please try again.');
+    },
+  });
+
+  // Update user status mutation
+  const updateUserStatusMutation = useMutation({
+    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
+      const response = await fetch(`/api/admin/users/${userId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error('Failed to update user status');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      console.log('User status updated successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error updating user status:', error);
+      alert('Failed to update user status. Please try again.');
+    },
+  });
+
+  // Send email mutation
+  const sendEmailMutation = useMutation({
+    mutationFn: async ({ userId, subject, message, template }: { userId: string; subject: string; message: string; template?: string }) => {
+      const response = await fetch(`/api/admin/users/${userId}/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject, message, template }),
+      });
+      if (!response.ok) throw new Error('Failed to send email');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log('Email sent successfully:', data);
+      alert('Email sent successfully!');
+    },
+    onError: (error) => {
+      console.error('Error sending email:', error);
+      alert('Failed to send email. Please try again.');
     },
   });
 
@@ -224,10 +321,78 @@ export default function AdminUsers() {
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-2">Manage platform users, roles, and permissions</p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add New User
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add New User
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>Create a new user account</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="new-user-name">Full Name</Label>
+                <Input id="new-user-name" placeholder="Enter full name" />
+              </div>
+              <div>
+                <Label htmlFor="new-user-email">Email</Label>
+                <Input id="new-user-email" type="email" placeholder="Enter email address" />
+              </div>
+              <div>
+                <Label htmlFor="new-user-role">Role</Label>
+                <Select defaultValue="free_user">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="pro_user">Professional User</SelectItem>
+                    <SelectItem value="free_user">Pro Se User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="new-user-subscription">Subscription</Label>
+                <Select defaultValue="Pro Se">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="Professional">Professional</SelectItem>
+                    <SelectItem value="Pro Se">Pro Se</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline">Cancel</Button>
+              <Button 
+                onClick={() => {
+                  const name = (document.getElementById('new-user-name') as HTMLInputElement)?.value;
+                  const email = (document.getElementById('new-user-email') as HTMLInputElement)?.value;
+                  const role = document.querySelector('[id^="new-user-role"]')?.getAttribute('data-value') || 'free_user';
+                  const subscription = document.querySelector('[id^="new-user-subscription"]')?.getAttribute('data-value') || 'Pro Se';
+                  
+                  if (name && email) {
+                    createUserMutation.mutate({
+                      name,
+                      email,
+                      role,
+                      subscription
+                    });
+                  }
+                }}
+              >
+                Create User
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -320,7 +485,16 @@ export default function AdminUsers() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {users
+                    .filter(user => {
+                      const matchesSearch = searchTerm === '' || 
+                        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+                      const matchesRole = filterRole === 'all' || user.role === filterRole;
+                      const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
+                      return matchesSearch && matchesRole && matchesStatus;
+                    })
+                    .map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -346,12 +520,100 @@ export default function AdminUsers() {
                       <TableCell>{user.lastActive}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Mail className="h-4 w-4" />
-                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit User: {user.name}</DialogTitle>
+                                <DialogDescription>Update user information and settings</DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="user-role">User Role</Label>
+                                  <Select 
+                                    defaultValue={user.role}
+                                    onValueChange={(newRole) => {
+                                      updateRoleMutation.mutate({ userId: user.id, role: newRole });
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="pro_user">Professional User</SelectItem>
+                                      <SelectItem value="free_user">Pro Se User</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label htmlFor="user-status">User Status</Label>
+                                  <Select 
+                                    defaultValue={user.status}
+                                    onValueChange={(newStatus) => {
+                                      updateUserStatusMutation.mutate({ userId: user.id, status: newStatus });
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="active">Active</SelectItem>
+                                      <SelectItem value="inactive">Inactive</SelectItem>
+                                      <SelectItem value="suspended">Suspended</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                          
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline">
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Send Email to {user.name}</DialogTitle>
+                                <DialogDescription>Send a direct email to this user</DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="email-subject">Subject</Label>
+                                  <Input id="email-subject" placeholder="Email subject..." />
+                                </div>
+                                <div>
+                                  <Label htmlFor="email-message">Message</Label>
+                                  <textarea 
+                                    id="email-message"
+                                    className="w-full h-32 p-3 border rounded-md"
+                                    placeholder="Enter your message..."
+                                  />
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button variant="outline">Cancel</Button>
+                                <Button 
+                                  onClick={() => {
+                                    const subject = (document.getElementById('email-subject') as HTMLInputElement)?.value;
+                                    const message = (document.getElementById('email-message') as HTMLTextAreaElement)?.value;
+                                    if (subject && message) {
+                                      sendEmailMutation.mutate({ userId: user.id, subject, message });
+                                    }
+                                  }}
+                                >
+                                  Send Email
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+
                           {canImpersonate(user) && (
                             <Dialog>
                               <DialogTrigger asChild>
@@ -413,9 +675,31 @@ export default function AdminUsers() {
                               </DialogContent>
                             </Dialog>
                           )}
-                          <Button size="sm" variant="outline" className="text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline" className="text-red-600">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Delete User</DialogTitle>
+                                <DialogDescription>
+                                  Are you sure you want to delete {user.name}? This action cannot be undone.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <DialogFooter>
+                                <Button variant="outline">Cancel</Button>
+                                <Button 
+                                  variant="destructive" 
+                                  onClick={() => deleteUserMutation.mutate(user.id)}
+                                >
+                                  Delete User
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -489,8 +773,17 @@ export default function AdminUsers() {
                           size="sm" 
                           variant="outline"
                           onClick={() => {
-                            // Save role permissions changes
-                            console.log('Saving Professional User role permissions');
+                            const permissions = [
+                              "unlimited_cases",
+                              "advanced_ai_features", 
+                              "document_generation",
+                              "priority_support",
+                              "api_access_limited"
+                            ];
+                            updateRolePermissionsMutation.mutate({ 
+                              roleId: "pro_user", 
+                              permissions 
+                            });
                           }}
                         >
                           <Edit className="h-4 w-4" />
@@ -541,8 +834,16 @@ export default function AdminUsers() {
                           size="sm" 
                           variant="outline"
                           onClick={() => {
-                            // Save role permissions changes
-                            console.log('Saving Pro Se User role permissions');
+                            const permissions = [
+                              "limited_cases",
+                              "basic_ai_assistance",
+                              "document_templates", 
+                              "email_support"
+                            ];
+                            updateRolePermissionsMutation.mutate({ 
+                              roleId: "free_user", 
+                              permissions 
+                            });
                           }}
                         >
                           <Edit className="h-4 w-4" />
@@ -691,7 +992,29 @@ export default function AdminUsers() {
                               </div>
                               <DialogFooter>
                                 <Button variant="outline">Cancel</Button>
-                                <Button>Save Permissions</Button>
+                                <Button 
+                                  onClick={() => {
+                                    const permissions = {
+                                      caseManagement: true,
+                                      documentAccess: true,
+                                      aiFeatures: false,
+                                      billingAccess: false,
+                                      exportData: true
+                                    };
+                                    const limits = {
+                                      casesPerMonth: parseInt((document.getElementById('case-limit') as HTMLInputElement)?.value || '10'),
+                                      tokensPerMonth: parseInt((document.getElementById('token-limit') as HTMLInputElement)?.value || '5000')
+                                    };
+                                    
+                                    updatePermissionsMutation.mutate({
+                                      userId: user.id,
+                                      permissions,
+                                      limits
+                                    });
+                                  }}
+                                >
+                                  Save Permissions
+                                </Button>
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>

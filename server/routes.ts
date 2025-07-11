@@ -858,6 +858,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       // Mock payment method update
       res.json({ 
         success: true, 
+```tool_code
         message: 'Payment method updated successfully',        paymentmethod: {
           last4: number.slice(-4),
           brand,
@@ -1096,274 +1097,187 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  app.get("/api/admin/roles", async (req, res) => {
-    try {
-      const roles = [
-        {
-          id: 'admin',
-          name: 'Admin',
-          description: 'Full platform access',
-          permissions: [
-            'user_management', 'system_configuration', 'financial_reports',
-            'content_management', 'api_access', 'impersonation'
-          ],
-          isEditable: false
-        },
-        {
-          id: 'pro_user',
-          name: 'Professional User',
-          description: 'Advanced legal features',
-          permissions: [
-            'unlimited_cases', 'advanced_ai', 'document_generation',
-            'priority_support', 'api_access_limited', 'billing_access'
-          ],
-          isEditable: true
-        },
-        {
-          id: 'free_user',
-          name: 'Pro Se User',
-          description: 'Basic legal assistance',
-          permissions: [
-            'limited_cases', 'basic_ai', 'document_templates',
-            'email_support', 'export_data'
-          ],
-          isEditable: true
-        }
-      ];
-      res.json(roles);
-    } catch (error) {
-      console.error('Roles fetch error:', error);
-      res.status(500).json({ error: 'Failed to fetch roles' });
-    }
+  // Update user role
+  app.put("/api/admin/users/:userId/role", (req, res) => {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/users/${userId}/role 200`);
+
+    // In a real implementation, this would update the database
+    res.json({ 
+      success: true, 
+      message: `User ${userId} role updated to ${role}`,
+      userId,
+      newRole: role
+    });
   });
 
-  app.put("/api/admin/roles/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { permissions, permissionNames } = req.body;
+  // Update user permissions
+  app.put("/api/admin/users/:userId/permissions", (req, res) => {
+    const { userId } = req.params;
+    const { permissions, limits } = req.body;
 
-      if (id === 'admin') {
-        return res.status(403).json({ error: 'Cannot modify admin role' });
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/users/${userId}/permissions 200`);
+
+    // In a real implementation, this would update the database
+    res.json({ 
+      success: true, 
+      message: `User ${userId} permissions updated`,
+      userId,
+      permissions,
+      limits
+    });
+  });
+
+  // Update role permissions
+  app.put("/api/admin/roles/:roleId", (req, res) => {
+    const { roleId } = req.params;
+    const { permissions } = req.body;
+
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/roles/${roleId} 200`);
+
+    // In a real implementation, this would update the role in database
+    res.json({ 
+      success: true, 
+      message: `Role ${roleId} permissions updated`,
+      roleId,
+      permissions
+    });
+  });
+
+  // Fetch roles
+  app.get("/api/admin/roles", (req, res) => {
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/roles 200`);
+
+    const roles = [
+      {
+        id: "admin",
+        name: "Admin",
+        description: "Full platform access",
+        permissions: [
+          "user_management",
+          "system_configuration", 
+          "financial_reports",
+          "content_management",
+          "api_access",
+          "impersonation"
+        ],
+        isEditable: false
+      },
+      {
+        id: "pro_user",
+        name: "Professional User", 
+        description: "Advanced legal features",
+        permissions: [
+          "unlimited_cases",
+          "advanced_ai",
+          "document_generation",
+          "priority_support",
+          "api_access_limited",
+          "billing_access"
+        ],
+        isEditable: true
+      },
+      {
+        id: "free_user",
+        name: "Pro Se User",
+        description: "Basic legal assistance", 
+        permissions: [
+          "limited_cases",
+          "basic_ai",
+          "document_templates",
+          "email_support",
+          "export_data"
+        ],
+        isEditable: true
       }
+    ];
 
-      console.log(`Updating role ${id} permissions:`, permissions);
-      if (permissionNames) {
-        console.log(`Updating role ${id} permission names:`, permissionNames);
+    res.json(roles);
+  });
+
+  // Fetch permission groups
+  app.get("/api/admin/permission-groups", (req, res) => {
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/permission-groups 200`);
+
+    const groups = [
+      {
+        id: 'legal_assistants',
+        name: 'Legal Assistants',
+        members: 3,
+        permissions: ['case_viewing', 'document_editing'],
+        color: 'purple'
+      },
+      {
+        id: 'paralegals',
+        name: 'Paralegals',
+        members: 2,
+        permissions: ['full_case_access', 'document_management', 'timeline_management'],
+        color: 'green'
+      },
+      {
+        id: 'trial_users',
+        name: 'Trial Users',
+        members: 8,
+        permissions: ['limited_case_access', 'basic_ai_features'],
+        color: 'orange'
       }
-
-      res.json({ 
-        success: true, 
-        message: 'Role permissions and names updated successfully',
-        role: {
-          id,
-          permissions,
-          permissionNames,
-          updatedAt: new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      console.error('Role update error:', error);
-      res.status(500).json({ error: 'Failed to update role' });
-    }
+    ];
+    res.json(groups);
   });
 
-  app.get("/api/admin/permission-groups", async (req, res) => {
-    try {
-      const groups = [
-        {
-          id: 'legal_assistants',
-          name: 'Legal Assistants',
-          members: 3,
-          permissions: ['case_viewing', 'document_editing'],
-          color: 'purple'
-        },
-        {
-          id: 'paralegals',
-          name: 'Paralegals',
-          members: 2,
-          permissions: ['full_case_access', 'document_management', 'timeline_management'],
-          color: 'green'
-        },
-        {
-          id: 'trial_users',
-          name: 'Trial Users',
-          members: 8,
-          permissions: ['limited_case_access', 'basic_ai_features'],
-          color: 'orange'
-        }
-      ];
-      res.json(groups);
-    } catch (error) {
-      console.error('Permission groups error:', error);
-      res.status(500).json({ error: 'Failed to fetch permission groups' });
-    }
+  // Create new user
+  app.post("/api/admin/users", (req, res) => {
+    const userData = req.body;
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/users 201`);
+
+    const newUser = {
+      id: Date.now().toString(),
+      ...userData,
+      status: "active",
+      joinDate: new Date().toISOString().split('T')[0],
+      lastActive: "Just now"
+    };
+
+    res.status(201).json(newUser);
   });
 
-  app.post("/api/admin/permission-groups", async (req, res) => {
-    try {
-      const { name, permissions, color } = req.body;
+  // Delete user
+  app.delete("/api/admin/users/:userId", (req, res) => {
+    const { userId } = req.params;
+    console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/users/${userId} 200`);
 
-      const newGroup = {
-        id: `group_${Date.now()}`,
-        name,
-        permissions,
-        color: color || 'blue',
-        members: 0,
-        createdAt: new Date().toISOString()
-      };
-
-      console.log('Creating permission group:', newGroup);
-
-      res.json({ 
-        success: true, 
-        message: 'Permission group created successfully',
-        group: newGroup
-      });
-    } catch (error) {
-      console.error('Create permission group error:', error);
-      res.status(500).json({ error: 'Failed to create permission group' });
-    }
+    res.json({ success: true, message: `User ${userId} deleted successfully` });
   });
 
-  app.put("/api/admin/permission-groups/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { name, permissions, permissionNames, color } = req.body;
+  // Suspend/activate user
+  app.put("/api/admin/users/:userId/status", (req, res) => {
+    const { userId } = req.params;
+    const { status } = req.body;
 
-      console.log(`Updating permission group ${id}:`, { name, permissions, permissionNames, color });
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/users/${userId}/status 200`);
 
-      res.json({ 
-        success: true, 
-        message: 'Permission group updated successfully',
-        group: {
-          id,
-          name,
-          permissions,
-          permissionNames,
-          color,
-          updatedAt: new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      console.error('Update permission group error:', error);
-      res.status(500).json({ error: 'Failed to update permission group' });
-    }
+    res.json({ 
+      success: true, 
+      message: `User ${userId} status updated to ${status}`,
+      userId,
+      newStatus: status
+    });
   });
 
-  app.get("/api/admin/user-analytics", async (req, res) => {
-    try {
-      const analytics = {
-        totalUsers: 1247,
-        activeUsers: 856,
-        newThisMonth: 143,
-        churnRate: 3.2,
-        roleDistribution: {
-          admin: 12,
-          pro_user: 456,
-          free_user: 779
-        },
-        activityDistribution: {
-          high: 72, // percentage
-          medium: 18,
-          low: 7,
-          inactive: 3
-        },
-        topUsers: [
-          {
-            id: '1',
-            name: 'Sarah Johnson',
-            email: 'sarah.johnson@law.com',
-            role: 'pro_user',
-            casesCreated: 24,
-            aiInteractions: 156,
-            lastActive: '2 hours ago'
-          },
-          {
-            id: '2',
-            name: 'Michael Wilson',
-            email: 'michael.wilson@legal.org',
-            role: 'free_user',
-            casesCreated: 18,
-            aiInteractions: 89,
-            lastActive: '1 day ago'
-          },
-          {
-            id: '3',
-            name: 'Emily Davis',
-            email: 'emily.davis@attorney.com',
-            role: 'pro_user',
-            casesCreated: 15,
-            aiInteractions: 67,
-            lastActive: '3 hours ago'
-          }
-        ]
-      };
-      res.json(analytics);
-    } catch (error) {
-      console.error('User analytics error:', error);
-      res.status(500).json({ error: 'Failed to fetch user analytics' });
-    }
-  });
+  // Send email to user
+  app.post("/api/admin/users/:userId/send-email", (req, res) => {
+    const { userId } = req.params;
+    const { subject, message, template } = req.body;
 
-  app.get("/api/admin/settings", async (req, res) => {
-    try {
-      const settings = {
-        defaults: {
-          role: 'free_user',
-          trialPeriod: 14,
-          caseLimit: 5,
-          tokenLimit: 1000,
-          emailVerificationRequired: true,
-          autoActivate: true,
-          sendWelcomeEmail: true,
-          require2FA: false
-        },
-        security: {
-          passwordPolicy: 'strong',
-          sessionTimeout: 60,
-          maxLoginAttempts: 5,
-          lockoutDuration: 30,
-          ipRestriction: false,
-          deviceRegistration: false,
-          loginNotifications: true,
-          auditLogging: true
-        },
-        limits: {
-          freeUsers: { cases: 5, tokens: 1000, storage: 1 },
-          proUsers: { cases: 50, tokens: 10000, storage: 10 },
-          system: { maxFileSize: 100, apiRateLimit: 100, concurrentSessions: 3 }
-        },
-        notifications: {
-          usageLimitWarnings: true,
-          accountExpiryAlerts: true,
-          systemMaintenance: true,
-          securityAlerts: true,
-          featureUpdates: false,
-          weeklyReports: false
-        }
-      };
-      res.json(settings);
-    } catch (error) {
-      console.error('Settings fetch error:', error);
-      res.status(500).json({ error: 'Failed to fetch settings' });
-    }
-  });
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/users/${userId}/send-email 200`);
 
-  app.put("/api/admin/settings", async (req, res) => {
-    try {
-      const { section, settings } = req.body;
-
-      console.log(`Updating ${section} settings:`, settings);
-
-      res.json({ 
-        success: true, 
-        message: `${section} settings updated successfully`,
-        updatedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Settings update error:', error);
-      res.status(500).json({ error: 'Failed to update settings' });
-    }
+    res.json({ 
+      success: true, 
+      message: `Email sent to user ${userId}`,
+      emailId: `email_${Date.now()}`
+    });
   });
 
   // Bookmark case
