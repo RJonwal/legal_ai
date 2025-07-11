@@ -3399,6 +3399,6 @@ const mockCases = [
   }
 ];
 
-  httpServer = createServer(app);
+  const httpServer = createServer(app);
   return httpServer;
 }
