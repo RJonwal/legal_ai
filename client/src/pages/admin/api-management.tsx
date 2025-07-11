@@ -282,6 +282,12 @@ export default function APIManagement() {
     // You can also open a dialog or modal here to edit the webhook
   };
 
+    // Placeholder for deleteWebhook function - needs actual implementation
+    const deleteWebhook = (webhookId: string) => {
+      console.log(`Deleting webhook with ID: ${webhookId}`);
+      // TODO: Implement the actual delete logic here (API call, state update, etc.)
+    };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -1041,6 +1047,7 @@ export default function APIManagement() {
                       <DialogTitle>Add New Webhook</DialogTitle>
                       <DialogDescription>Configure a new webhook endpoint</DialogDescription>
                     </DialogHeader>
+                    <form onSubmit={(e) => {e.preventDefault(); setNewWebhookDialogOpen(false);}}>
                     <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 160px)' }}>
                       <div>
                         <Label htmlFor="webhook-name">Webhook Name</Label>
@@ -1130,7 +1137,11 @@ export default function APIManagement() {
                           </SelectContent>
                         </Select>
                       </div>
+                    
+</div>
+                      </div>
                     </div>
+                    </form>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setNewWebhookDialogOpen(false)}>Cancel</Button>
                       <Button onClick={() => setNewWebhookDialogOpen(false)}>Create Webhook</Button>
@@ -1205,7 +1216,16 @@ export default function APIManagement() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline" className="text-red-600">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-red-600"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this webhook?')) {
+                              deleteWebhook('crm-sync');
+                            }
+                          }}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -1274,7 +1294,16 @@ export default function APIManagement() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline" className="text-red-600">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-red-600"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this webhook?')) {
+                              deleteWebhook('crm-sync');
+                            }
+                          }}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

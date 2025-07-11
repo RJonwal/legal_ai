@@ -860,7 +860,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         success: true, 
         message: 'Payment method updated successfully',
         paymentMethod: {
-          last4: number.slice(-4),
+          last4: number.slice(-```tool_code
+4),
           brand,
           expiry,
           name
@@ -1572,7 +1573,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   app.put("/api/admin/billing/gateway-settings", async (req, res) => {
     try {
       const { gateways, primaryGateway, fallbackGateway, autoRetry, gatewayFailover, proration } = req.body;
-      
+
       console.log("Updating payment gateway settings:", {
         gateways,
         primaryGateway,
@@ -1581,7 +1582,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         gatewayFailover,
         proration
       });
-      
+
       // Mock update response
       res.json({
         success: true,
@@ -1685,9 +1686,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       const { apiKey, refresh } = req.query;
-      
+
       console.log(`Fetching models for provider: ${id}, refresh: ${refresh}`);
-      
+
       // Mock model data based on provider
       const modelData = {
         openai: [
@@ -1709,9 +1710,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
           { id: "deepseek-math", name: "Deepseek Math", description: "Mathematical reasoning", contextLength: 4096 }
         ]
       };
-      
+
       const models = modelData[id as keyof typeof modelData] || [];
-      
+
       res.json({ 
         success: true, 
         models,
@@ -1777,12 +1778,12 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       // Simulate different test scenarios
       const testScenarios = {
         openai: { success: true, responseTime: "1.2s", status: "healthy" },
-        anthropic: { success: true, responseTime: "0.8s", status: "healthy" },
+        anthropic: { success: true, responseTime: "0.8s", status: "healthy"},
         deepseek: { success: false, responseTime: "timeout", status: "error", error: "Connection timeout" }
       };
 
       const result = testScenarios[id as keyof typeof testScenarios];
-      
+
       if (!result) {
         return res.status(404).json({ 
           success: false, 
@@ -1855,7 +1856,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
   app.post("/api/admin/app-apis", async (req, res) => {
     try {
       const { name, description, endpoint, method, authentication, headers } = req.body;
-      
+
       if (!name || !endpoint || !method) {
         return res.status(400).json({
           error: "Missing required fields",
@@ -1890,9 +1891,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
-      
+
       console.log(`Updating App API ${id}:`, updates);
-      
+
       res.json({
         success: true,
         message: "App API updated successfully",
@@ -1913,7 +1914,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       console.log(`Deleting App API: ${id}`);
-      
+
       res.json({
         success: true,
         message: "App API deleted successfully"
@@ -1929,11 +1930,11 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       console.log(`Testing App API: ${id}`);
-      
+
       // Simulate API test
       const success = Math.random() > 0.2; // 80% success rate
       const responseTime = Math.floor(Math.random() * 2000) + 100; // 100ms - 2100ms
-      
+
       if (success) {
         res.json({
           success: true,
@@ -2117,7 +2118,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         dataRetention,
         eventFilter
       } = req.body;
-      
+
       if (!name || !url || !events || events.length === 0) {
         return res.status(400).json({
           error: "Missing required fields",
@@ -2159,9 +2160,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
-      
+
       console.log(`Updating webhook ${id}:`, updates);
-      
+
       res.json({
         success: true,
         message: "Webhook updated successfully",
@@ -2182,7 +2183,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       console.log(`Deleting webhook: ${id}`);
-      
+
       res.json({
         success: true,
         message: "Webhook deleted successfully"
@@ -2198,13 +2199,13 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       const { testEvent } = req.body;
-      
+
       console.log(`Testing webhook ${id} with event: ${testEvent || 'ping'}`);
-      
+
       // Simulate webhook test
       const success = Math.random() > 0.1; // 90% success rate
       const responseTime = Math.floor(Math.random() * 1000) + 100; // 100ms - 1100ms
-      
+
       if (success) {
         res.json({
           success: true,
@@ -2276,9 +2277,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       const { apiKey, secretKey, webhookSecret, environment, isActive } = req.body;
-      
+
       console.log(`Updating payment gateway ${id}:`, { environment, isActive });
-      
+
       res.json({
         success: true,
         message: "Payment gateway updated successfully",
@@ -2303,7 +2304,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     try {
       const { id } = req.params;
       console.log(`Testing payment gateway: ${id}`);
-      
+
       // Simulate gateway test based on configuration
       const testResults = {
         stripe: { success: true, responseTime: "450ms", status: "healthy" },
@@ -2312,7 +2313,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       };
 
       const result = testResults[id as keyof typeof testResults];
-      
+
       if (!result) {
         return res.status(404).json({
           success: false,
