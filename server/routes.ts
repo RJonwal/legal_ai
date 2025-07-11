@@ -859,7 +859,6 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       res.json({ 
         success: true, 
         message: 'Payment method updated successfully',
-```tool_code
         paymentMethod: {
           last4: number.slice(-4),
           brand,
@@ -2638,8 +2637,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         {
           category: 'Revenue',
           subcategory: 'Token Purchases',
-          amount: 4290          percentage: 14.3,
-          trend: 'up', 
+          amount: 4290,
+          percentage: 14.3,
+          trend: 'up',
           trendValue: 8.2
         },
         {
