@@ -59,8 +59,10 @@ interface EmailConfig {
     password: string;
     fromName: string;
     fromEmail: string;
+    operationalEmails: string[];
   };
   templates: EmailTemplate[];
+  emailLogs: EmailLog[];
   aiAssistant: {
     enabled: boolean;
     provider: string;
@@ -110,7 +112,26 @@ interface EmailConfig {
       offlineMessage: string;
       escalationMessage: string;
     };
+    realTimeMonitoring: {
+      enabled: boolean;
+      allowIntercept: boolean;
+      showTypingIndicator: boolean;
+    };
   };
+}
+
+interface EmailLog {
+  id: string;
+  timestamp: string;
+  type: 'sent' | 'received' | 'forwarded';
+  to: string;
+  from: string;
+  subject: string;
+  content: string;
+  status: 'success' | 'failed' | 'pending';
+  aiProcessed: boolean;
+  humanCorrected: boolean;
+  forwardedToHuman: boolean;
 }
 
 export default function EmailSettings() {
@@ -118,6 +139,16 @@ export default function EmailSettings() {
   const [activeTemplate, setActiveTemplate] = useState<EmailTemplate | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [testEmail, setTestEmail] = useState("");
+  const [config, setConfig] = useState<EmailConfig | null>(null);
+  const [newOperationalEmail, setNewOperationalEmail] = useState("");
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    name: "",
+    subject: "",
+    content: "",
+    type: "custom" as const,
+    variables: [] as string[]
+  });
 
   // Fetch email configuration
   const { data: emailConfig, isLoading } = useQuery({
@@ -180,8 +211,10 @@ export default function EmailSettings() {
       user: '',
       password: '',
       fromName: 'LegalAI Pro',
-      fromEmail: 'noreply@legalai.pro'
+      fromEmail: 'noreply@legalai.pro',
+      operationalEmails: ['support@legalai.pro', 'admin@legalai.pro']
     },
+    emailLogs: [],
     templates: [
       {
         id: '1',
@@ -270,14 +303,75 @@ export default function EmailSettings() {
         welcomeMessage: 'Welcome to LegalAI Pro support! How can I help you today?',
         offlineMessage: 'Thank you for contacting us. We are currently offline but will respond soon.',
         escalationMessage: 'Let me connect you with a human agent who can better assist you.'
+      },
+      realTimeMonitoring: {
+        enabled: true,
+        allowIntercept: true,
+        showTypingIndicator: true
       }
     }
   };
 
-  const config = emailConfig || defaultConfig;
+  // Use local state with proper initialization
+  useEffect(() => {
+    if (emailConfig) {
+      setConfig(emailConfig);
+    } else if (!config) {
+      setConfig(defaultConfig);
+    }
+  }, [emailConfig]);
+
+  const currentConfig = config || defaultConfig;
 
   const handleUpdateConfig = (updates: Partial<EmailConfig>) => {
+    const updatedConfig = { ...currentConfig, ...updates };
+    setConfig(updatedConfig);
     updateConfigMutation.mutate(updates);
+  };
+
+  // Create template mutation
+  const createTemplateMutation = useMutation({
+    mutationFn: async (template: Omit<EmailTemplate, 'id' | 'lastModified'>) => {
+      const response = await fetch('/api/admin/email/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(template),
+      });
+      if (!response.ok) throw new Error('Failed to create template');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-email-config'] });
+      toast({ title: "Template created successfully" });
+      setIsCreatingTemplate(false);
+      setNewTemplate({ name: "", subject: "", content: "", type: "custom", variables: [] });
+    },
+    onError: () => {
+      toast({ title: "Failed to create template", variant: "destructive" });
+    },
+  });
+
+  const addOperationalEmail = () => {
+    if (!newOperationalEmail.trim()) return;
+    
+    const updatedEmails = [...(currentConfig.smtp.operationalEmails || []), newOperationalEmail.trim()];
+    handleUpdateConfig({
+      smtp: {
+        ...currentConfig.smtp,
+        operationalEmails: updatedEmails
+      }
+    });
+    setNewOperationalEmail("");
+  };
+
+  const removeOperationalEmail = (email: string) => {
+    const updatedEmails = currentConfig.smtp.operationalEmails?.filter(e => e !== email) || [];
+    handleUpdateConfig({
+      smtp: {
+        ...currentConfig.smtp,
+        operationalEmails: updatedEmails
+      }
+    });
   };
 
   const handleSendTestEmail = () => {
@@ -364,9 +458,10 @@ export default function EmailSettings() {
       </div>
 
       <Tabs defaultValue="templates" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="templates">Email Templates</TabsTrigger>
           <TabsTrigger value="smtp">SMTP Configuration</TabsTrigger>
+          <TabsTrigger value="email-logs">Email Logs</TabsTrigger>
           <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
           <TabsTrigger value="live-chat">Live Chat</TabsTrigger>
         </TabsList>
@@ -386,7 +481,7 @@ export default function EmailSettings() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {config.templates.map((template) => (
+                  {currentConfig.templates.map((template) => (
                     <div
                       key={template.id}
                       className={`p-4 border rounded-lg cursor-pointer transition-colors ${
@@ -409,10 +504,68 @@ export default function EmailSettings() {
                     </div>
                   ))}
                   
-                  <Button className="w-full" variant="outline">
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => setIsCreatingTemplate(true)}
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Custom Template
                   </Button>
+                  
+                  {isCreatingTemplate && (
+                    <Card className="mt-4 border-dashed">
+                      <CardContent className="p-4 space-y-3">
+                        <div>
+                          <Label>Template Name</Label>
+                          <Input
+                            value={newTemplate.name}
+                            onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Enter template name"
+                          />
+                        </div>
+                        <div>
+                          <Label>Subject</Label>
+                          <Input
+                            value={newTemplate.subject}
+                            onChange={(e) => setNewTemplate(prev => ({ ...prev, subject: e.target.value }))}
+                            placeholder="Email subject"
+                          />
+                        </div>
+                        <div>
+                          <Label>Content</Label>
+                          <Textarea
+                            value={newTemplate.content}
+                            onChange={(e) => setNewTemplate(prev => ({ ...prev, content: e.target.value }))}
+                            placeholder="Email content with {{variables}}"
+                            rows={4}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm"
+                            onClick={() => createTemplateMutation.mutate({
+                              ...newTemplate,
+                              enabled: true
+                            })}
+                            disabled={!newTemplate.name || !newTemplate.subject || createTemplateMutation.isPending}
+                          >
+                            Create Template
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setIsCreatingTemplate(false);
+                              setNewTemplate({ name: "", subject: "", content: "", type: "custom", variables: [] });
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -504,6 +657,86 @@ export default function EmailSettings() {
           </div>
         </TabsContent>
 
+        <TabsContent value="email-logs" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Email Activity Logs
+              </CardTitle>
+              <CardDescription>
+                Monitor all email activity, AI responses, and human interventions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex gap-4 items-center">
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Activity</SelectItem>
+                      <SelectItem value="sent">Sent Emails</SelectItem>
+                      <SelectItem value="received">Received Emails</SelectItem>
+                      <SelectItem value="forwarded">Forwarded to Human</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline">
+                    <Activity className="h-4 w-4 mr-2" />
+                    Export Logs
+                  </Button>
+                </div>
+
+                <ScrollArea className="h-96 border rounded-lg">
+                  <div className="p-4 space-y-3">
+                    {currentConfig.emailLogs?.length > 0 ? (
+                      currentConfig.emailLogs.map((log) => (
+                        <div key={log.id} className="border rounded-lg p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge variant={log.type === 'sent' ? 'default' : log.type === 'received' ? 'secondary' : 'outline'}>
+                                {log.type}
+                              </Badge>
+                              <span className="text-sm font-medium">{log.subject}</span>
+                              {log.aiProcessed && <Badge variant="outline">AI Processed</Badge>}
+                              {log.humanCorrected && <Badge variant="destructive">Human Corrected</Badge>}
+                              {log.forwardedToHuman && <Badge variant="secondary">Escalated</Badge>}
+                            </div>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(log.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex gap-4 text-sm">
+                            <span><strong>From:</strong> {log.from}</span>
+                            <span><strong>To:</strong> {log.to}</span>
+                            <Badge variant={log.status === 'success' ? 'default' : log.status === 'failed' ? 'destructive' : 'secondary'}>
+                              {log.status}
+                            </Badge>
+                          </div>
+                          <div className="text-sm bg-gray-50 p-2 rounded max-h-20 overflow-y-auto">
+                            {log.content.substring(0, 200)}...
+                          </div>
+                          {log.humanCorrected && (
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline">View Original</Button>
+                              <Button size="sm" variant="outline">View Correction</Button>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No email activity yet
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="smtp" className="space-y-6">
           <Card>
             <CardHeader>
@@ -549,12 +782,61 @@ export default function EmailSettings() {
                 <div className="space-y-4">
                   <div>
                     <Label>From Name</Label>
-                    <Input value={config.smtp.fromName} placeholder="LegalAI Pro" />
+                    <Input 
+                      value={currentConfig.smtp.fromName} 
+                      onChange={(e) => handleUpdateConfig({
+                        smtp: { ...currentConfig.smtp, fromName: e.target.value }
+                      })}
+                      placeholder="LegalAI Pro" 
+                    />
                   </div>
                   
                   <div>
                     <Label>From Email</Label>
-                    <Input value={config.smtp.fromEmail} placeholder="noreply@legalai.pro" />
+                    <Input 
+                      value={currentConfig.smtp.fromEmail} 
+                      onChange={(e) => handleUpdateConfig({
+                        smtp: { ...currentConfig.smtp, fromEmail: e.target.value }
+                      })}
+                      placeholder="noreply@legalai.pro" 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
+                  <div>
+                    <Label>Operational Email Addresses</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Email addresses that will receive operational notifications and AI escalations
+                    </p>
+                    
+                    <div className="space-y-2">
+                      {currentConfig.smtp.operationalEmails?.map((email, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input value={email} readOnly className="flex-1" />
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => removeOperationalEmail(email)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      
+                      <div className="flex gap-2">
+                        <Input
+                          value={newOperationalEmail}
+                          onChange={(e) => setNewOperationalEmail(e.target.value)}
+                          placeholder="admin@company.com"
+                          className="flex-1"
+                        />
+                        <Button onClick={addOperationalEmail} disabled={!newOperationalEmail.trim()}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -874,6 +1156,94 @@ export default function EmailSettings() {
                         </CardContent>
                       </Card>
                     )}
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Real-Time Monitoring</CardTitle>
+                        <CardDescription>
+                          Monitor and control AI chat responses in real-time
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={currentConfig.liveChat.realTimeMonitoring?.enabled}
+                            onCheckedChange={(enabled) => 
+                              handleUpdateConfig({ 
+                                liveChat: { 
+                                  ...currentConfig.liveChat, 
+                                  realTimeMonitoring: {
+                                    ...currentConfig.liveChat.realTimeMonitoring,
+                                    enabled
+                                  }
+                                } 
+                              })
+                            }
+                          />
+                          <Label>Enable Real-Time Monitoring</Label>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={currentConfig.liveChat.realTimeMonitoring?.allowIntercept}
+                            onCheckedChange={(allowIntercept) => 
+                              handleUpdateConfig({ 
+                                liveChat: { 
+                                  ...currentConfig.liveChat, 
+                                  realTimeMonitoring: {
+                                    ...currentConfig.liveChat.realTimeMonitoring,
+                                    allowIntercept
+                                  }
+                                } 
+                              })
+                            }
+                          />
+                          <Label>Allow Human Intercept</Label>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={currentConfig.liveChat.realTimeMonitoring?.showTypingIndicator}
+                            onCheckedChange={(showTypingIndicator) => 
+                              handleUpdateConfig({ 
+                                liveChat: { 
+                                  ...currentConfig.liveChat, 
+                                  realTimeMonitoring: {
+                                    ...currentConfig.liveChat.realTimeMonitoring,
+                                    showTypingIndicator
+                                  }
+                                } 
+                              })
+                            }
+                          />
+                          <Label>Show AI Typing Indicator</Label>
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-3">
+                          <h4 className="font-medium">Live Chat Dashboard</h4>
+                          <div className="grid grid-cols-3 gap-4 text-center">
+                            <Card className="p-3">
+                              <div className="text-2xl font-bold text-green-600">12</div>
+                              <div className="text-sm text-muted-foreground">Active Chats</div>
+                            </Card>
+                            <Card className="p-3">
+                              <div className="text-2xl font-bold text-blue-600">3</div>
+                              <div className="text-sm text-muted-foreground">AI Responding</div>
+                            </Card>
+                            <Card className="p-3">
+                              <div className="text-2xl font-bold text-orange-600">1</div>
+                              <div className="text-sm text-muted-foreground">Pending Intercept</div>
+                            </Card>
+                          </div>
+                          <Button className="w-full">
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Open Live Chat Monitor
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
 
                     <Alert>
                       <AlertCircle className="h-4 w-4" />

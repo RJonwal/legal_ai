@@ -5,6 +5,7 @@ import { openaiService } from "./services/openai";
 import { insertChatMessageSchema, insertDocumentSchema, insertTimelineSchema } from "@shared/schema";
 import { z } from "zod";
 import adminRoutes from "./routes/admin";
+import { Request, Response } from "express";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user (mock for now)
@@ -857,8 +858,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
 
       // Mock payment method update
       res.json({ 
-        success: true, 
-        message: 'Payment method updated successfully',
+        success: true,         message: 'Payment method updated successfully',
         paymentmethod: {
           last4: number.slice(-4),
           brand,
@@ -2637,7 +2637,8 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         {
           category: 'Revenue',
           subcategory: 'Token Purchases',
-          amount: 4290,
+          amount:```text
+ 4290,
           percentage: 14.3,
           trend: 'up',
           trendValue: 8.2
@@ -3173,10 +3174,179 @@ app.post('/api/admin/system/update/check', (req, res) => {
     }
   });
 
+    const router = adminRoutes;
+// Get email configuration
+router.get("/admin/email/config", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/config 200`);
+  res.json({
+    smtp: {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      user: '',
+      password: '',
+      fromName: 'LegalAI Pro',
+      fromEmail: 'noreply@legalai.pro',
+      operationalEmails: ['support@legalai.pro', 'admin@legalai.pro']
+    },
+    templates: [
+      {
+        id: '1',
+        name: 'Welcome Email',
+        subject: 'Welcome to LegalAI Pro!',
+        content: 'Welcome {{firstName}}, thank you for signing up...',
+        type: 'signup',
+        enabled: true,
+        lastModified: new Date().toISOString(),
+        variables: ['firstName', 'lastName', 'email']
+      },
+      {
+        id: '2',
+        name: 'Payment Confirmation',
+        subject: 'Payment Received - {{amount}}',
+        content: 'Thank you for your payment of {{amount}}...',
+        type: 'payment',
+        enabled: true,
+        lastModified: new Date().toISOString(),
+        variables: ['amount', 'transactionId', 'planName']
+      }
+    ],
+    emailLogs: [
+      {
+        id: '1',
+        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        type: 'received',
+        to: 'support@legalai.pro',
+        from: 'user@example.com',
+        subject: 'Question about billing',
+        content: 'Hi, I have a question about my recent billing statement...',
+        status: 'success',
+        aiProcessed: true,
+        humanCorrected: false,
+        forwardedToHuman: false
+      },
+      {
+        id: '2',
+        timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+        type: 'sent',
+        to: 'user@example.com',
+        from: 'support@legalai.pro',
+        subject: 'Re: Question about billing',
+        content: 'Thank you for your inquiry. Your billing statement shows...',
+        status: 'success',
+        aiProcessed: true,
+        humanCorrected: true,
+        forwardedToHuman: false
+      },
+      {
+        id: '3',
+        timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+        type: 'forwarded',
+        to: 'admin@legalai.pro',
+        from: 'support@legalai.pro',
+        subject: 'Complex legal question - needs human review',
+        content: 'Forwarding complex inquiry that requires human expertise...',
+        status: 'success',
+        aiProcessed: true,
+        humanCorrected: false,
+        forwardedToHuman: true
+      }
+    ],
+    aiAssistant: {
+      enabled: true,
+      provider: 'openai',
+      model: 'gpt-4',
+      permissions: {
+        userManagement: false,
+        billingInquiries: true,
+        technicalSupport: true,
+        accountSettings: true,
+        caseManagement: false,
+        documentGeneration: false,
+        paymentProcessing: false,
+        subscriptionChanges: false,
+        dataExport: false,
+        systemStatus: true,
+        generalInquiries: true,
+        escalateToHuman: true
+      },
+      responseSettings: {
+        maxTokens: 500,
+        temperature: 0.7,
+        systemPrompt: 'You are a helpful AI assistant for LegalAI Pro.'
+      }
+    },
+    liveChat: {
+      enabled: true,
+      provider: 'internal',
+      permissions: {
+        viewUserProfiles: true,
+        accessCaseHistory: true,
+        modifyUserAccounts: false,
+        processPayments: false,
+        scheduleAppointments: true,
+        accessDocuments: true,
+        generateReports: false,
+        systemAdministration: false,
+        escalationManagement: true,
+        knowledgeBaseAccess: true
+      },
+      workingHours: {
+        enabled: true,
+        timezone: 'UTC',
+        schedule: {
+          monday: { start: '09:00', end: '17:00', active: true },
+          tuesday: { start: '09:00', end: '17:00', active: true },
+          wednesday: { start: '09:00', end: '17:00', active: true },
+          thursday: { start: '09:00', end: '17:00', active: true },
+          friday: { start: '09:00', end: '17:00', active: true },
+          saturday: { start: '10:00', end: '14:00', active: false },
+          sunday: { start: '10:00', end: '14:00', active: false }
+        }
+      },
+      autoResponses: {
+        welcomeMessage: 'Welcome to LegalAI Pro support! How can I help you today?',
+        offlineMessage: 'Thank you for contacting us. We are currently offline but will respond soon.',
+        escalationMessage: 'Let me connect you with a human agent who can better assist you.'
+      },
+      realTimeMonitoring: {
+        enabled: true,
+        allowIntercept: true,
+        showTypingIndicator: true
+      }
+    }
+  });
+});
+
+// Create email template
+router.post("/admin/email/templates", (req: Request, res: Response) => {
+  const template = {
+    ...req.body,
+    id: Date.now().toString(),
+    lastModified: new Date().toISOString()
+  };
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/templates 201`);
+  res.status(201).json(template);
+});
+
+// Update email configuration
+router.put("/admin/email/config", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/config 200`);
+  res.json({ success: true, config: req.body });
+});
+
+// Send test email
+router.post("/admin/email/test", (req: Request, res: Response) => {
+  const { email, templateId } = req.body;
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/test 200`);
+  res.json({ 
+    success: true, 
+    message: `Test email sent to ${email}`,
+    templateId 
+  });
+});
+
   // This API defines report export and scheduling endpoints.
-  const httpServer = createServer(app);
-  return httpServer;
-}
 
 // Mock cases data
 const mockCases = [
@@ -3229,3 +3399,7 @@ const mockCases = [
     nextDeadline: "2024-03-30T00:00:00Z"
   }
 ];
+
+  httpServer = createServer(app);
+  return httpServer;
+}
