@@ -27,7 +27,10 @@ import {
   ChevronUp,
   User2,
   CreditCard,
-  Key
+  Key,
+  MessageSquare,
+  Phone,
+  FileText
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -41,51 +44,75 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navigationItems = [
     {
       title: "Dashboard",
-      icon: Home,
       url: "/admin",
+      icon: Home,
       isActive: location === "/admin"
     },
     {
-      title: "User Management",
-      icon: Users,
+      title: "Users",
       url: "/admin/users",
+      icon: Users,
       isActive: location === "/admin/users"
     },
     {
-      title: "Billing & Subscriptions",
+      title: "Billing",
+      url: "/admin/billing", 
       icon: CreditCard,
-      url: "/admin/billing",
       isActive: location === "/admin/billing"
     },
     {
       title: "API Management",
-      icon: Key,
       url: "/admin/api-management",
+      icon: Key,
       isActive: location === "/admin/api-management"
     },
     {
-      title: "System Settings",
+      title: "Analytics",
+      url: "/admin/analytics",
+      icon: BarChart3,
+      isActive: location === "/admin/analytics"
+    },
+    {
+      title: "Email Management",
+      url: "/admin/email-management",
+      icon: Mail,
+      isActive: location === "/admin/email-management"
+    },
+    {
+      title: "Live Chat",
+      url: "/admin/livechat-management",
+      icon: MessageSquare,
+      isActive: location === "/admin/livechat-management"
+    },
+    {
+      title: "VoIP Management",
+      url: "/admin/voip-management",
+      icon: Phone,
+      isActive: location === "/admin/voip-management"
+    },
+    {
+      title: "Page Management",
+      url: "/admin/page-management",
+      icon: FileText,
+      isActive: location === "/admin/page-management"
+    },
+    {
+      title: "Email Settings",
+      url: "/admin/email-settings",
       icon: Settings,
+      isActive: location === "/admin/email-settings"
+    },
+    {
+      title: "System",
       url: "/admin/system",
+      icon: Database,
       isActive: location === "/admin/system"
     },
     {
       title: "Landing Config",
-      icon: Globe,
       url: "/admin/landing-config",
+      icon: Globe,
       isActive: location === "/admin/landing-config"
-    },
-    {
-      title: "Analytics",
-      icon: BarChart3,
-      url: "/admin/analytics",
-      isActive: location === "/admin/analytics"
-    },
-    {
-      title: "Email Settings",
-      icon: Mail,
-      url: "/admin/email-settings",
-      isActive: location === "/admin/email-settings"
     }
   ];
 
@@ -151,7 +178,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     <span>Database Status</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                
+
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
