@@ -7,6 +7,7 @@ import { ChatInput } from "./chat-input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Share2, Bookmark } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatInterfaceProps {
   caseId: number;
@@ -16,6 +17,7 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: ChatInterfaceProps) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentCaseData, setCurrentCaseData] = useState<any>(null);
   const messagesRef = useRef(messages);
@@ -206,7 +208,7 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
         variant: "destructive",
       });
     }
-  }, [currentCaseData, currentCase, caseQuery, toast]);
+  }, [currentCaseData, currentCase]);
 
   return (
     <div ref={chatInterfaceRef} className="flex-1 flex flex-col bg-white h-full" data-chat-interface="true">
