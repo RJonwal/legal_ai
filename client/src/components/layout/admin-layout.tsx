@@ -80,6 +80,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: BarChart3,
       url: "/admin/analytics",
       isActive: location === "/admin/analytics"
+    },
+    {
+      title: "Email Settings",
+      icon: Mail,
+      url: "/admin/email-settings",
+      isActive: location === "/admin/email-settings"
     }
   ];
 
@@ -145,12 +151,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     <span>Database Status</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <Mail />
-                    <span>Email Settings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

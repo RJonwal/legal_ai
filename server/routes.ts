@@ -859,7 +859,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       res.json({ 
         success: true, 
         message: 'Payment method updated successfully',
-        paymentMethod: {
+        paymentmethod: {
           last4: number.slice(-4),
           brand,
           expiry,
@@ -2638,7 +2638,8 @@ app.get("/api/admin/impersonation/history", (req, res) => {
           category: 'Revenue',
           subcategory: 'Token Purchases',
           amount: 4290,
-          percentage: 14.3,
+          percentage: 1```text
+4.3,
           trend: 'up',
           trendValue: 8.2
         },
@@ -2723,37 +2724,37 @@ app.get('/api/admin/system/status', (req, res) => {
 });
 
 // System configuration endpoints
-app.get('/api/admin/system/config', (req, res) => {
-  console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/config 200');
+  app.get("/api/admin/system/config", async (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/config 200');
 
-  const config = {
-    security: {
-      twoFactorAuth: true,
-      sessionTimeout: true,
-      ipAllowlist: false,
-      passwordPolicy: "Minimum 8 characters, include uppercase, lowercase, number, and special character"
-    },
-    database: {
-      autoBackup: true,
-      backupRetention: 30,
-      lastBackup: "2 hours ago",
-      status: "healthy",
-      uptime: "99.9%"
-    },
-    api: {
-      rateLimit: 1000,
-      apiVersioning: true,
-      corsProtection: true,
-      requestTimeout: 30
-    },
-    maintenance: {
-      maintenanceMode: false,
-      maintenanceMessage: "System is currently undergoing scheduled maintenance. Please check back later."
-    }
-  };
+    const config = {
+      security: {
+        twoFactorAuth: true,
+        sessionTimeout: true,
+        ipAllowlist: false,
+        passwordPolicy: "Minimum 8 characters, include uppercase, lowercase, number, and special character"
+      },
+      database: {
+        autoBackup: true,
+        backupRetention: 30,
+        lastBackup: "2 hours ago",
+        status: "healthy",
+        uptime: "99.9%"
+      },
+      api: {
+        rateLimit: 1000,
+        apiVersioning: true,
+        corsProtection: true,
+        requestTimeout: 30
+      },
+      maintenance: {
+        maintenanceMode: false,
+        maintenanceMessage: "System is currently undergoing scheduled maintenance. Please check back later."
+      }
+    };
 
-  res.json(config);
-});
+    res.json(config);
+  });
 
 app.put('/api/admin/system/config', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/system/config 200');

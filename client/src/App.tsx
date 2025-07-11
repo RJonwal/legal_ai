@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLayout from "@/components/layout/mobile-layout";
 import AdminLayout from "@/components/layout/admin-layout";
+import { lazy } from 'react';
 
 // Import pages
 import LandingPage from "@/pages/landing";
@@ -67,7 +68,8 @@ function App() {
             <Route path="/admin/analytics">
               <AdminLayout>
                 <AdminAnalytics />
-              </AdminLayout>
+            <Route path="/admin/email-settings" component={lazy(() => import('./pages/admin/email-settings'))} />
+          </AdminLayout>
             </Route>
 
             <Route path="/admin/system">
