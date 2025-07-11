@@ -859,6 +859,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       res.json({ 
         success: true, 
         message: 'Payment method updated successfully',
+```tool_code
         paymentMethod: {
           last4: number.slice(-4),
           brand,
@@ -2353,9 +2354,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
   // Analytics endpoints for cost tracking and profitability
   app.get('/api/admin/analytics/ai-usage', (req, res) => {
     const { dateRange = '30d', provider = 'all', userId } = req.query;
-    
+
     console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/analytics/ai-usage 200');
-    
+
     // Mock AI usage data with cost calculations
     const aiUsageData = [
       {
@@ -2417,25 +2418,25 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         requestType: 'legal_research'
       }
     ];
-    
+
     // Filter data based on query parameters
     let filteredData = aiUsageData;
-    
+
     if (provider !== 'all') {
       filteredData = filteredData.filter(record => 
         record.provider.toLowerCase().includes(provider.toLowerCase())
       );
     }
-    
+
     if (userId) {
       filteredData = filteredData.filter(record => record.userId === userId);
     }
-    
+
     // Calculate aggregated metrics
     const totalCost = filteredData.reduce((sum, record) => sum + record.cost, 0);
     const totalTokens = filteredData.reduce((sum, record) => sum + record.tokens, 0);
     const avgCostPerToken = totalTokens > 0 ? totalCost / totalTokens : 0;
-    
+
     const providerBreakdown = filteredData.reduce((acc, record) => {
       if (!acc[record.provider]) {
         acc[record.provider] = { cost: 0, tokens: 0, requests: 0 };
@@ -2445,7 +2446,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       acc[record.provider].requests += 1;
       return acc;
     }, {} as Record<string, { cost: number; tokens: number; requests: number }>);
-    
+
     res.json({
       success: true,
       data: filteredData,
@@ -2463,9 +2464,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   app.get('/api/admin/analytics/profitability', (req, res) => {
     const { sortBy = 'profit', sortOrder = 'desc' } = req.query;
-    
+
     console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/analytics/profitability 200');
-    
+
     // Mock user profitability data
     const profitabilityData = [
       {
@@ -2557,14 +2558,14 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         riskFactors: ['high_ai_usage', 'negative_margin']
       }
     ];
-    
+
     // Sort data
     const sortedData = [...profitabilityData].sort((a, b) => {
       const aValue = a[sortBy as keyof typeof a] as number;
       const bValue = b[sortBy as keyof typeof b] as number;
       return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
     });
-    
+
     // Calculate summary metrics
     const totalUsers = profitabilityData.length;
     const profitableUsers = profitabilityData.filter(u => u.status === 'profitable').length;
@@ -2573,7 +2574,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     const totalCosts = profitabilityData.reduce((sum, u) => sum + u.totalCosts, 0);
     const totalProfit = profitabilityData.reduce((sum, u) => sum + u.profit, 0);
     const avgMargin = profitabilityData.reduce((sum, u) => sum + u.margin, 0) / totalUsers;
-    
+
     res.json({
       success: true,
       data: sortedData,
@@ -2593,9 +2594,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   app.get('/api/admin/analytics/profit-loss', (req, res) => {
     const { period = 'monthly' } = req.query;
-    
+
     console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/analytics/profit-loss 200');
-    
+
     // Mock P&L data
     const plData = {
       period: 'March 2024',
@@ -2637,8 +2638,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         {
           category: 'Revenue',
           subcategory: 'Token Purchases',
-          amount: 4290,
-          percentage: 14.3,
+          amount: 4290          percentage: 14.3,
           trend: 'up', 
           trendValue: 8.2
         },
@@ -2700,7 +2700,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         }
       ]
     };
-    
+
     res.json({
       success: true,
       data: plData,
@@ -2725,7 +2725,7 @@ app.get('/api/admin/system/status', (req, res) => {
 // System configuration endpoints
 app.get('/api/admin/system/config', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/config 200');
-  
+
   const config = {
     security: {
       twoFactorAuth: true,
@@ -2751,21 +2751,21 @@ app.get('/api/admin/system/config', (req, res) => {
       maintenanceMessage: "System is currently undergoing scheduled maintenance. Please check back later."
     }
   };
-  
+
   res.json(config);
 });
 
 app.put('/api/admin/system/config', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/system/config 200');
-  
+
   const { section, config } = req.body;
-  
+
   if (!section || !config) {
     return res.status(400).json({ error: 'Section and config are required' });
   }
-  
+
   console.log('Updating system config section:', section, config);
-  
+
   res.json({
     success: true,
     message: `${section} configuration updated successfully`,
@@ -2777,7 +2777,7 @@ app.put('/api/admin/system/config', (req, res) => {
 // Security configuration endpoints
 app.post('/api/admin/system/security/scan', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/system/security/scan 200');
-  
+
   // Simulate security scan
   setTimeout(() => {
     res.json({
@@ -2797,10 +2797,10 @@ app.post('/api/admin/system/security/scan', (req, res) => {
 // Database management endpoints
 app.post('/api/admin/system/database/backup', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/system/database/backup 200');
-  
+
   // Simulate backup creation
   const backupId = 'backup_' + Date.now();
-  
+
   res.json({
     success: true,
     message: 'Database backup created successfully',
@@ -2815,7 +2815,7 @@ app.post('/api/admin/system/database/backup', (req, res) => {
 
 app.get('/api/admin/system/database/backups', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/database/backups 200');
-  
+
   const backups = [
     {
       id: 'backup_001',
@@ -2836,14 +2836,14 @@ app.get('/api/admin/system/database/backups', (req, res) => {
       status: 'completed'
     }
   ];
-  
+
   res.json(backups);
 });
 
 // Monitoring endpoints
 app.get('/api/admin/system/monitoring/metrics', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/monitoring/metrics 200');
-  
+
   const metrics = {
     system: {
       cpu: 45.2,
@@ -2864,15 +2864,15 @@ app.get('/api/admin/system/monitoring/metrics', (req, res) => {
       cacheHitRate: 94.5
     }
   };
-  
+
   res.json(metrics);
 });
 
 app.get('/api/admin/system/monitoring/logs', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/monitoring/logs 200');
-  
+
   const { level = 'all', limit = 100 } = req.query;
-  
+
   const logs = [
     {
       timestamp: new Date().toISOString(),
@@ -2893,16 +2893,16 @@ app.get('/api/admin/system/monitoring/logs', (req, res) => {
       source: 'database.service'
     }
   ];
-  
+
   res.json(logs.slice(0, parseInt(limit as string)));
 });
 
 // Maintenance mode endpoints
 app.put('/api/admin/system/maintenance/mode', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/system/maintenance/mode 200');
-  
+
   const { enabled, message } = req.body;
-  
+
   res.json({
     success: true,
     message: `Maintenance mode ${enabled ? 'enabled' : 'disabled'} successfully`,
@@ -2914,9 +2914,9 @@ app.put('/api/admin/system/maintenance/mode', (req, res) => {
 
 app.post('/api/admin/system/maintenance/schedule', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/system/maintenance/schedule 200');
-  
+
   const { scheduledFor, duration, message } = req.body;
-  
+
   res.json({
     success: true,
     message: 'Maintenance scheduled successfully',
@@ -2932,10 +2932,10 @@ app.post('/api/admin/system/maintenance/schedule', (req, res) => {
 
 app.post('/api/admin/system/update/check', (req, res) => {
   console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/system/update/check 200');
-  
+
   // Simulate update check
   const hasUpdate = Math.random() > 0.7; // 30% chance of update
-  
+
   res.json({
     success: true,
     updateAvailable: hasUpdate,
@@ -2950,39 +2950,230 @@ app.post('/api/admin/system/update/check', (req, res) => {
 });
 
 // Chat widget settings endpoints
-app.get('/api/admin/chat-widget-config', (req, res) => {
-  res.json({
-    success: true,
-    config: {
-      enabled: false,
-      provider: 'crisp',
-      apiKey: '',
-      position: 'bottom-right',
-      showOnDashboard: false,
-      allowedPages: ['landing', 'pricing', 'contact'],
-      customization: {
-        primaryColor: '#3B82F6',
-        fontFamily: 'Inter',
-        borderRadius: '8px',
-        position: 'bottom-right'
+  app.get('/api/admin/chat-widget-config', (req, res) => {
+    res.json({
+      success: true,
+      config: {
+        enabled: false,
+        provider: 'crisp',
+        apiKey: '',
+        position: 'bottom-right',
+        showOnDashboard: false,
+        allowedPages: ['landing', 'pricing', 'contact'],
+        customization: {
+          primaryColor: '#3B82F6',
+          fontFamily: 'Inter',
+          borderRadius: '8px',
+          position: 'bottom-right'
+        }
       }
+    });
+  });
+
+  app.put('/api/admin/chat-widget-config', (req, res) => {
+    const { config } = req.body;
+
+    // In a real app, you would save this to your database
+    console.log('Updating chat widget config:', config);
+
+    res.json({
+      success: true,
+      message: 'Chat widget configuration updated successfully',
+      config
+    });
+  });
+
+  // Report export and scheduling endpoints
+  app.get('/api/admin/reports/export/:reportType', async (req, res) => {
+    try {
+      const { reportType } = req.params;
+      const { dateRange = '30d', format = 'csv' } = req.query;
+
+      console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/reports/export/' + reportType + ' 200');
+
+      // Generate CSV content based on report type
+      let csvContent = '';
+
+      switch (reportType) {
+        case 'comprehensive':
+          csvContent = `Date,Revenue,AI Costs,Users,Profit,Margin\n` +
+            `2024-03-01,$29040,$3850,127,$20520,70.6%\n` +
+            `2024-02-01,$26200,$3420,115,$18980,72.4%\n` +
+            `2024-01-01,$23800,$3100,108,$17200,72.3%\n`;
+          break;
+        case 'ai-usage':
+          csvContent = `User,Provider,Model,Tokens,Cost,Date\n` +
+            `Sarah Johnson,OpenAI,gpt-4o,2500,0.075,2024-03-15\n` +
+            `Mike Wilson,Anthropic,claude-3-sonnet,1800,0.054,2024-03-15\n` +
+            `Robert Davis,Deepseek,deepseek-chat,3200,0.0128,2024-03-15\n`;
+          break;
+        case 'profitability':
+          csvContent = `User,Subscription,Revenue,AI Costs,Total Costs,Profit,Margin,Status\n` +
+            `Sarah Johnson,Professional,$99,$12.50,$27.70,$71.30,72.0%,profitable\n` +
+            `Mike Wilson,Pro Se,$29,$8.75,$20.85,$8.15,28.1%,profitable\n` +
+            `Robert Davis,Enterprise,$299,$45.20,$81.00,$218.00,72.9%,profitable\n`;
+          break;
+        case 'pl-statement':
+          csvContent = `Category,Item,Amount,Percentage,Trend\n` +
+            `Revenue,Subscription Revenue,$24750,82.7%,up 12.5%\n` +
+            `Revenue,Token Purchases,$4290,14.3%,up 8.2%\n` +
+            `Costs,AI API Costs,-$3850,36.6%,up 15.3%\n` +
+            `Costs,Infrastructure,-$2100,20.0%,stable 0.5%\n` +
+            `Costs,Support & Operations,-$1580,15.0%,down -3.2%\n`;
+          break;
+        default:
+          csvContent = `Report Type,${reportType}\nGenerated,${new Date().toISOString()}\nPeriod,${dateRange}\n`;
+      }
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${reportType}-report-${dateRange}-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.setHeader('Cache-Control', 'no-cache');
+
+      res.send(csvContent);
+    } catch (error) {
+      console.error('Report export error:', error);
+      res.status(500).json({ 
+        error: 'Failed to export report',
+        message: 'Unable to generate report file. Please try again later.'
+      });
     }
   });
-});
 
-app.put('/api/admin/chat-widget-config', (req, res) => {
-  const { config } = req.body;
+  app.post('/api/admin/reports/schedule', async (req, res) => {
+    try {
+      const { reportType, frequency, dateRange, format, recipients } = req.body;
 
-  // In a real app, you would save this to your database
-  console.log('Updating chat widget config:', config);
+      console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/reports/schedule 200');
 
-  res.json({
-    success: true,
-    message: 'Chat widget configuration updated successfully',
-    config
+      if (!reportType || !frequency) {
+        return res.status(400).json({
+          error: 'Missing required fields',
+          message: 'Report type and frequency are required'
+        });
+      }
+
+      // Generate schedule ID
+      const scheduleId = 'sched_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+
+      // Calculate next execution date based on frequency
+      let nextExecution = new Date();
+      switch (frequency) {
+        case 'daily':
+          nextExecution.setDate(nextExecution.getDate() + 1);
+          break;
+        case 'weekly':
+          nextExecution.setDate(nextExecution.getDate() + 7);
+          break;
+        case 'monthly':
+          nextExecution.setMonth(nextExecution.getMonth() + 1);
+          break;
+        default:
+          nextExecution.setDate(nextExecution.getDate() + 7);
+      }
+
+      // Mock schedule creation
+      const schedule = {
+        id: scheduleId,
+        reportType,
+        frequency,
+        dateRange: dateRange || '30d',
+        format: format || 'pdf',
+        recipients: recipients || ['admin@legalai.com'],
+        nextExecution: nextExecution.toISOString(),
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        createdBy: 'admin_user'
+      };
+
+      console.log('Created report schedule:', schedule);
+
+      res.json({
+        success: true,
+        message: `${frequency} ${reportType} report scheduled successfully`,
+        scheduleId,
+        schedule,
+        nextExecution: nextExecution.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      });
+    } catch (error) {
+      console.error('Report scheduling error:', error);
+      res.status(500).json({
+        error: 'Failed to schedule report',
+        message: 'Unable to create report schedule. Please try again later.'
+      });
+    }
   });
-});
 
+  app.get('/api/admin/reports/schedules', async (req, res) => {
+    try {
+      console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/reports/schedules 200');
+
+      // Mock scheduled reports data
+      const schedules = [
+        {
+          id: 'sched_001',
+          reportType: 'comprehensive',
+          frequency: 'weekly',
+          dateRange: '30d',
+          format: 'pdf',
+          recipients: ['admin@legalai.com', 'manager@legalai.com'],
+          nextExecution: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'active',
+          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          lastExecuted: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'sched_002',
+          reportType: 'profitability',
+          frequency: 'monthly',
+          dateRange: '90d',
+          format: 'csv',
+          recipients: ['finance@legalai.com'],
+          nextExecution: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'active',
+          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+          lastExecuted: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+
+      res.json({
+        success: true,
+        schedules
+      });
+    } catch (error) {
+      console.error('Error fetching report schedules:', error);
+      res.status(500).json({
+        error: 'Failed to fetch report schedules',
+        message: 'Unable to retrieve scheduled reports. Please try again later.'
+      });
+    }
+  });
+
+  app.delete('/api/admin/reports/schedules/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(new Date().toLocaleTimeString() + ' [express] DELETE /api/admin/reports/schedules/' + id + ' 200');
+
+      res.json({
+        success: true,
+        message: 'Report schedule deleted successfully',
+        scheduleId: id
+      });
+    } catch (error) {
+      console.error('Error deleting report schedule:', error);
+      res.status(500).json({
+        error: 'Failed to delete report schedule',
+        message: 'Unable to delete scheduled report. Please try again later.'
+      });
+    }
+  });
+
+  // This API defines report export and scheduling endpoints.
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -225,9 +225,62 @@ export default function AdminAnalytics() {
     return sortDirection === "desc" ? bValue - aValue : aValue - bValue;
   });
 
-  const downloadReport = (reportType: string) => {
-    console.log(`Downloading ${reportType} report...`);
-    // Implementation would generate and download actual report
+  const downloadReport = async (reportType: string) => {
+    try {
+      console.log(`Downloading ${reportType} report...`);
+      const response = await fetch(`/api/admin/reports/export/${reportType}?dateRange=${dateRange}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `${reportType}-report-${dateRange}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      alert('Failed to download report. Please try again.');
+    }
+  };
+
+  const scheduleReport = async () => {
+    try {
+      const response = await fetch('/api/admin/reports/schedule', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reportType: 'comprehensive',
+          frequency: 'weekly',
+          dateRange,
+          format: 'pdf',
+          recipients: ['admin@legalai.com']
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to schedule report');
+      }
+
+      const result = await response.json();
+      alert(`Report scheduled successfully! Schedule ID: ${result.scheduleId}`);
+    } catch (error) {
+      console.error('Error scheduling report:', error);
+      alert('Failed to schedule report. Please try again.');
+    }
   };
 
   return (
@@ -249,11 +302,11 @@ export default function AdminAnalytics() {
               <SelectItem value="1y">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => downloadReport('comprehensive')}>
             <Download className="mr-2 h-4 w-4" />
             Export Report
           </Button>
-          <Button>
+          <Button onClick={scheduleReport}>
             <Calendar className="mr-2 h-4 w-4" />
             Schedule Report
           </Button>
