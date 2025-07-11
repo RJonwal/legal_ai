@@ -24,6 +24,7 @@ import AdminAnalytics from "@/pages/admin/analytics";
 import AdminSystem from "@/pages/admin/system";
 import AdminBilling from "@/pages/admin/billing";
 import AdminAPIManagement from "@/pages/admin/api-management";
+import EmailSettings from "@/pages/admin/email-settings";
 
 import "./index.css";
 
@@ -68,8 +69,13 @@ function App() {
             <Route path="/admin/analytics">
               <AdminLayout>
                 <AdminAnalytics />
-            <Route path="/admin/email-settings" component={lazy(() => import('./pages/admin/email-settings'))} />
-          </AdminLayout>
+              </AdminLayout>
+            </Route>
+
+            <Route path="/admin/email-settings">
+              <AdminLayout>
+                <EmailSettings />
+              </AdminLayout>
             </Route>
 
             <Route path="/admin/system">
