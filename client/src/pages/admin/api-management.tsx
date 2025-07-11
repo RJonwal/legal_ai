@@ -46,6 +46,13 @@ interface APIProvider {
   status: 'healthy' | 'error' | 'warning';
 }
 
+interface ModelInfo {
+  id: string;
+  name: string;
+  description?: string;
+  contextLength?: number;
+}
+
 interface AppAPI {
   id: string;
   name: string;
@@ -89,6 +96,8 @@ export default function APIManagement() {
   const [newWebhookDialogOpen, setNewWebhookDialogOpen] = useState(false);
   const [newAppAPIDialogOpen, setNewAppAPIDialogOpen] = useState(false);
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
+  const [fetchingModels, setFetchingModels] = useState<Record<string, boolean>>({});
+  const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
 
   const queryClient = useQueryClient();
 
@@ -154,6 +163,27 @@ export default function APIManagement() {
   const maskApiKey = (key: string) => {
     if (!key) return '';
     return key.substring(0, 8) + '•'.repeat(Math.max(0, key.length - 8));
+  };
+
+  const fetchModelsForProvider = async (providerId: string, apiKey?: string, refresh = false) => {
+    setFetchingModels(prev => ({ ...prev, [providerId]: true }));
+    
+    try {
+      const queryParams = new URLSearchParams();
+      if (apiKey) queryParams.append('apiKey', apiKey);
+      if (refresh) queryParams.append('refresh', 'true');
+      
+      const response = await fetch(`/api/admin/ai-providers/${providerId}/models?${queryParams}`);
+      if (!response.ok) throw new Error('Failed to fetch models');
+      
+      const data = await response.json();
+      setAvailableModels(prev => ({ ...prev, [providerId]: data.models }));
+    } catch (error) {
+      console.error('Error fetching models:', error);
+    } finally {
+      setFetchingModels(prev => ({ ...prev, [providerId]: false }));
+    }
+  };
   };
 
   const getStatusIcon = (status: string) => {
@@ -272,17 +302,47 @@ export default function APIManagement() {
                       
                       <div>
                         <Label htmlFor="openai-model">Model</Label>
-                        <Select defaultValue="gpt-4">
-                          <SelectTrigger id="openai-model" className="bg-white">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="gpt-4">GPT-4</SelectItem>
-                            <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                            <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                        <div className="flex gap-2">
+                          <Select defaultValue="gpt-4o" onOpenChange={() => {
+                            if (!availableModels['openai']) {
+                              fetchModelsForProvider('openai');
+                            }
+                          }}>
+                            <SelectTrigger id="openai-model" className="bg-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableModels['openai']?.map((model) => (
+                                <SelectItem key={model.id} value={model.id}>
+                                  <div className="flex flex-col">
+                                    <span>{model.name}</span>
+                                    {model.description && (
+                                      <span className="text-xs text-gray-500">{model.description}</span>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              )) || [
+                                <SelectItem key="gpt-4o" value="gpt-4o">GPT-4o</SelectItem>,
+                                <SelectItem key="gpt-4" value="gpt-4">GPT-4</SelectItem>,
+                                <SelectItem key="gpt-3.5-turbo" value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                              ]}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => fetchModelsForProvider('openai', undefined, true)}
+                            disabled={fetchingModels['openai']}
+                            title="Refresh models list"
+                          >
+                            {fetchingModels['openai'] ? (
+                              <Activity className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Zap className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>v>
 
                       <div className="flex items-center justify-between">
                         <Label className="text-sm">Active</Label>

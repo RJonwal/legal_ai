@@ -106,4 +106,57 @@ router.get("/logo-config", (req: Request, res: Response) => {
   });
 });
 
+// Page management endpoints
+router.get("/pages", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pages 200`);
+  
+  const pages = [
+    {
+      id: "1",
+      title: "Terms and Conditions",
+      slug: "terms-and-conditions",
+      content: "# Terms and Conditions\n\nLast updated: [DATE]\n\n## 1. Acceptance of Terms...",
+      metaDescription: "Terms and conditions for using LegalAI Pro platform and services.",
+      isPublished: true,
+      showInFooter: true,
+      footerCategory: "Legal",
+      lastModified: "2024-01-15",
+      type: "terms"
+    },
+    {
+      id: "2", 
+      title: "Privacy Policy",
+      slug: "privacy-policy",
+      content: "# Privacy Policy\n\nLast updated: [DATE]\n\n## Information We Collect...",
+      metaDescription: "Privacy policy explaining how LegalAI Pro collects, uses, and protects your personal information.",
+      isPublished: true,
+      showInFooter: true,
+      footerCategory: "Legal",
+      lastModified: "2024-01-15",
+      type: "privacy"
+    }
+  ];
+
+  res.json(pages);
+});
+
+router.post("/pages", (req: Request, res: Response) => {
+  const page = req.body;
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/pages 201`);
+  res.status(201).json({ ...page, id: Date.now().toString() });
+});
+
+router.put("/pages/:id", (req: Request, res: Response) => {
+  const { id } = req.params;
+  const page = req.body;
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/pages/${id} 200`);
+  res.json({ ...page, id });
+});
+
+router.delete("/pages/:id", (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/pages/${id} 200`);
+  res.json({ success: true });
+});
+
 export default router;

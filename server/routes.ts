@@ -1558,7 +1558,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     res.json(apis);
   });
 
-  // Webhooks endpoints
+  // Enhanced webhook configuration with granular controls
   app.get("/api/admin/webhooks", (req, res) => {
     console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/webhooks 200`);
 
@@ -1566,28 +1566,139 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       {
         id: "crm-sync",
         name: "Case Management Sync",
-        url: "https://crm.example.com/webhook",
-        events: ["case.created", "case.updated", "case.completed"],
+        url: "https://api.crm.example.com/webhooks/cases",
+        events: ["case.created", "case.updated", "case.closed", "document.generated"],
         isActive: true,
-        secret: "webhook_secret_123",
-        retryAttempts: 3,
-        lastTriggered: "30 min ago",
-        deliveryRate: 99.2
+        lastTriggered: "2 minutes ago",
+        status: "healthy",
+        retryCount: 3,
+        timeout: 30,
+        includeMetadata: true,
+        includeUserData: false,
+        includeDocumentContent: true,
+        dataFilters: {
+          caseTypes: ["litigation", "contract"],
+          documentTypes: ["brief", "motion"],
+          userRoles: ["attorney", "paralegal"]
+        },
+        headers: {
+          "X-Source": "LegalAI-Pro",
+          "Content-Type": "application/json"
+        }
       },
       {
-        id: "analytics-tracker",
-        name: "Analytics Tracker",
-        url: "https://analytics.app.com/events",
-        events: ["user.created", "document.generated", "payment.completed"],
+        id: "billing-updates",
+        name: "Billing System",
+        url: "https://billing.example.com/hooks/legal-ai",
+        events: ["subscription.changed", "payment.processed", "payment.failed", "usage.threshold"],
         isActive: true,
-        secret: "analytics_secret_456",
-        retryAttempts: 5,
-        lastTriggered: "2 hours ago",
-        deliveryRate: 97.8
+        lastTriggered: "1 hour ago", 
+        status: "healthy",
+        retryCount: 5,
+        timeout: 15,
+        includeMetadata: true,
+        includeUserData: true,
+        includeDocumentContent: false,
+        dataFilters: {
+          subscriptionTiers: ["professional", "enterprise"],
+          paymentMethods: ["card", "ach"],
+          userRoles: ["admin", "billing"]
+        },
+        headers: {
+          "X-Source": "LegalAI-Pro",
+          "Authorization": "Bearer webhook-token-123"
+        }
+      },
+      {
+        id: "security-alerts",
+        name: "Security Monitoring",
+        url: "https://security.example.com/webhooks/legal-ai",
+        events: ["login.failed", "suspicious.activity", "data.breach", "unauthorized.access"],
+        isActive: true,
+        lastTriggered: "Never",
+        status: "healthy",
+        retryCount: 1,
+        timeout: 10,
+        includeMetadata: true,
+        includeUserData: true,
+        includeDocumentContent: false,
+        dataFilters: {
+          severityLevels: ["high", "critical"],
+          userRoles: ["admin", "security"],
+          ipRanges: ["trusted"]
+        },
+        headers: {
+          "X-Source": "LegalAI-Pro",
+          "X-Security-Level": "high"
+        }
+      },
+      {
+        id: "document-processing",
+        name: "Document Processing Pipeline",
+        url: "https://docs.example.com/webhooks/process",
+        events: ["document.uploaded", "document.analyzed", "document.processed", "ai.analysis.complete"],
+        isActive: false,
+        lastTriggered: "3 days ago",
+        status: "warning",
+        retryCount: 2,
+        timeout: 60,
+        includeMetadata: true,
+        includeUserData: false,
+        includeDocumentContent: true,
+        dataFilters: {
+          documentTypes: ["contract", "brief", "motion", "discovery"],
+          fileSizes: ["<10MB"],
+          caseTypes: ["all"]
+        },
+        headers: {
+          "X-Source": "LegalAI-Pro",
+          "X-Process-Priority": "normal"
+        }
       }
     ];
 
     res.json(webhooks);
+  });
+
+  app.get("/api/admin/webhook-events", (req, res) => {
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/webhook-events 200`);
+
+    const availableEvents = [
+      // Case Events
+      { id: "case.created", name: "Case Created", category: "Cases", description: "When a new case is created" },
+      { id: "case.updated", name: "Case Updated", category: "Cases", description: "When case details are modified" },
+      { id: "case.closed", name: "Case Closed", category: "Cases", description: "When a case is marked as closed" },
+      { id: "case.archived", name: "Case Archived", category: "Cases", description: "When a case is archived" },
+
+      // Document Events
+      { id: "document.generated", name: "Document Generated", category: "Documents", description: "When AI generates a new document" },
+      { id: "document.uploaded", name: "Document Uploaded", category: "Documents", description: "When a document is uploaded" },
+      { id: "document.analyzed", name: "Document Analyzed", category: "Documents", description: "When AI analysis completes" },
+      { id: "document.processed", name: "Document Processed", category: "Documents", description: "When document processing finishes" },
+
+      // User Events
+      { id: "user.registered", name: "User Registered", category: "Users", description: "When a new user signs up" },
+      { id: "user.login", name: "User Login", category: "Users", description: "When a user logs in" },
+      { id: "user.logout", name: "User Logout", category: "Users", description: "When a user logs out" },
+      { id: "login.failed", name: "Login Failed", category: "Security", description: "When login attempts fail" },
+
+      // Billing Events
+      { id: "subscription.changed", name: "Subscription Changed", category: "Billing", description: "When subscription plan changes" },
+      { id: "payment.processed", name: "Payment Processed", category: "Billing", description: "When payment is successful" },
+      { id: "payment.failed", name: "Payment Failed", category: "Billing", description: "When payment fails" },
+      { id: "usage.threshold", name: "Usage Threshold", category: "Billing", description: "When usage limits are reached" },
+
+      // AI Events
+      { id: "ai.analysis.complete", name: "AI Analysis Complete", category: "AI", description: "When AI analysis finishes" },
+      { id: "ai.chat.session", name: "AI Chat Session", category: "AI", description: "When AI chat session starts/ends" },
+
+      // Security Events
+      { id: "suspicious.activity", name: "Suspicious Activity", category: "Security", description: "When suspicious behavior is detected" },
+      { id: "data.breach", name: "Data Breach", category: "Security", description: "When potential breach is detected" },
+      { id: "unauthorized.access", name: "Unauthorized Access", category: "Security", description: "When unauthorized access is attempted" }
+    ];
+
+    res.json(availableEvents);
   });
 
   // Payment Gateways endpoints
