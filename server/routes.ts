@@ -858,8 +858,53 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       // Mock payment method update
       res.json({ 
         success: true, 
-        message:```text
-        // Generate realistic transaction ID
+        message: 'Payment method updated successfully',
+        paymentMethod: {
+          last4: number.slice(-4),
+          brand,
+          expiry,
+          name
+        }
+      });
+    } catch (error) {
+      console.error('Payment method update error:', error);
+      res.status(500).json({ 
+        error: 'Failed to update payment method',
+        message: 'Unable to update your payment method at this time. Please try again later.'
+      });
+    }
+  });
+
+  app.post("/api/billing/tokens", async (req, res) => {
+    try {
+      const { plan } = req.body;
+
+      if (!plan) {
+        return res.status(400).json({ 
+          error: 'Missing plan',
+          message: 'Token plan is required'
+        });
+      }
+
+      // Mock token purchase
+      const tokenPlans = {
+        '1000': { tokens: 1000, price: 19, savings: 0 },
+        '5000': { tokens: 5000, price: 79, savings: 16 },
+        '10000': { tokens: 10000, price: 149, savings: 21 },
+        '25000': { tokens: 25000, price: 349, savings: 26 }
+      };
+
+      const selectedPlan = tokenPlans[plan as keyof typeof tokenPlans];
+
+      if (!selectedPlan) {
+        return res.status(400).json({ 
+          error: 'Invalid token plan',
+          message: 'Selected plan is not available',
+          availablePlans: Object.keys(tokenPlans)
+        });
+      }
+
+      // Generate realistic transaction ID
       const transactionId = "txn_" + Date.now() + "_" + Math.random().toString(36).substring(2, 11);
 
       res.json({ 
@@ -1726,7 +1771,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   app.post("/api/admin/ai-providers/:id/test", async (req, res) => {
     const { id } = req.params;
-    console.log(newDate().toLocaleTimeString() + ' [express] POST /api/admin/ai-providers/' + id + '/test 200');
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/ai-providers/' + id + '/test 200');
 
     try {
       // Simulate different test scenarios
