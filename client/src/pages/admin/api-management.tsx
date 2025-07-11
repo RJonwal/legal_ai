@@ -275,11 +275,12 @@ export default function APIManagement() {
 
   // Add a state variable to track the currently edited webhook
   const [editingWebhook, setEditingWebhook] = useState<WebhookConfig | null>(null);
+  const [editWebhookDialogOpen, setEditWebhookDialogOpen] = useState(false);
 
   // Function to handle editing a webhook
   const handleEditWebhook = (webhook: WebhookConfig) => {
     setEditingWebhook(webhook);
-    // You can also open a dialog or modal here to edit the webhook
+    setEditWebhookDialogOpen(true);
   };
 
     // Placeholder for deleteWebhook function - needs actual implementation
@@ -1145,6 +1146,136 @@ export default function APIManagement() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+
+                {/* Edit Webhook Dialog */}
+                <Dialog open={editWebhookDialogOpen} onOpenChange={setEditWebhookDialogOpen}>
+                  <DialogContent className="max-w-md max-h-[85vh]">
+                    <DialogHeader>
+                      <DialogTitle>Edit Webhook</DialogTitle>
+                      <DialogDescription>Update webhook configuration</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={(e) => {e.preventDefault(); setEditWebhookDialogOpen(false);}}>
+                      <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 160px)' }}>
+                        <div>
+                          <Label htmlFor="edit-webhook-name">Webhook Name</Label>
+                          <Input 
+                            id="edit-webhook-name" 
+                            defaultValue={editingWebhook?.name || ""} 
+                            placeholder="e.g., Case Status Updates" 
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-webhook-url">Endpoint URL</Label>
+                          <Input 
+                            id="edit-webhook-url" 
+                            defaultValue={editingWebhook?.url || ""} 
+                            placeholder="https://example.com/webhook" 
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-webhook-secret">Secret Key</Label>
+                          <Input 
+                            id="edit-webhook-secret" 
+                            defaultValue={editingWebhook?.secret || ""} 
+                            placeholder="Optional webhook secret" 
+                          />
+                        </div>
+                        <div>
+                          <Label>Events to Send</Label>
+                          <div className="grid grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto border rounded-lg p-3">
+                            {availableWebhookEvents.map((event) => (
+                              <div key={event} className="flex items-center space-x-2">
+                                <input 
+                                  type="checkbox" 
+                                  id={`edit-${event}`} 
+                                  className="rounded" 
+                                  defaultChecked={editingWebhook?.events?.includes(event) || false}
+                                />
+                                <Label htmlFor={`edit-${event}`} className="text-xs">{event}</Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label>Data Sharing Controls</Label>
+                          <div className="space-y-3 mt-2 border rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Include User PII</Label>
+                                <p className="text-xs text-gray-600">Share personally identifiable information</p>
+                              </div>
+                              <Switch id="edit-include-pii" />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Include Payment Data</Label>
+                                <p className="text-xs text-gray-600">Share payment and billing information</p>
+                              </div>
+                              <Switch id="edit-include-payment" />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Include Document Content</Label>
+                                <p className="text-xs text-gray-600">Share full document content</p>
+                              </div>
+                              <Switch id="edit-include-content" />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Include Case Details</Label>
+                                <p className="text-xs text-gray-600">Share detailed case information</p>
+                              </div>
+                              <Switch id="edit-include-case-details" defaultChecked />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="edit-data-retention">Data Retention (days)</Label>
+                              <Input id="edit-data-retention" type="number" defaultValue="30" placeholder="30" />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="edit-webhook-filter">Event Filter (JSON)</Label>
+                              <Textarea 
+                                id="edit-webhook-filter" 
+                                placeholder='{"user.role": "admin", "case.priority": "high"}'
+                                rows={3}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-retry-attempts">Retry Attempts</Label>
+                          <Select defaultValue={editingWebhook?.retryAttempts?.toString() || "3"}>
+                            <SelectTrigger id="edit-retry-attempts">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">No retries</SelectItem>
+                              <SelectItem value="3">3 attempts</SelectItem>
+                              <SelectItem value="5">5 attempts</SelectItem>
+                              <SelectItem value="10">10 attempts</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm">Active</Label>
+                            <p className="text-xs text-gray-600">Enable this webhook</p>
+                          </div>
+                          <Switch defaultChecked={editingWebhook?.isActive || false} />
+                        </div>
+                      </div>
+                    </form>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setEditWebhookDialogOpen(false)}>Cancel</Button>
+                      <Button onClick={() => setEditWebhookDialogOpen(false)}>Update Webhook</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardHeader>
             <CardContent>
@@ -1585,8 +1716,7 @@ export default function APIManagement() {
 
                       <div>
                         <Label htmlFor="braintree-public">Public Key</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
+                        <div className="flex items-center gap-2"><Input
                             id="braintree-public"
                             type={showApiKey['braintree-public'] ? 'text' : 'password'}
                             defaultValue="your_public_key"
