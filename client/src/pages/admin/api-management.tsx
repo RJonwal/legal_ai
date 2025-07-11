@@ -184,7 +184,6 @@ export default function APIManagement() {
       setFetchingModels(prev => ({ ...prev, [providerId]: false }));
     }
   };
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -342,7 +341,7 @@ export default function APIManagement() {
                             )}
                           </Button>
                         </div>
-                      </div>v>
+                      </div>
 
                       <div className="flex items-center justify-between">
                         <Label className="text-sm">Active</Label>
