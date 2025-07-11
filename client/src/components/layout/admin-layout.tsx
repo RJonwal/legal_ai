@@ -29,6 +29,7 @@ import {
   CreditCard,
   Key
 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface AdminLayoutProps {
   children: React.ReactNode;

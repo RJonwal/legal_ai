@@ -1,4 +1,3 @@
-
 interface ModelInfo {
   id: string;
   name: string;
@@ -18,7 +17,7 @@ export class AIModelsService {
   static async getAvailableModels(provider: string, apiKey?: string): Promise<ModelInfo[]> {
     const now = Date.now();
     const cacheKey = `${provider}_${apiKey?.substring(0, 10) || 'default'}`;
-    
+
     // Check cache
     if (
       this.modelCache[cacheKey] && 
@@ -156,5 +155,71 @@ export class AIModelsService {
     delete this.modelCache[cacheKey];
     delete this.cacheTimestamp[cacheKey];
     return this.getAvailableModels(provider, apiKey);
+  }
+}
+
+const AI_MODELS = {
+  openai: [
+    { id: 'gpt-4o', name: 'GPT-4o', description: 'Latest GPT-4 Omni model', contextLength: 128000 },
+    { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'Affordable and intelligent small model', contextLength: 128000 },
+    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Latest GPT-4 Turbo model', contextLength: 128000 },
+    { id: 'gpt-4', name: 'GPT-4', description: 'High-intelligence flagship model', contextLength: 8192 },
+    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast, inexpensive model', contextLength: 16385 },
+    { id: 'o1-preview', name: 'o1 Preview', description: 'Advanced reasoning model', contextLength: 128000 },
+    { id: 'o1-mini', name: 'o1 Mini', description: 'Faster reasoning model', contextLength: 128000 },
+  ],
+  anthropic: [
+    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet (Latest)', description: 'Most capable model with latest updates', contextLength: 200000 },
+    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable model for complex tasks', contextLength: 200000 },
+    { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanced performance and speed', contextLength: 200000 },
+    { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Fastest model for simple tasks', contextLength: 200000 },
+  ],
+  deepseek: [
+    { id: 'deepseek-chat', name: 'Deepseek Chat', description: 'General conversation model', contextLength: 32000 },
+    { id: 'deepseek-coder', name: 'Deepseek Coder', description: 'Code-focused model', contextLength: 32000 },
+    { id: 'deepseek-r1', name: 'Deepseek R1', description: 'Latest reasoning model', contextLength: 32000 },
+  ],
+};
+
+export async function fetchLiveModels(provider: string, apiKey?: string): Promise<ModelInfo[]> {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  try {
+    switch (provider) {
+      case 'openai':
+        if (apiKey) {
+          // In production, make actual API call to OpenAI
+          // const response = await fetch('https://api.openai.com/v1/models', {
+          //   headers: { 'Authorization': `Bearer ${apiKey}` }
+          // });
+          // For now, return updated static models
+        }
+        return AI_MODELS.openai;
+
+      case 'anthropic':
+        if (apiKey) {
+          // In production, make actual API call to Anthropic
+          // const response = await fetch('https://api.anthropic.com/v1/models', {
+          //   headers: { 'x-api-key': apiKey }
+          // });
+        }
+        return AI_MODELS.anthropic;
+
+      case 'deepseek':
+        if (apiKey) {
+          // In production, make actual API call to Deepseek
+          // const response = await fetch('https://api.deepseek.com/v1/models', {
+          //   headers: { 'Authorization': `Bearer ${apiKey}` }
+          // });
+        }
+        return AI_MODELS.deepseek;
+
+      default:
+        return [];
+    }
+  } catch (error) {
+    console.error(`Error fetching models for ${provider}:`, error);
+    return AI_MODELS[provider as keyof typeof AI_MODELS] || [];
   }
 }

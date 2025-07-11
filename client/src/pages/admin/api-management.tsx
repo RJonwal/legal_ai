@@ -204,11 +204,33 @@ export default function APIManagement() {
   };
 
   const availableWebhookEvents = [
-    'user.created', 'user.updated', 'user.deleted',
-    'case.created', 'case.updated', 'case.completed',
-    'document.generated', 'document.updated',
-    'payment.completed', 'payment.failed',
-    'subscription.created', 'subscription.cancelled'
+    // User Events
+    'user.created', 'user.updated', 'user.deleted', 'user.login', 'user.logout', 'user.password_reset',
+    'user.email_verified', 'user.profile_completed', 'user.subscription_changed',
+    
+    // Case Events
+    'case.created', 'case.updated', 'case.completed', 'case.deleted', 'case.assigned', 'case.status_changed',
+    'case.deadline_approaching', 'case.overdue', 'case.archived', 'case.shared',
+    
+    // Document Events
+    'document.generated', 'document.updated', 'document.deleted', 'document.shared', 'document.signed',
+    'document.reviewed', 'document.approved', 'document.rejected', 'document.exported',
+    
+    // Payment Events
+    'payment.completed', 'payment.failed', 'payment.refunded', 'payment.dispute_created',
+    'payment.method_added', 'payment.method_updated', 'payment.method_deleted',
+    
+    // Subscription Events
+    'subscription.created', 'subscription.cancelled', 'subscription.renewed', 'subscription.expired',
+    'subscription.upgraded', 'subscription.downgraded', 'subscription.paused', 'subscription.resumed',
+    
+    // Billing Events
+    'invoice.created', 'invoice.paid', 'invoice.failed', 'invoice.refunded',
+    'token.purchased', 'token.overage', 'token.low_balance',
+    
+    // System Events
+    'system.maintenance', 'system.update', 'system.error', 'system.backup_completed',
+    'api.rate_limit_exceeded', 'api.error', 'security.login_attempt', 'security.breach_detected'
   ];
 
   return (
@@ -219,14 +241,208 @@ export default function APIManagement() {
           <p className="text-gray-600 mt-2">Configure external integrations and API connections</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline">
-            <Activity className="mr-2 h-4 w-4" />
-            View API Logs
-          </Button>
-          <Button>
-            <Settings className="mr-2 h-4 w-4" />
-            Global Settings
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Activity className="mr-2 h-4 w-4" />
+                View API Logs
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>API Logs & Monitoring</DialogTitle>
+                <DialogDescription>Real-time API activity and performance monitoring</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Filter by provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Providers</SelectItem>
+                      <SelectItem value="openai">OpenAI</SelectItem>
+                      <SelectItem value="anthropic">Anthropic</SelectItem>
+                      <SelectItem value="deepseek">Deepseek</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select defaultValue="24h">
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Time range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1h">Last Hour</SelectItem>
+                      <SelectItem value="24h">Last 24 Hours</SelectItem>
+                      <SelectItem value="7d">Last 7 Days</SelectItem>
+                      <SelectItem value="30d">Last 30 Days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Logs
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">1,247</div>
+                      <div className="text-sm text-gray-600">Total Requests</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">1,198</div>
+                      <div className="text-sm text-gray-600">Successful</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">49</div>
+                      <div className="text-sm text-gray-600">Failed</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">1.2s</div>
+                      <div className="text-sm text-gray-600">Avg Response</div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Timestamp</TableHead>
+                      <TableHead>Provider</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Response Time</TableHead>
+                      <TableHead>Tokens</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[
+                      { time: '2024-01-15 10:30:45', provider: 'OpenAI', method: 'POST /chat/completions', status: '200', responseTime: '1.2s', tokens: '150' },
+                      { time: '2024-01-15 10:30:32', provider: 'Anthropic', method: 'POST /messages', status: '200', responseTime: '0.8s', tokens: '200' },
+                      { time: '2024-01-15 10:30:15', provider: 'OpenAI', method: 'POST /chat/completions', status: '429', responseTime: '0.1s', tokens: '0' },
+                      { time: '2024-01-15 10:29:58', provider: 'Deepseek', method: 'POST /chat/completions', status: '200', responseTime: '2.1s', tokens: '300' },
+                    ].map((log, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-mono text-sm">{log.time}</TableCell>
+                        <TableCell>{log.provider}</TableCell>
+                        <TableCell className="font-mono text-sm">{log.method}</TableCell>
+                        <TableCell>
+                          <Badge variant={log.status === '200' ? 'default' : 'destructive'}>
+                            {log.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{log.responseTime}</TableCell>
+                        <TableCell>{log.tokens}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Settings className="mr-2 h-4 w-4" />
+                Global Settings
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Global API Settings</DialogTitle>
+                <DialogDescription>Configure system-wide API behavior and security settings</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Rate Limiting</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Requests per minute (per user)</Label>
+                        <Input type="number" defaultValue="60" />
+                      </div>
+                      <div>
+                        <Label>Requests per hour (per user)</Label>
+                        <Input type="number" defaultValue="1000" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Enable Rate Limiting</Label>
+                        <p className="text-sm text-gray-600">Limit API requests per user</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Security Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Require API Key Authentication</Label>
+                        <p className="text-sm text-gray-600">All API requests must include valid API key</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Enable CORS</Label>
+                        <p className="text-sm text-gray-600">Allow cross-origin requests</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div>
+                      <Label>Allowed Origins</Label>
+                      <Textarea placeholder="https://example.com&#10;https://app.example.com" rows={3} />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Logging & Monitoring</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Log API Requests</Label>
+                        <p className="text-sm text-gray-600">Store detailed request/response logs</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Log Request Bodies</Label>
+                        <p className="text-sm text-gray-600">Include request payloads in logs</p>
+                      </div>
+                      <Switch />
+                    </div>
+                    <div>
+                      <Label>Log Retention Period (days)</Label>
+                      <Input type="number" defaultValue="30" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <DialogFooter>
+                <Button variant="outline">Cancel</Button>
+                <Button>Save Settings</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -772,13 +988,64 @@ export default function APIManagement() {
                       </div>
                       <div>
                         <Label>Events to Send</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto">
+                        <div className="grid grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto border rounded-lg p-3">
                           {availableWebhookEvents.map((event) => (
                             <div key={event} className="flex items-center space-x-2">
                               <input type="checkbox" id={event} className="rounded" />
                               <Label htmlFor={event} className="text-xs">{event}</Label>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label>Data Sharing Controls</Label>
+                        <div className="space-y-3 mt-2 border rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Label className="text-sm">Include User PII</Label>
+                              <p className="text-xs text-gray-600">Share personally identifiable information</p>
+                            </div>
+                            <Switch id="include-pii" />
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Label className="text-sm">Include Payment Data</Label>
+                              <p className="text-xs text-gray-600">Share payment and billing information</p>
+                            </div>
+                            <Switch id="include-payment" />
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Label className="text-sm">Include Document Content</Label>
+                              <p className="text-xs text-gray-600">Share full document content</p>
+                            </div>
+                            <Switch id="include-content" />
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Label className="text-sm">Include Case Details</Label>
+                              <p className="text-xs text-gray-600">Share detailed case information</p>
+                            </div>
+                            <Switch id="include-case-details" defaultChecked />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="data-retention">Data Retention (days)</Label>
+                            <Input id="data-retention" type="number" defaultValue="30" placeholder="30" />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="webhook-filter">Event Filter (JSON)</Label>
+                            <Textarea 
+                              id="webhook-filter" 
+                              placeholder='{"user.role": "admin", "case.priority": "high"}'
+                              rows={3}
+                            />
+                          </div>
                         </div>
                       </div>
                       <div>

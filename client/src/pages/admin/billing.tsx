@@ -541,6 +541,100 @@ export default function AdminBilling() {
                       />
                     </div>
                     
+                    <div className="space-y-4">
+                      <div className="border rounded-lg p-4">
+                        <Label className="text-sm font-medium">Token Overage Settings</Label>
+                        <div className="grid grid-cols-2 gap-4 mt-3">
+                          <div>
+                            <Label htmlFor="overageRate">Overage Rate ($/1000 tokens)</Label>
+                            <Input
+                              id="overageRate"
+                              name="overageRate"
+                              type="number"
+                              step="0.01"
+                              defaultValue={selectedPlan?.overageRate || 0.02}
+                              placeholder="0.02"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="overageLimit">Max Overage Tokens</Label>
+                            <Input
+                              id="overageLimit"
+                              name="overageLimit"
+                              type="number"
+                              defaultValue={selectedPlan?.overageLimit || 10000}
+                              placeholder="10000"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <div>
+                            <Label className="text-sm">Allow Token Overage</Label>
+                            <p className="text-xs text-gray-600">Charge for usage beyond token limit</p>
+                          </div>
+                          <Switch
+                            id="allowOverage"
+                            name="allowOverage"
+                            defaultChecked={selectedPlan?.allowOverage ?? true}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg p-4">
+                        <Label className="text-sm font-medium">Billing Variables</Label>
+                        <div className="grid grid-cols-2 gap-4 mt-3">
+                          <div>
+                            <Label htmlFor="gracePeriod">Grace Period (days)</Label>
+                            <Input
+                              id="gracePeriod"
+                              name="gracePeriod"
+                              type="number"
+                              defaultValue={selectedPlan?.gracePeriod || 3}
+                              placeholder="3"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="prorationPolicy">Proration Policy</Label>
+                            <Select name="prorationPolicy" defaultValue={selectedPlan?.prorationPolicy || 'immediate'}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="immediate">Immediate</SelectItem>
+                                <SelectItem value="next_cycle">Next Billing Cycle</SelectItem>
+                                <SelectItem value="none">No Proration</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mt-3">
+                          <div>
+                            <Label htmlFor="cancellationPolicy">Cancellation Policy</Label>
+                            <Select name="cancellationPolicy" defaultValue={selectedPlan?.cancellationPolicy || 'immediate'}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="immediate">Immediate</SelectItem>
+                                <SelectItem value="end_of_cycle">End of Cycle</SelectItem>
+                                <SelectItem value="with_notice">30-day Notice</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="trialPeriod">Trial Period (days)</Label>
+                            <Input
+                              id="trialPeriod"
+                              name="trialPeriod"
+                              type="number"
+                              defaultValue={selectedPlan?.trialPeriod || 0}
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div className="flex gap-4">
                       <div className="flex items-center space-x-2">
                         <Switch
