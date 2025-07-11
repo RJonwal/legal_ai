@@ -139,7 +139,6 @@ export default function EmailSettings() {
   const [activeTemplate, setActiveTemplate] = useState<EmailTemplate | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [testEmail, setTestEmail] = useState("");
-  const [config, setConfig] = useState<EmailConfig | null>(null);
   const [newOperationalEmail, setNewOperationalEmail] = useState("");
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
@@ -150,59 +149,7 @@ export default function EmailSettings() {
     variables: [] as string[]
   });
 
-  // Fetch email configuration
-  const { data: emailConfig, isLoading } = useQuery({
-    queryKey: ['admin-email-config'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/email/config');
-      if (!response.ok) throw new Error('Failed to fetch email config');
-      return response.json();
-    },
-  });
-
-  // Update configuration mutation
-  const updateConfigMutation = useMutation({
-    mutationFn: async (config: Partial<EmailConfig>) => {
-      const response = await fetch('/api/admin/email/config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
-      });
-      if (!response.ok) throw new Error('Failed to update configuration');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-email-config'] });
-      toast({ title: "Configuration updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update configuration", variant: "destructive" });
-    },
-  });
-
-  // Send test email mutation
-  const sendTestEmailMutation = useMutation({
-    mutationFn: async (data: { email: string; templateId?: string }) => {
-      const response = await fetch('/api/admin/email/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to send test email');
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Test email sent successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to send test email", variant: "destructive" });
-    },
-  });
-
-  if (isLoading) {
-    return <div className="p-6">Loading email settings...</div>;
-  }
-
+  // Default configuration
   const defaultConfig: EmailConfig = {
     smtp: {
       host: 'smtp.gmail.com',
@@ -312,20 +259,63 @@ export default function EmailSettings() {
     }
   };
 
-  // Use local state with proper initialization
-  useEffect(() => {
-    if (emailConfig) {
-      setConfig(emailConfig);
-    } else if (!config) {
-      setConfig(defaultConfig);
-    }
-  }, [emailConfig]);
+  // Fetch email configuration
+  const { data: emailConfig, isLoading } = useQuery({
+    queryKey: ['admin-email-config'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/email/config');
+      if (!response.ok) throw new Error('Failed to fetch email config');
+      return response.json();
+    },
+  });
 
-  const currentConfig = config || defaultConfig;
+  // Use the fetched config or default config
+  const currentConfig = emailConfig || defaultConfig;
+
+  // Update configuration mutation
+  const updateConfigMutation = useMutation({
+    mutationFn: async (config: Partial<EmailConfig>) => {
+      const response = await fetch('/api/admin/email/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) throw new Error('Failed to update configuration');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-email-config'] });
+      toast({ title: "Configuration updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update configuration", variant: "destructive" });
+    },
+  });
+
+  // Send test email mutation
+  const sendTestEmailMutation = useMutation({
+    mutationFn: async (data: { email: string; templateId?: string }) => {
+      const response = await fetch('/api/admin/email/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to send test email');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Test email sent successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to send test email", variant: "destructive" });
+    },
+  });
+
+  if (isLoading) {
+    return <div className="p-6">Loading email settings...</div>;
+  }
 
   const handleUpdateConfig = (updates: Partial<EmailConfig>) => {
-    const updatedConfig = { ...currentConfig, ...updates };
-    setConfig(updatedConfig);
     updateConfigMutation.mutate(updates);
   };
 
@@ -753,16 +743,16 @@ export default function EmailSettings() {
                 <div className="space-y-4">
                   <div>
                     <Label>SMTP Host</Label>
-                    <Input value={config.smtp.host} placeholder="smtp.gmail.com" />
+                    <Input value={currentConfig.smtp.host} placeholder="smtp.gmail.com" />
                   </div>
                   
                   <div>
                     <Label>Port</Label>
-                    <Input type="number" value={config.smtp.port} placeholder="587" />
+                    <Input type="number" value={currentConfig.smtp.port} placeholder="587" />
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <Switch checked={config.smtp.secure} />
+                    <Switch checked={currentConfig.smtp.secure} />
                     <Label>Use SSL/TLS</Label>
                   </div>
                 </div>
@@ -770,12 +760,12 @@ export default function EmailSettings() {
                 <div className="space-y-4">
                   <div>
                     <Label>Username</Label>
-                    <Input value={config.smtp.user} placeholder="your-email@gmail.com" />
+                    <Input value={currentConfig.smtp.user} placeholder="your-email@gmail.com" />
                   </div>
                   
                   <div>
                     <Label>Password</Label>
-                    <Input type="password" value={config.smtp.password} placeholder="App password" />
+                    <Input type="password" value={currentConfig.smtp.password} placeholder="App password" />
                   </div>
                 </div>
 
@@ -843,7 +833,7 @@ export default function EmailSettings() {
 
               <div className="mt-6 pt-6 border-t">
                 <div className="flex gap-2">
-                  <Button onClick={() => handleUpdateConfig({ smtp: config.smtp })}>
+                  <Button onClick={() => handleUpdateConfig({ smtp: currentConfig.smtp })}>
                     <Save className="h-4 w-4 mr-2" />
                     Save SMTP Settings
                   </Button>
@@ -872,22 +862,22 @@ export default function EmailSettings() {
               <div className="space-y-6">
                 <div className="flex items-center space-x-2">
                   <Switch 
-                    checked={config.aiAssistant.enabled}
+                    checked={currentConfig.aiAssistant.enabled}
                     onCheckedChange={(enabled) => 
                       handleUpdateConfig({ 
-                        aiAssistant: { ...config.aiAssistant, enabled } 
+                        aiAssistant: { ...currentConfig.aiAssistant, enabled } 
                       })
                     }
                   />
                   <Label>Enable AI Email Assistant</Label>
                 </div>
 
-                {config.aiAssistant.enabled && (
+                {currentConfig.aiAssistant.enabled && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <Label>AI Provider</Label>
-                        <Select value={config.aiAssistant.provider}>
+                        <Select value={currentConfig.aiAssistant.provider}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -901,7 +891,7 @@ export default function EmailSettings() {
 
                       <div>
                         <Label>Model</Label>
-                        <Select value={config.aiAssistant.model}>
+                        <Select value={currentConfig.aiAssistant.model}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -917,13 +907,13 @@ export default function EmailSettings() {
                         <Label>Max Tokens</Label>
                         <Input 
                           type="number" 
-                          value={config.aiAssistant.responseSettings.maxTokens}
+                          value={currentConfig.aiAssistant.responseSettings.maxTokens}
                           onChange={(e) => 
                             handleUpdateConfig({
                               aiAssistant: {
-                                ...config.aiAssistant,
+                                ...currentConfig.aiAssistant,
                                 responseSettings: {
-                                  ...config.aiAssistant.responseSettings,
+                                  ...currentConfig.aiAssistant.responseSettings,
                                   maxTokens: parseInt(e.target.value)
                                 }
                               }
@@ -936,15 +926,15 @@ export default function EmailSettings() {
                     <div>
                       <Label>System Prompt</Label>
                       <Textarea
-                        value={config.aiAssistant.responseSettings.systemPrompt}
+                        value={currentConfig.aiAssistant.responseSettings.systemPrompt}
                         rows={3}
                         placeholder="Define how the AI should respond to emails..."
                         onChange={(e) =>
                           handleUpdateConfig({
                             aiAssistant: {
-                              ...config.aiAssistant,
+                              ...currentConfig.aiAssistant,
                               responseSettings: {
-                                ...config.aiAssistant.responseSettings,
+                                ...currentConfig.aiAssistant.responseSettings,
                                 systemPrompt: e.target.value
                               }
                             }
@@ -966,13 +956,13 @@ export default function EmailSettings() {
                                 {category.permissions.map(({ key, label, icon: Icon }) => (
                                   <div key={key} className="flex items-center space-x-3">
                                     <Checkbox
-                                      checked={config.aiAssistant.permissions[key as keyof typeof config.aiAssistant.permissions]}
+                                      checked={currentConfig.aiAssistant.permissions[key as keyof typeof currentConfig.aiAssistant.permissions]}
                                       onCheckedChange={(checked) => {
                                         handleUpdateConfig({
                                           aiAssistant: {
-                                            ...config.aiAssistant,
+                                            ...currentConfig.aiAssistant,
                                             permissions: {
-                                              ...config.aiAssistant.permissions,
+                                              ...currentConfig.aiAssistant.permissions,
                                               [key]: checked
                                             }
                                           }
@@ -1011,31 +1001,31 @@ export default function EmailSettings() {
               <div className="space-y-6">
                 <div className="flex items-center space-x-2">
                   <Switch 
-                    checked={config.liveChat.enabled}
+                    checked={currentConfig.liveChat.enabled}
                     onCheckedChange={(enabled) => 
                       handleUpdateConfig({ 
-                        liveChat: { ...config.liveChat, enabled } 
+                        liveChat: { ...currentConfig.liveChat, enabled } 
                       })
                     }
                   />
                   <Label>Enable AI Live Chat</Label>
                 </div>
 
-                {config.liveChat.enabled && (
+                {currentConfig.liveChat.enabled && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <div>
                           <Label>Welcome Message</Label>
                           <Textarea
-                            value={config.liveChat.autoResponses.welcomeMessage}
+                            value={currentConfig.liveChat.autoResponses.welcomeMessage}
                             rows={2}
                             onChange={(e) =>
                               handleUpdateConfig({
                                 liveChat: {
-                                  ...config.liveChat,
+                                  ...currentConfig.liveChat,
                                   autoResponses: {
-                                    ...config.liveChat.autoResponses,
+                                    ...currentConfig.liveChat.autoResponses,
                                     welcomeMessage: e.target.value
                                   }
                                 }
@@ -1047,14 +1037,14 @@ export default function EmailSettings() {
                         <div>
                           <Label>Offline Message</Label>
                           <Textarea
-                            value={config.liveChat.autoResponses.offlineMessage}
+                            value={currentConfig.liveChat.autoResponses.offlineMessage}
                             rows={2}
                             onChange={(e) =>
                               handleUpdateConfig({
                                 liveChat: {
-                                  ...config.liveChat,
+                                  ...currentConfig.liveChat,
                                   autoResponses: {
-                                    ...config.liveChat.autoResponses,
+                                    ...currentConfig.liveChat.autoResponses,
                                     offlineMessage: e.target.value
                                   }
                                 }
@@ -1068,14 +1058,14 @@ export default function EmailSettings() {
                         <div>
                           <Label>Escalation Message</Label>
                           <Textarea
-                            value={config.liveChat.autoResponses.escalationMessage}
+                            value={currentConfig.liveChat.autoResponses.escalationMessage}
                             rows={2}
                             onChange={(e) =>
                               handleUpdateConfig({
                                 liveChat: {
-                                  ...config.liveChat,
+                                  ...currentConfig.liveChat,
                                   autoResponses: {
-                                    ...config.liveChat.autoResponses,
+                                    ...currentConfig.liveChat.autoResponses,
                                     escalationMessage: e.target.value
                                   }
                                 }
@@ -1085,7 +1075,7 @@ export default function EmailSettings() {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <Switch checked={config.liveChat.workingHours.enabled} />
+                          <Switch checked={currentConfig.liveChat.workingHours.enabled} />
                           <Label>Enable Working Hours</Label>
                         </div>
                       </div>
@@ -1104,13 +1094,13 @@ export default function EmailSettings() {
                                 {category.permissions.map(({ key, label, icon: Icon }) => (
                                   <div key={key} className="flex items-center space-x-3">
                                     <Checkbox
-                                      checked={config.liveChat.permissions[key as keyof typeof config.liveChat.permissions]}
+                                      checked={currentConfig.liveChat.permissions[key as keyof typeof currentConfig.liveChat.permissions]}
                                       onCheckedChange={(checked) => {
                                         handleUpdateConfig({
                                           liveChat: {
-                                            ...config.liveChat,
+                                            ...currentConfig.liveChat,
                                             permissions: {
-                                              ...config.liveChat.permissions,
+                                              ...currentConfig.liveChat.permissions,
                                               [key]: checked
                                             }
                                           }
@@ -1128,14 +1118,14 @@ export default function EmailSettings() {
                       </ScrollArea>
                     </div>
 
-                    {config.liveChat.workingHours.enabled && (
+                    {currentConfig.liveChat.workingHours.enabled && (
                       <Card>
                         <CardHeader>
                           <CardTitle className="text-lg">Working Hours Schedule</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-4">
-                            {Object.entries(config.liveChat.workingHours.schedule).map(([day, schedule]) => (
+                            {Object.entries(currentConfig.liveChat.workingHours.schedule).map(([day, schedule]) => (
                               <div key={day} className="flex items-center space-x-4">
                                 <div className="w-20 capitalize">{day}</div>
                                 <Switch checked={schedule.active} />
