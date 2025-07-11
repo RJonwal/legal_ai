@@ -1,0 +1,927 @@
+
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  MessageSquare, 
+  Settings, 
+  Users, 
+  Brain, 
+  Shield, 
+  CreditCard, 
+  FileText, 
+  Calendar, 
+  Activity,
+  AlertCircle,
+  CheckCircle,
+  Phone,
+  Clock,
+  Zap,
+  Bot,
+  Globe,
+  Smartphone
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+
+interface LiveChatConfig {
+  enabled: boolean;
+  provider: string;
+  plugin: {
+    name: string;
+    type: 'crisp' | 'intercom' | 'zendesk' | 'freshchat' | 'custom';
+    apiKey: string;
+    websiteId: string;
+    customEndpoint?: string;
+  };
+  permissions: {
+    viewUserProfiles: boolean;
+    accessCaseHistory: boolean;
+    modifyUserAccounts: boolean;
+    processPayments: boolean;
+    scheduleAppointments: boolean;
+    accessDocuments: boolean;
+    generateReports: boolean;
+    systemAdministration: boolean;
+    escalationManagement: boolean;
+    knowledgeBaseAccess: boolean;
+  };
+  workingHours: {
+    enabled: boolean;
+    timezone: string;
+    schedule: Record<string, { start: string; end: string; active: boolean }>;
+  };
+  autoResponses: {
+    welcomeMessage: string;
+    offlineMessage: string;
+    escalationMessage: string;
+    queueMessage: string;
+  };
+  humanHandoff: {
+    enabled: boolean;
+    triggerKeywords: string[];
+    escalationThreshold: number;
+    forwardToEmails: string[];
+    autoEscalateTime: number; // minutes
+  };
+  realTimeMonitoring: {
+    enabled: boolean;
+    allowIntercept: boolean;
+    showTypingIndicator: boolean;
+    supervisorNotifications: boolean;
+  };
+  aiSettings: {
+    confidenceThreshold: number;
+    maxResponseTime: number; // seconds
+    fallbackToHuman: boolean;
+    learningMode: boolean;
+  };
+}
+
+export default function LiveChatManagement() {
+  const queryClient = useQueryClient();
+  const [newForwardEmail, setNewForwardEmail] = useState("");
+  const [newTriggerKeyword, setNewTriggerKeyword] = useState("");
+
+  // Default configuration
+  const defaultConfig: LiveChatConfig = useMemo(() => ({
+    enabled: true,
+    provider: 'internal',
+    plugin: {
+      name: 'Crisp Chat',
+      type: 'crisp',
+      apiKey: '',
+      websiteId: '',
+      customEndpoint: ''
+    },
+    permissions: {
+      viewUserProfiles: true,
+      accessCaseHistory: true,
+      modifyUserAccounts: false,
+      processPayments: false,
+      scheduleAppointments: true,
+      accessDocuments: true,
+      generateReports: false,
+      systemAdministration: false,
+      escalationManagement: true,
+      knowledgeBaseAccess: true
+    },
+    workingHours: {
+      enabled: true,
+      timezone: 'UTC',
+      schedule: {
+        monday: { start: '09:00', end: '17:00', active: true },
+        tuesday: { start: '09:00', end: '17:00', active: true },
+        wednesday: { start: '09:00', end: '17:00', active: true },
+        thursday: { start: '09:00', end: '17:00', active: true },
+        friday: { start: '09:00', end: '17:00', active: true },
+        saturday: { start: '10:00', end: '14:00', active: false },
+        sunday: { start: '10:00', end: '14:00', active: false }
+      }
+    },
+    autoResponses: {
+      welcomeMessage: 'Welcome to LegalAI Pro support! How can I help you today?',
+      offlineMessage: 'Thank you for contacting us. We are currently offline but will respond soon.',
+      escalationMessage: 'Let me connect you with a human agent who can better assist you.',
+      queueMessage: 'You are currently #{{position}} in the queue. Estimated wait time: {{waitTime}} minutes.'
+    },
+    humanHandoff: {
+      enabled: true,
+      triggerKeywords: ['human', 'agent', 'speak to someone', 'urgent', 'complaint', 'refund'],
+      escalationThreshold: 3, // Number of failed AI responses
+      forwardToEmails: ['support@legalai.pro'],
+      autoEscalateTime: 15 // Auto escalate after 15 minutes
+    },
+    realTimeMonitoring: {
+      enabled: true,
+      allowIntercept: true,
+      showTypingIndicator: true,
+      supervisorNotifications: true
+    },
+    aiSettings: {
+      confidenceThreshold: 0.7,
+      maxResponseTime: 30,
+      fallbackToHuman: true,
+      learningMode: true
+    }
+  }), []);
+
+  // Fetch live chat configuration
+  const { data: chatConfig, isLoading } = useQuery({
+    queryKey: ['admin-livechat-config'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/livechat/config');
+      if (!response.ok) throw new Error('Failed to fetch live chat config');
+      return response.json();
+    },
+  });
+
+  // Update configuration mutation
+  const updateConfigMutation = useMutation({
+    mutationFn: async (config: Partial<LiveChatConfig>) => {
+      const response = await fetch('/api/admin/livechat/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) throw new Error('Failed to update configuration');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-livechat-config'] });
+      toast({ title: "Configuration updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update configuration", variant: "destructive" });
+    },
+  });
+
+  const currentConfig = chatConfig || defaultConfig;
+
+  if (isLoading) {
+    return <div className="p-6">Loading live chat settings...</div>;
+  }
+
+  const handleUpdateConfig = (updates: Partial<LiveChatConfig>) => {
+    updateConfigMutation.mutate(updates);
+  };
+
+  const addForwardEmail = () => {
+    if (!newForwardEmail.trim()) return;
+    
+    const updatedEmails = [...(currentConfig.humanHandoff.forwardToEmails || []), newForwardEmail.trim()];
+    handleUpdateConfig({
+      humanHandoff: {
+        ...currentConfig.humanHandoff,
+        forwardToEmails: updatedEmails
+      }
+    });
+    setNewForwardEmail("");
+  };
+
+  const removeForwardEmail = (email: string) => {
+    const updatedEmails = currentConfig.humanHandoff.forwardToEmails?.filter(e => e !== email) || [];
+    handleUpdateConfig({
+      humanHandoff: {
+        ...currentConfig.humanHandoff,
+        forwardToEmails: updatedEmails
+      }
+    });
+  };
+
+  const addTriggerKeyword = () => {
+    if (!newTriggerKeyword.trim()) return;
+    
+    const updatedKeywords = [...(currentConfig.humanHandoff.triggerKeywords || []), newTriggerKeyword.trim().toLowerCase()];
+    handleUpdateConfig({
+      humanHandoff: {
+        ...currentConfig.humanHandoff,
+        triggerKeywords: updatedKeywords
+      }
+    });
+    setNewTriggerKeyword("");
+  };
+
+  const removeTriggerKeyword = (keyword: string) => {
+    const updatedKeywords = currentConfig.humanHandoff.triggerKeywords?.filter(k => k !== keyword) || [];
+    handleUpdateConfig({
+      humanHandoff: {
+        ...currentConfig.humanHandoff,
+        triggerKeywords: updatedKeywords
+      }
+    });
+  };
+
+  const chatProviders = [
+    { value: 'crisp', label: 'Crisp Chat', description: 'Modern customer messaging platform' },
+    { value: 'intercom', label: 'Intercom', description: 'Customer messaging platform' },
+    { value: 'zendesk', label: 'Zendesk Chat', description: 'Help desk software with live chat' },
+    { value: 'freshchat', label: 'Freshchat', description: 'Modern messaging software' },
+    { value: 'custom', label: 'Custom Integration', description: 'Your own chat system' }
+  ];
+
+  const permissionCategories = [
+    {
+      title: "User Access",
+      permissions: [
+        { key: 'viewUserProfiles', label: 'View User Profiles', icon: Users },
+        { key: 'accessCaseHistory', label: 'Access Case History', icon: FileText },
+        { key: 'modifyUserAccounts', label: 'Modify User Accounts', icon: Settings }
+      ]
+    },
+    {
+      title: "Operations",
+      permissions: [
+        { key: 'processPayments', label: 'Process Payments', icon: CreditCard },
+        { key: 'scheduleAppointments', label: 'Schedule Appointments', icon: Calendar },
+        { key: 'accessDocuments', label: 'Access Documents', icon: FileText }
+      ]
+    },
+    {
+      title: "Administration",
+      permissions: [
+        { key: 'generateReports', label: 'Generate Reports', icon: Activity },
+        { key: 'systemAdministration', label: 'System Administration', icon: Shield },
+        { key: 'escalationManagement', label: 'Escalation Management', icon: Users },
+        { key: 'knowledgeBaseAccess', label: 'Knowledge Base Access', icon: Brain }
+      ]
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Live Chat Management</h1>
+        <p className="text-muted-foreground">
+          Configure AI-powered live chat with plugin integrations and human handoff
+        </p>
+      </div>
+
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="plugin">Plugin Setup</TabsTrigger>
+          <TabsTrigger value="permissions">Permissions</TabsTrigger>
+          <TabsTrigger value="handoff">Human Handoff</TabsTrigger>
+          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Live Chat Configuration
+              </CardTitle>
+              <CardDescription>
+                Basic settings for your AI-powered live chat system
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  checked={currentConfig.enabled}
+                  onCheckedChange={(enabled) => 
+                    handleUpdateConfig({ enabled })
+                  }
+                />
+                <Label>Enable Live Chat</Label>
+              </div>
+
+              {currentConfig.enabled && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Welcome Message</Label>
+                        <Textarea
+                          value={currentConfig.autoResponses.welcomeMessage}
+                          rows={2}
+                          onChange={(e) =>
+                            handleUpdateConfig({
+                              autoResponses: {
+                                ...currentConfig.autoResponses,
+                                welcomeMessage: e.target.value
+                              }
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Offline Message</Label>
+                        <Textarea
+                          value={currentConfig.autoResponses.offlineMessage}
+                          rows={2}
+                          onChange={(e) =>
+                            handleUpdateConfig({
+                              autoResponses: {
+                                ...currentConfig.autoResponses,
+                                offlineMessage: e.target.value
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Escalation Message</Label>
+                        <Textarea
+                          value={currentConfig.autoResponses.escalationMessage}
+                          rows={2}
+                          onChange={(e) =>
+                            handleUpdateConfig({
+                              autoResponses: {
+                                ...currentConfig.autoResponses,
+                                escalationMessage: e.target.value
+                              }
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Queue Message</Label>
+                        <Textarea
+                          value={currentConfig.autoResponses.queueMessage}
+                          rows={2}
+                          placeholder="Use {{position}} and {{waitTime}} variables"
+                          onChange={(e) =>
+                            handleUpdateConfig({
+                              autoResponses: {
+                                ...currentConfig.autoResponses,
+                                queueMessage: e.target.value
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">AI Response Settings</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div>
+                        <Label>Confidence Threshold</Label>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          max="1" 
+                          step="0.1"
+                          value={currentConfig.aiSettings.confidenceThreshold}
+                          onChange={(e) =>
+                            handleUpdateConfig({
+                              aiSettings: {
+                                ...currentConfig.aiSettings,
+                                confidenceThreshold: parseFloat(e.target.value)
+                              }
+                            })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">0.0 - 1.0 (higher = more strict)</p>
+                      </div>
+
+                      <div>
+                        <Label>Max Response Time (seconds)</Label>
+                        <Input 
+                          type="number" 
+                          value={currentConfig.aiSettings.maxResponseTime}
+                          onChange={(e) =>
+                            handleUpdateConfig({
+                              aiSettings: {
+                                ...currentConfig.aiSettings,
+                                maxResponseTime: parseInt(e.target.value)
+                              }
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          checked={currentConfig.aiSettings.fallbackToHuman}
+                          onCheckedChange={(fallbackToHuman) => 
+                            handleUpdateConfig({ 
+                              aiSettings: { 
+                                ...currentConfig.aiSettings, 
+                                fallbackToHuman 
+                              } 
+                            })
+                          }
+                        />
+                        <Label>Fallback to Human</Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          checked={currentConfig.aiSettings.learningMode}
+                          onCheckedChange={(learningMode) => 
+                            handleUpdateConfig({ 
+                              aiSettings: { 
+                                ...currentConfig.aiSettings, 
+                                learningMode 
+                              } 
+                            })
+                          }
+                        />
+                        <Label>Learning Mode</Label>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="plugin" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Chat Plugin Integration
+              </CardTitle>
+              <CardDescription>
+                Connect with popular messaging platforms and chat widgets
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label>Chat Provider</Label>
+                <Select 
+                  value={currentConfig.plugin.type}
+                  onValueChange={(type) =>
+                    handleUpdateConfig({
+                      plugin: {
+                        ...currentConfig.plugin,
+                        type: type as any
+                      }
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {chatProviders.map((provider) => (
+                      <SelectItem key={provider.value} value={provider.value}>
+                        <div>
+                          <div className="font-medium">{provider.label}</div>
+                          <div className="text-sm text-muted-foreground">{provider.description}</div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>API Key</Label>
+                  <Input 
+                    type="password"
+                    value={currentConfig.plugin.apiKey}
+                    placeholder="Enter your API key"
+                    onChange={(e) =>
+                      handleUpdateConfig({
+                        plugin: {
+                          ...currentConfig.plugin,
+                          apiKey: e.target.value
+                        }
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label>Website ID</Label>
+                  <Input 
+                    value={currentConfig.plugin.websiteId}
+                    placeholder="Your website/chat ID"
+                    onChange={(e) =>
+                      handleUpdateConfig({
+                        plugin: {
+                          ...currentConfig.plugin,
+                          websiteId: e.target.value
+                        }
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {currentConfig.plugin.type === 'custom' && (
+                <div>
+                  <Label>Custom Endpoint</Label>
+                  <Input 
+                    value={currentConfig.plugin.customEndpoint || ''}
+                    placeholder="https://your-chat-api.com/webhook"
+                    onChange={(e) =>
+                      handleUpdateConfig({
+                        plugin: {
+                          ...currentConfig.plugin,
+                          customEndpoint: e.target.value
+                        }
+                      })
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900">Integration Status</h4>
+                    <p className="text-sm text-blue-700">
+                      {currentConfig.plugin.apiKey ? 
+                        `Connected to ${chatProviders.find(p => p.value === currentConfig.plugin.type)?.label}` :
+                        'Not connected - Please add your API credentials'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={() => handleUpdateConfig({ plugin: currentConfig.plugin })}>
+                  Save Plugin Settings
+                </Button>
+                <Button variant="outline">
+                  Test Connection
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="permissions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                AI Chat Permissions
+              </CardTitle>
+              <CardDescription>
+                Control what the AI can access and respond to in chat conversations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-96">
+                <div className="space-y-6">
+                  {permissionCategories.map((category) => (
+                    <div key={category.title}>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-3">
+                        {category.title}
+                      </h4>
+                      <div className="grid grid-cols-1 gap-3">
+                        {category.permissions.map(({ key, label, icon: Icon }) => (
+                          <div key={key} className="flex items-center space-x-3">
+                            <Checkbox
+                              checked={currentConfig.permissions[key as keyof typeof currentConfig.permissions]}
+                              onCheckedChange={(checked) => {
+                                handleUpdateConfig({
+                                  permissions: {
+                                    ...currentConfig.permissions,
+                                    [key]: checked
+                                  }
+                                });
+                              }}
+                            />
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            <Label className="text-sm">{label}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="handoff" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Human Handoff Configuration
+              </CardTitle>
+              <CardDescription>
+                Set up automatic escalation to human agents when needed
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  checked={currentConfig.humanHandoff.enabled}
+                  onCheckedChange={(enabled) => 
+                    handleUpdateConfig({ 
+                      humanHandoff: { 
+                        ...currentConfig.humanHandoff, 
+                        enabled 
+                      } 
+                    })
+                  }
+                />
+                <Label>Enable Human Handoff</Label>
+              </div>
+
+              {currentConfig.humanHandoff.enabled && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label>Escalation Threshold</Label>
+                      <Input 
+                        type="number" 
+                        min="1"
+                        value={currentConfig.humanHandoff.escalationThreshold}
+                        onChange={(e) =>
+                          handleUpdateConfig({
+                            humanHandoff: {
+                              ...currentConfig.humanHandoff,
+                              escalationThreshold: parseInt(e.target.value)
+                            }
+                          })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">Number of failed AI responses before escalation</p>
+                    </div>
+
+                    <div>
+                      <Label>Auto Escalation Time (minutes)</Label>
+                      <Input 
+                        type="number" 
+                        min="1"
+                        value={currentConfig.humanHandoff.autoEscalateTime}
+                        onChange={(e) =>
+                          handleUpdateConfig({
+                            humanHandoff: {
+                              ...currentConfig.humanHandoff,
+                              autoEscalateTime: parseInt(e.target.value)
+                            }
+                          })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">Automatically escalate after this time</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Escalation Trigger Keywords</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Keywords that trigger immediate human handoff
+                    </p>
+                    
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {currentConfig.humanHandoff.triggerKeywords?.map((keyword, index) => (
+                          <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeTriggerKeyword(keyword)}>
+                            {keyword} ×
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Input
+                          value={newTriggerKeyword}
+                          onChange={(e) => setNewTriggerKeyword(e.target.value)}
+                          placeholder="Enter trigger keyword"
+                          className="flex-1"
+                        />
+                        <Button onClick={addTriggerKeyword} disabled={!newTriggerKeyword.trim()}>
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Forward to Email Addresses</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Email addresses to notify when chat is escalated to human
+                    </p>
+                    
+                    <div className="space-y-2">
+                      {currentConfig.humanHandoff.forwardToEmails?.map((email, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input value={email} readOnly className="flex-1" />
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => removeForwardEmail(email)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                      
+                      <div className="flex gap-2">
+                        <Input
+                          value={newForwardEmail}
+                          onChange={(e) => setNewForwardEmail(e.target.value)}
+                          placeholder="support@company.com"
+                          className="flex-1"
+                        />
+                        <Button onClick={addForwardEmail} disabled={!newForwardEmail.trim()}>
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="monitoring" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Real-Time Monitoring
+              </CardTitle>
+              <CardDescription>
+                Monitor and control AI chat responses in real-time
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      checked={currentConfig.realTimeMonitoring.enabled}
+                      onCheckedChange={(enabled) => 
+                        handleUpdateConfig({ 
+                          realTimeMonitoring: { 
+                            ...currentConfig.realTimeMonitoring, 
+                            enabled 
+                          } 
+                        })
+                      }
+                    />
+                    <Label>Enable Real-Time Monitoring</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      checked={currentConfig.realTimeMonitoring.allowIntercept}
+                      onCheckedChange={(allowIntercept) => 
+                        handleUpdateConfig({ 
+                          realTimeMonitoring: { 
+                            ...currentConfig.realTimeMonitoring, 
+                            allowIntercept 
+                          } 
+                        })
+                      }
+                    />
+                    <Label>Allow Human Intercept</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      checked={currentConfig.realTimeMonitoring.showTypingIndicator}
+                      onCheckedChange={(showTypingIndicator) => 
+                        handleUpdateConfig({ 
+                          realTimeMonitoring: { 
+                            ...currentConfig.realTimeMonitoring, 
+                            showTypingIndicator 
+                          } 
+                        })
+                      }
+                    />
+                    <Label>Show AI Typing Indicator</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      checked={currentConfig.realTimeMonitoring.supervisorNotifications}
+                      onCheckedChange={(supervisorNotifications) => 
+                        handleUpdateConfig({ 
+                          realTimeMonitoring: { 
+                            ...currentConfig.realTimeMonitoring, 
+                            supervisorNotifications 
+                          } 
+                        })
+                      }
+                    />
+                    <Label>Supervisor Notifications</Label>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-medium">Live Chat Dashboard</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <Card className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-2xl font-bold text-green-600">12</div>
+                          <div className="text-sm text-muted-foreground">Active Chats</div>
+                        </div>
+                        <MessageSquare className="h-8 w-8 text-green-600" />
+                      </div>
+                    </Card>
+                    <Card className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-2xl font-bold text-blue-600">3</div>
+                          <div className="text-sm text-muted-foreground">AI Responding</div>
+                        </div>
+                        <Bot className="h-8 w-8 text-blue-600" />
+                      </div>
+                    </Card>
+                    <Card className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-2xl font-bold text-orange-600">1</div>
+                          <div className="text-sm text-muted-foreground">Pending Escalation</div>
+                        </div>
+                        <Users className="h-8 w-8 text-orange-600" />
+                      </div>
+                    </Card>
+                  </div>
+                  <Button className="w-full">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Open Live Chat Monitor
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Chat Analytics
+              </CardTitle>
+              <CardDescription>
+                Monitor chat performance and AI effectiveness
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="p-4">
+                  <div className="text-2xl font-bold">89%</div>
+                  <div className="text-sm text-muted-foreground">AI Resolution Rate</div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-2xl font-bold">2.3s</div>
+                  <div className="text-sm text-muted-foreground">Avg Response Time</div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-2xl font-bold">4.8/5</div>
+                  <div className="text-sm text-muted-foreground">Customer Satisfaction</div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-2xl font-bold">156</div>
+                  <div className="text-sm text-muted-foreground">Chats Today</div>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
