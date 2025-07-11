@@ -860,7 +860,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         success: true, 
         message: 'Payment method updated successfully',
         paymentMethod: {
-          last4: number.slice(-4),
+          last4: number.slice(-```tool_code
+4),
           brand,
           expiry,
           name
@@ -1230,7 +1231,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   // Create new user
   app.post("/api/admin/users", (req, res) => {
     const userData = req.body;
-    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/users 201');
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/users 201`);
 
     const newUser = {
       id: Date.now().toString(),
@@ -1246,9 +1247,9 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   // Delete user
   app.delete("/api/admin/users/:userId", (req, res) => {
     const { userId } = req.params;
-    console.log(new Date().toLocaleTimeString() + ' [express] DELETE /api/admin/users/' + userId + ' 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/users/${userId} 200`);
 
-    res.json({ success: true, message: 'User ' + userId + ' deleted successfully' });
+    res.json({ success: true, message: `User ${userId} deleted successfully` });
   });
 
   // Suspend/activate user
@@ -1256,11 +1257,11 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     const { userId } = req.params;
     const { status } = req.body;
 
-    console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/users/' + userId + '/status 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/users/${userId}/status 200`);
 
     res.json({ 
       success: true, 
-      message: 'User ' + userId + ' status updated to ' + status,
+      message: `User ${userId} status updated to ${status}`,
       userId,
       newStatus: status
     });
@@ -1271,12 +1272,12 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     const { userId } = req.params;
     const { subject, message, template } = req.body;
 
-    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/users/' + userId + '/send-email 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/users/${userId}/send-email 200`);
 
     res.json({ 
       success: true, 
-      message: 'Email sent to user ' + userId,
-      emailId: 'email_' + Date.now()
+      message: `Email sent to user ${userId}`,
+      emailId: `email_${Date.now()}`
     });
   });
 
@@ -1609,8 +1610,8 @@ app.post("/api/admin/impersonation/start", (req, res) => {
   const { userId, reason } = req.body;
 
   // Log the impersonation start
-  console.log(new Date().toLocaleTimeString() + ' [express] Starting impersonation of user ' + userId);
-  console.log('Reason: ' + reason);
+  console.log(`${new Date().toLocaleTimeString()} [express] Starting impersonation of user ${userId}`);
+  console.log(`Reason: ${reason}`);
 
   // In a real implementation, you would:
   // 1. Validate admin permissions
@@ -1621,7 +1622,7 @@ app.post("/api/admin/impersonation/start", (req, res) => {
   res.json({ 
     success: true, 
     message: "Impersonation started successfully",
-    sessionId: 'imp_' + Date.now(),
+    sessionId: `imp_${Date.now()}`,
     startTime: new Date().toISOString()
   });
 });
@@ -1629,7 +1630,7 @@ app.post("/api/admin/impersonation/start", (req, res) => {
 app.post("/api/admin/impersonation/stop", (req, res) => {
   const { sessionId } = req.body;
 
-  console.log(new Date().toLocaleTimeString() + ' [express] Stopping impersonation session ' + sessionId);
+  console.log(`${new Date().toLocaleTimeString()} [express] Stopping impersonation session ${sessionId}`);
 
   // In a real implementation, you would:
   // 1. Clear impersonation session
@@ -1645,7 +1646,7 @@ app.post("/api/admin/impersonation/stop", (req, res) => {
 });
 
 app.get("/api/admin/impersonation/history", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/impersonation/history 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/impersonation/history 200`);
 
     // Mock impersonation history
     const history = [
@@ -1686,7 +1687,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       const { id } = req.params;
       const { apiKey, refresh } = req.query;
 
-      console.log('Fetching models for provider: ' + id + ', refresh: ' + refresh);
+      console.log(`Fetching models for provider: ${id}, refresh: ${refresh}`);
 
       // Mock model data based on provider
       const modelData = {
@@ -1719,7 +1720,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         source: refresh ? 'live_api' : 'cache'
       });
     } catch (error) {
-      console.error('Error fetching models for provider ' + req.params.id + ':', error);
+      console.error(`Error fetching models for provider ${req.params.id}:`, error);
       res.status(500).json({ 
         success: false, 
         error: 'Failed to fetch models',
@@ -1730,7 +1731,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   // AI Providers endpoints
   app.get("/api/admin/ai-providers", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/ai-providers 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/ai-providers 200`);
 
     const providers = [
       {
@@ -1771,7 +1772,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   app.post("/api/admin/ai-providers/:id/test", async (req, res) => {
     const { id } = req.params;
-    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/ai-providers/' + id + '/test 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/ai-providers/${id}/test 200`);
 
     try {
       // Simulate different test scenarios
@@ -1808,7 +1809,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Provider test error for ' + id + ':', error);
+      console.error(`Provider test error for ${id}:`, error);
       res.status(500).json({
         success: false,
         error: "Test failed",
@@ -1819,7 +1820,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   // App APIs endpoints
   app.get("/api/admin/app-apis", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/app-apis 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/app-apis 200`);
 
     const apis = [
       {
@@ -1864,7 +1865,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       }
 
       const newApi = {
-        id: 'api-' + Date.now(),
+        id: `api-${Date.now()}`,
         name,
         description: description || "",
         endpoint,
@@ -1891,7 +1892,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       const { id } = req.params;
       const updates = req.body;
 
-      console.log('Updating App API ' + id + ':', updates);
+      console.log(`Updating App API ${id}:`, updates);
 
       res.json({
         success: true,
@@ -1912,7 +1913,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
   app.delete("/api/admin/app-apis/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      console.log('Deleting App API: ' + id);
+      console.log(`Deleting App API: ${id}`);
 
       res.json({
         success: true,
@@ -1928,7 +1929,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
   app.post("/api/admin/app-apis/:id/test", async (req, res) => {
     try {
       const { id } = req.params;
-      console.log('Testing App API: ' + id);
+      console.log(`Testing App API: ${id}`);
 
       // Simulate API test
       const success = Math.random() > 0.2; // 80% success rate
@@ -1938,7 +1939,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         res.json({
           success: true,
           message: "API test successful",
-          responseTime: responseTime + 'ms',
+          responseTime: `${responseTime}ms`,
           status: 200,
           timestamp: new Date().toISOString()
         });
@@ -1947,7 +1948,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
           success: false,
           message: "API test failed",
           error: "Connection timeout",
-          responseTime: responseTime + 'ms',
+          responseTime: `${responseTime}ms`,
           status: 504,
           timestamp: new Date().toISOString()
         });
@@ -1960,7 +1961,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   // Enhanced webhook configuration with granular controls
   app.get("/api/admin/webhooks", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/webhooks 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/webhooks 200`);
 
     const webhooks = [
       {
@@ -2061,7 +2062,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
   });
 
   app.get("/api/admin/webhook-events", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/webhook-events 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/webhook-events 200`);
 
     const availableEvents = [
       // Case Events
@@ -2126,7 +2127,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       }
 
       const newWebhook = {
-        id: 'webhook-' + Date.now(),
+        id: `webhook-${Date.now()}`,
         name,
         url,
         events,
@@ -2160,7 +2161,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       const { id } = req.params;
       const updates = req.body;
 
-      console.log('Updating webhook ' + id + ':', updates);
+      console.log(`Updating webhook ${id}:`, updates);
 
       res.json({
         success: true,
@@ -2181,7 +2182,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
   app.delete("/api/admin/webhooks/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      console.log('Deleting webhook: ' + id);
+      console.log(`Deleting webhook: ${id}`);
 
       res.json({
         success: true,
@@ -2199,7 +2200,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       const { id } = req.params;
       const { testEvent } = req.body;
 
-      console.log('Testing webhook ' + id + ' with event: ' + (testEvent || 'ping'));
+      console.log(`Testing webhook ${id} with event: ${testEvent || 'ping'}`);
 
       // Simulate webhook test
       const success = Math.random() > 0.1; // 90% success rate
@@ -2209,7 +2210,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         res.json({
           success: true,
           message: "Webhook test successful",
-          responseTime: responseTime + 'ms',
+          responseTime: `${responseTime}ms`,
           status: 200,
           event: testEvent || 'test.ping',
           timestamp: new Date().toISOString()
@@ -2219,7 +2220,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
           success: false,
           message: "Webhook test failed",
           error: "Endpoint unreachable",
-          responseTime: responseTime + 'ms',
+          responseTime: `${responseTime}ms`,
           status: 404,
           timestamp: new Date().toISOString()
         });
@@ -2232,7 +2233,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   // Payment Gateways endpoints
   app.get("/api/admin/payment-gateways", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/payment-gateways 200');
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/payment-gateways 200`);
 
     const gateways = [
       {
@@ -2277,7 +2278,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       const { id } = req.params;
       const { apiKey, secretKey, webhookSecret, environment, isActive } = req.body;
 
-      console.log('Updating payment gateway ' + id + ':', { environment, isActive });
+      console.log(`Updating payment gateway ${id}:`, { environment, isActive });
 
       res.json({
         success: true,
@@ -2302,7 +2303,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
   app.post("/api/admin/payment-gateways/:id/test", async (req, res) => {
     try {
       const { id } = req.params;
-      console.log('Testing payment gateway: ' + id);
+      console.log(`Testing payment gateway: ${id}`);
 
       // Simulate gateway test based on configuration
       const testResults = {
@@ -2337,7 +2338,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         responseTime: result.responseTime,
         status: result.status,
         testTransaction: {
-          id: 'test_' + Date.now(),
+          id: `test_${Date.now()}`,
           amount: 100, // $1.00 test charge
           currency: "USD",
           status: "succeeded"
