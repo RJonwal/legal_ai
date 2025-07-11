@@ -858,8 +858,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       // Mock payment method update
       res.json({ 
         success: true, 
-```tool_code
-        message: 'Payment method updated successfully',        paymentmethod: {
+        message: 'Payment method updated successfully',
+        paymentMethod: {
           last4: number.slice(-4),
           brand,
           expiry,
