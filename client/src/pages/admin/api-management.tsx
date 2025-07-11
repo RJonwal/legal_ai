@@ -1026,12 +1026,12 @@ export default function APIManagement() {
                       Add Webhook
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
+                  <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Add New Webhook</DialogTitle>
                       <DialogDescription>Configure a new webhook endpoint</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="space-y-4 max-h-[calc(85vh-120px)] overflow-y-auto">
                       <div>
                         <Label htmlFor="webhook-name">Webhook Name</Label>
                         <Input id="webhook-name" placeholder="e.g., Case Status Updates" />
