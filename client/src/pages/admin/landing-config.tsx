@@ -196,17 +196,59 @@ export default function LandingConfig() {
   const [activeTab, setActiveTab] = useState("hero");
   const [isSaving, setSaving] = useState(false);
 
+  // Load chat widget config on component mount
+  useEffect(() => {
+    const loadChatConfig = async () => {
+      try {
+        const response = await fetch('/api/admin/chat-widget-config');
+        const data = await response.json();
+        if (data.success) {
+          setConfig(prev => ({
+            ...prev,
+            htmlCustomizations: {
+              ...prev.htmlCustomizations,
+              chatWidget: data.config
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load chat widget config:', error);
+      }
+    };
+
+    loadChatConfig();
+  }, []);
+
   const handleSave = async () => {
     setSaving(true);
     
-    // Simulate API save
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Here you would typically send to your API
-    console.log("Saving config:", config);
-    
-    setSaving(false);
-    alert("Configuration saved successfully!");
+    try {
+      // Save chat widget config
+      const chatResponse = await fetch('/api/admin/chat-widget-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          config: config.htmlCustomizations.chatWidget
+        }),
+      });
+
+      if (!chatResponse.ok) {
+        throw new Error('Failed to save chat widget config');
+      }
+
+      // Save other config (simulate for now)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log("Saving config:", config);
+      alert("Configuration saved successfully!");
+    } catch (error) {
+      console.error('Save failed:', error);
+      alert("Failed to save configuration. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addFeature = () => {

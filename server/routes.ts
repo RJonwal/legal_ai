@@ -858,6 +858,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       // Mock payment method update
       res.json({ 
         success: true, 
+```text
         message: 'Payment method updated successfully',
         paymentMethod: {
           last4: number.slice(-4),
@@ -1771,7 +1772,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   app.post("/api/admin/ai-providers/:id/test", async (req, res) => {
     const { id } = req.params;
-    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/ai-providers/' + id + '/test 200');
+    console.log(newDate().toLocaleTimeString() + ' [express] POST /api/admin/ai-providers/' + id + '/test 200');
 
     try {
       // Simulate different test scenarios
@@ -2349,6 +2350,54 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       res.status(500).json({ error: "Failed to test payment gateway" });
     }
   });
+
+  // Get system status
+app.get('/api/admin/system/status', (req, res) => {
+  res.json({
+    success: true,
+    status: {
+      server: 'healthy',
+      database: 'connected',
+      memory: '2.1GB / 4GB',
+      uptime: '15d 6h 23m',
+      version: '1.2.3'
+    }
+  });
+});
+
+// Chat widget settings endpoints
+app.get('/api/admin/chat-widget-config', (req, res) => {
+  res.json({
+    success: true,
+    config: {
+      enabled: false,
+      provider: 'crisp',
+      apiKey: '',
+      position: 'bottom-right',
+      showOnDashboard: false,
+      allowedPages: ['landing', 'pricing', 'contact'],
+      customization: {
+        primaryColor: '#3B82F6',
+        fontFamily: 'Inter',
+        borderRadius: '8px',
+        position: 'bottom-right'
+      }
+    }
+  });
+});
+
+app.put('/api/admin/chat-widget-config', (req, res) => {
+  const { config } = req.body;
+
+  // In a real app, you would save this to your database
+  console.log('Updating chat widget config:', config);
+
+  res.json({
+    success: true,
+    message: 'Chat widget configuration updated successfully',
+    config
+  });
+});
 
   const httpServer = createServer(app);
   return httpServer;
