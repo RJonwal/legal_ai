@@ -25,7 +25,7 @@ import {
   Trash2, 
   Plus,
   Save,
-  Test,
+  TestTube,
   AlertCircle,
   CheckCircle,
   Zap,
@@ -477,7 +477,7 @@ export default function EmailSettings() {
                           onChange={(e) => setTestEmail(e.target.value)}
                         />
                         <Button onClick={handleSendTestEmail} disabled={sendTestEmailMutation.isPending}>
-                          <Test className="h-4 w-4 mr-2" />
+                          <TestTube className="h-4 w-4 mr-2" />
                           Send Test
                         </Button>
                       </div>
@@ -566,7 +566,7 @@ export default function EmailSettings() {
                     Save SMTP Settings
                   </Button>
                   <Button variant="outline">
-                    <Test className="h-4 w-4 mr-2" />
+                    <TestTube className="h-4 w-4 mr-2" />
                     Test Connection
                   </Button>
                 </div>
