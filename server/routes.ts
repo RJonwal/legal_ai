@@ -2350,6 +2350,364 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     }
   });
 
+  // Analytics endpoints for cost tracking and profitability
+  app.get('/api/admin/analytics/ai-usage', (req, res) => {
+    const { dateRange = '30d', provider = 'all', userId } = req.query;
+    
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/analytics/ai-usage 200');
+    
+    // Mock AI usage data with cost calculations
+    const aiUsageData = [
+      {
+        id: '1',
+        userId: 'user_1',
+        userName: 'Sarah Johnson',
+        provider: 'OpenAI',
+        model: 'gpt-4o',
+        tokens: 2500,
+        inputTokens: 1500,
+        outputTokens: 1000,
+        cost: 0.075, // $0.005/1k input + $0.015/1k output for gpt-4o
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        caseId: 'case_1',
+        caseTitle: 'Smith v. Johnson',
+        requestType: 'document_generation'
+      },
+      {
+        id: '2',
+        userId: 'user_2', 
+        userName: 'Mike Wilson',
+        provider: 'Anthropic',
+        model: 'claude-3-sonnet',
+        tokens: 1800,
+        inputTokens: 1200,
+        outputTokens: 600,
+        cost: 0.054, // $0.003/1k input + $0.015/1k output for claude-3-sonnet
+        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+        caseId: 'case_2',
+        caseTitle: 'ABC Corp Merger',
+        requestType: 'case_analysis'
+      },
+      {
+        id: '3',
+        userId: 'user_1',
+        userName: 'Sarah Johnson',
+        provider: 'OpenAI', 
+        model: 'gpt-4o-mini',
+        tokens: 5000,
+        inputTokens: 3000,
+        outputTokens: 2000,
+        cost: 0.025, // $0.00015/1k input + $0.0006/1k output for gpt-4o-mini
+        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+        requestType: 'chat_interaction'
+      },
+      {
+        id: '4',
+        userId: 'user_3',
+        userName: 'Robert Davis',
+        provider: 'Deepseek',
+        model: 'deepseek-chat',
+        tokens: 3200,
+        inputTokens: 2000,
+        outputTokens: 1200,
+        cost: 0.0128, // $0.0002/1k input + $0.0008/1k output for deepseek
+        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+        caseId: 'case_3',
+        caseTitle: 'Estate Planning - Davis',
+        requestType: 'legal_research'
+      }
+    ];
+    
+    // Filter data based on query parameters
+    let filteredData = aiUsageData;
+    
+    if (provider !== 'all') {
+      filteredData = filteredData.filter(record => 
+        record.provider.toLowerCase().includes(provider.toLowerCase())
+      );
+    }
+    
+    if (userId) {
+      filteredData = filteredData.filter(record => record.userId === userId);
+    }
+    
+    // Calculate aggregated metrics
+    const totalCost = filteredData.reduce((sum, record) => sum + record.cost, 0);
+    const totalTokens = filteredData.reduce((sum, record) => sum + record.tokens, 0);
+    const avgCostPerToken = totalTokens > 0 ? totalCost / totalTokens : 0;
+    
+    const providerBreakdown = filteredData.reduce((acc, record) => {
+      if (!acc[record.provider]) {
+        acc[record.provider] = { cost: 0, tokens: 0, requests: 0 };
+      }
+      acc[record.provider].cost += record.cost;
+      acc[record.provider].tokens += record.tokens;
+      acc[record.provider].requests += 1;
+      return acc;
+    }, {} as Record<string, { cost: number; tokens: number; requests: number }>);
+    
+    res.json({
+      success: true,
+      data: filteredData,
+      metrics: {
+        totalCost: parseFloat(totalCost.toFixed(4)),
+        totalTokens,
+        avgCostPerToken: parseFloat(avgCostPerToken.toFixed(6)),
+        providerBreakdown,
+        totalRequests: filteredData.length
+      },
+      dateRange,
+      filters: { provider, userId }
+    });
+  });
+
+  app.get('/api/admin/analytics/profitability', (req, res) => {
+    const { sortBy = 'profit', sortOrder = 'desc' } = req.query;
+    
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/analytics/profitability 200');
+    
+    // Mock user profitability data
+    const profitabilityData = [
+      {
+        userId: 'user_1',
+        userName: 'Sarah Johnson',
+        email: 'sarah.johnson@law.com',
+        subscription: 'Professional',
+        subscriptionPrice: 99,
+        monthlyRevenue: 99,
+        usage: {
+          aiCosts: 12.50,
+          infrastructureCosts: 8.20,
+          supportCosts: 3.50,
+          otherCosts: 3.50
+        },
+        totalCosts: 27.70,
+        profit: 71.30,
+        margin: 72.0,
+        status: 'profitable',
+        tokensUsed: 45000,
+        casesActive: 8,
+        joinDate: '2023-11-20',
+        riskFactors: []
+      },
+      {
+        userId: 'user_2',
+        userName: 'Mike Wilson', 
+        email: 'mike.wilson@legal.com',
+        subscription: 'Pro Se',
+        subscriptionPrice: 29,
+        monthlyRevenue: 29,
+        usage: {
+          aiCosts: 8.75,
+          infrastructureCosts: 5.10,
+          supportCosts: 4.50,
+          otherCosts: 2.50
+        },
+        totalCosts: 20.85,
+        profit: 8.15,
+        margin: 28.1,
+        status: 'profitable',
+        tokensUsed: 18000,
+        casesActive: 3,
+        joinDate: '2024-02-10',
+        riskFactors: ['low_margin']
+      },
+      {
+        userId: 'user_3',
+        userName: 'Robert Davis',
+        email: 'robert.davis@example.com', 
+        subscription: 'Enterprise',
+        subscriptionPrice: 299,
+        monthlyRevenue: 299,
+        usage: {
+          aiCosts: 45.20,
+          infrastructureCosts: 15.80,
+          supportCosts: 12.00,
+          otherCosts: 8.00
+        },
+        totalCosts: 81.00,
+        profit: 218.00,
+        margin: 72.9,
+        status: 'profitable',
+        tokensUsed: 125000,
+        casesActive: 15,
+        joinDate: '2023-08-05',
+        riskFactors: []
+      },
+      {
+        userId: 'user_4',
+        userName: 'Emily Chen',
+        email: 'emily.chen@legal.org',
+        subscription: 'Professional',
+        subscriptionPrice: 99,
+        monthlyRevenue: 99,
+        usage: {
+          aiCosts: 85.20, // High AI usage
+          infrastructureCosts: 12.30,
+          supportCosts: 8.50,
+          otherCosts: 5.00
+        },
+        totalCosts: 111.00,
+        profit: -12.00,
+        margin: -12.1,
+        status: 'loss',
+        tokensUsed: 95000,
+        casesActive: 12,
+        joinDate: '2024-01-15',
+        riskFactors: ['high_ai_usage', 'negative_margin']
+      }
+    ];
+    
+    // Sort data
+    const sortedData = [...profitabilityData].sort((a, b) => {
+      const aValue = a[sortBy as keyof typeof a] as number;
+      const bValue = b[sortBy as keyof typeof b] as number;
+      return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+    });
+    
+    // Calculate summary metrics
+    const totalUsers = profitabilityData.length;
+    const profitableUsers = profitabilityData.filter(u => u.status === 'profitable').length;
+    const lossUsers = profitabilityData.filter(u => u.status === 'loss').length;
+    const totalRevenue = profitabilityData.reduce((sum, u) => sum + u.monthlyRevenue, 0);
+    const totalCosts = profitabilityData.reduce((sum, u) => sum + u.totalCosts, 0);
+    const totalProfit = profitabilityData.reduce((sum, u) => sum + u.profit, 0);
+    const avgMargin = profitabilityData.reduce((sum, u) => sum + u.margin, 0) / totalUsers;
+    
+    res.json({
+      success: true,
+      data: sortedData,
+      summary: {
+        totalUsers,
+        profitableUsers,
+        lossUsers,
+        profitablePercentage: (profitableUsers / totalUsers) * 100,
+        totalRevenue,
+        totalCosts,
+        totalProfit,
+        avgMargin: parseFloat(avgMargin.toFixed(2))
+      },
+      sorting: { sortBy, sortOrder }
+    });
+  });
+
+  app.get('/api/admin/analytics/profit-loss', (req, res) => {
+    const { period = 'monthly' } = req.query;
+    
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/analytics/profit-loss 200');
+    
+    // Mock P&L data
+    const plData = {
+      period: 'March 2024',
+      revenue: {
+        subscriptionRevenue: 24750,
+        tokenPurchases: 4290,
+        overageCharges: 890,
+        total: 29930
+      },
+      costs: {
+        aiApiCosts: 3850,
+        infrastructureCosts: 2100,
+        supportOperations: 1580,
+        developmentCosts: 1200,
+        marketingCosts: 800,
+        otherExpenses: 990,
+        total: 10520
+      },
+      netIncome: 19410,
+      margins: {
+        grossMargin: 86.9,
+        operatingMargin: 74.2,
+        netMargin: 64.8
+      },
+      trends: {
+        revenueGrowth: 12.5,
+        costGrowth: 8.7,
+        profitGrowth: 14.2
+      },
+      breakdown: [
+        {
+          category: 'Revenue',
+          subcategory: 'Subscription Revenue',
+          amount: 24750,
+          percentage: 82.7,
+          trend: 'up',
+          trendValue: 12.5
+        },
+        {
+          category: 'Revenue',
+          subcategory: 'Token Purchases',
+          amount: 4290,
+          percentage: 14.3,
+          trend: 'up', 
+          trendValue: 8.2
+        },
+        {
+          category: 'Revenue',
+          subcategory: 'Overage Charges',
+          amount: 890,
+          percentage: 3.0,
+          trend: 'up',
+          trendValue: 22.1
+        },
+        {
+          category: 'Costs',
+          subcategory: 'AI API Costs',
+          amount: -3850,
+          percentage: 36.6,
+          trend: 'up',
+          trendValue: 15.3
+        },
+        {
+          category: 'Costs',
+          subcategory: 'Infrastructure',
+          amount: -2100,
+          percentage: 20.0,
+          trend: 'stable',
+          trendValue: 0.5
+        },
+        {
+          category: 'Costs',
+          subcategory: 'Support & Operations',
+          amount: -1580,
+          percentage: 15.0,
+          trend: 'down',
+          trendValue: -3.2
+        },
+        {
+          category: 'Costs',
+          subcategory: 'Development',
+          amount: -1200,
+          percentage: 11.4,
+          trend: 'stable',
+          trendValue: 2.1
+        },
+        {
+          category: 'Costs',
+          subcategory: 'Marketing',
+          amount: -800,
+          percentage: 7.6,
+          trend: 'up',
+          trendValue: 18.5
+        },
+        {
+          category: 'Costs',
+          subcategory: 'Other Expenses',
+          amount: -990,
+          percentage: 9.4,
+          trend: 'stable',
+          trendValue: 1.1
+        }
+      ]
+    };
+    
+    res.json({
+      success: true,
+      data: plData,
+      period
+    });
+  });
+
   // Get system status
 app.get('/api/admin/system/status', (req, res) => {
   res.json({
