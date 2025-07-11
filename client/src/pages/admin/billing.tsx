@@ -45,6 +45,17 @@ interface SubscriptionPlan {
   userLimit: number;
   isActive: boolean;
   isPopular?: boolean;
+  
+  // Token overage settings
+  overageRate?: number;
+  overageLimit?: number;
+  allowOverage?: boolean;
+  
+  // Billing variables
+  gracePeriod?: number;
+  prorationPolicy?: 'immediate' | 'next_cycle' | 'none';
+  cancellationPolicy?: 'immediate' | 'end_of_cycle' | 'with_notice';
+  trialPeriod?: number;
 }
 
 interface Customer {
@@ -56,6 +67,12 @@ interface Customer {
   nextBilling: string;
   totalSpent: number;
   joinDate: string;
+  subscription?: {
+    plan: string;
+    tokenLimit: number;
+    tokensUsed: number;
+    billingCycle: string;
+  };
 }
 
 interface BillingMetrics {
@@ -422,6 +439,11 @@ export default function AdminBilling() {
                       <div className="text-sm text-gray-600">
                         Up to {plan.userLimit} users
                       </div>
+                      {plan.allowOverage && (
+                        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                          Overage: ${plan.overageRate}/1k tokens (max {plan.overageLimit?.toLocaleString()})
+                        </div>
+                      )}
                       <Separator />
                       <div className="space-y-2">
                         {plan.features.map((feature, index) => (
@@ -431,8 +453,13 @@ export default function AdminBilling() {
                           </div>
                         ))}
                       </div>
-                      <div className="pt-3">
+                      <div className="pt-3 flex gap-2">
                         {getStatusBadge(plan.isActive ? 'active' : 'paused')}
+                        {plan.trialPeriod && plan.trialPeriod > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {plan.trialPeriod}-day trial
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -454,6 +481,8 @@ export default function AdminBilling() {
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
+                    
+                    // Extract all form data including billing variables
                     const planData = {
                       name: formData.get('name') as string,
                       price: Number(formData.get('price')),
@@ -463,6 +492,17 @@ export default function AdminBilling() {
                       features: (formData.get('features') as string).split('\n').filter(f => f.trim()),
                       isActive: formData.get('isActive') === 'on',
                       isPopular: formData.get('isPopular') === 'on',
+                      
+                      // Token overage settings
+                      overageRate: Number(formData.get('overageRate')) || 0.02,
+                      overageLimit: Number(formData.get('overageLimit')) || 10000,
+                      allowOverage: formData.get('allowOverage') === 'on',
+                      
+                      // Billing variables
+                      gracePeriod: Number(formData.get('gracePeriod')) || 3,
+                      prorationPolicy: formData.get('prorationPolicy') as string || 'immediate',
+                      cancellationPolicy: formData.get('cancellationPolicy') as string || 'immediate',
+                      trialPeriod: Number(formData.get('trialPeriod')) || 0,
                     };
                     
                     if (selectedPlan) {
@@ -747,19 +787,31 @@ export default function AdminBilling() {
                           <div>
                             <div className="font-medium">{customer.name}</div>
                             <div className="text-sm text-gray-600">{customer.email}</div>
+                            {customer.subscription && (
+                              <div className="text-xs text-blue-600 mt-1">
+                                {customer.subscription.tokensUsed?.toLocaleString()}/{customer.subscription.tokenLimit?.toLocaleString()} tokens
+                              </div>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell>{customer.plan}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{customer.plan}</div>
+                            {customer.subscription && (
+                              <div className="text-xs text-gray-500">{customer.subscription.billingCycle}</div>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>{getStatusBadge(customer.status)}</TableCell>
                         <TableCell>{customer.nextBilling}</TableCell>
                         <TableCell>{formatCurrency(customer.totalSpent)}</TableCell>
                         <TableCell>{customer.joinDate}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" title="Edit Customer">
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" title="Billing Details">
                               <CreditCard className="h-3 w-3" />
                             </Button>
                           </div>

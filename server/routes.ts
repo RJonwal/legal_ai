@@ -1310,6 +1310,232 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
+  // Admin billing endpoints
+  app.get("/api/admin/billing/metrics", async (req, res) => {
+    try {
+      const metrics = {
+        totalRevenue: 245750,
+        monthlyRevenue: 32840,
+        activeSubscriptions: 127,
+        churnRate: 3.2,
+        averageRevenuePerUser: 156,
+        totalCustomers: 184
+      };
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch billing metrics" });
+    }
+  });
+
+  app.get("/api/admin/subscription-plans", async (req, res) => {
+    try {
+      const plans = [
+        {
+          id: "1",
+          name: "Pro Se",
+          price: 29,
+          billingPeriod: "monthly",
+          features: ["Basic AI assistance", "Document templates", "Case tracking", "Email support"],
+          tokenLimit: 1000,
+          userLimit: 1,
+          isActive: true,
+          isPopular: false,
+          overageRate: 0.05,
+          overageLimit: 5000,
+          allowOverage: false,
+          gracePeriod: 3,
+          prorationPolicy: "immediate",
+          cancellationPolicy: "immediate",
+          trialPeriod: 14
+        },
+        {
+          id: "2",
+          name: "Professional",
+          price: 99,
+          billingPeriod: "monthly",
+          features: ["Full AI analysis", "Unlimited documents", "Advanced case management", "Priority support", "Court preparation tools"],
+          tokenLimit: 10000,
+          userLimit: 5,
+          isActive: true,
+          isPopular: true,
+          overageRate: 0.02,
+          overageLimit: 25000,
+          allowOverage: true,
+          gracePeriod: 7,
+          prorationPolicy: "immediate",
+          cancellationPolicy: "end_of_cycle",
+          trialPeriod: 30
+        },
+        {
+          id: "3",
+          name: "Enterprise",
+          price: 299,
+          billingPeriod: "monthly",
+          features: ["Custom AI training", "API access", "White-label solution", "Dedicated support", "Advanced analytics", "Custom integrations"],
+          tokenLimit: 50000,
+          userLimit: 25,
+          isActive: true,
+          isPopular: false,
+          overageRate: 0.015,
+          overageLimit: 100000,
+          allowOverage: true,
+          gracePeriod: 14,
+          prorationPolicy: "next_cycle",
+          cancellationPolicy: "with_notice",
+          trialPeriod: 60
+        }
+      ];
+      res.json(plans);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
+
+  app.post("/api/admin/subscription-plans", async (req, res) => {
+    try {
+      const planData = req.body;
+      const newPlan = {
+        id: Date.now().toString(),
+        ...planData,
+        createdAt: new Date().toISOString()
+      };
+      console.log("Created new subscription plan:", newPlan.name);
+      res.status(201).json(newPlan);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create subscription plan" });
+    }
+  });
+
+  app.put("/api/admin/subscription-plans/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const planData = req.body;
+      const updatedPlan = {
+        ...planData,
+        id,
+        updatedAt: new Date().toISOString()
+      };
+      console.log("Updated subscription plan:", id);
+      res.json(updatedPlan);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update subscription plan" });
+    }
+  });
+
+  app.delete("/api/admin/subscription-plans/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log("Deleted subscription plan:", id);
+      res.json({ success: true, message: "Subscription plan deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete subscription plan" });
+    }
+  });
+
+  app.get("/api/admin/customers", async (req, res) => {
+    try {
+      const customers = [
+        {
+          id: "1",
+          name: "Sarah Johnson",
+          email: "sarah.johnson@law.com",
+          plan: "Professional",
+          status: "active",
+          nextBilling: "2024-04-15",
+          totalSpent: 1485,
+          joinDate: "2023-11-20",
+          subscription: {
+            plan: "Professional",
+            tokenLimit: 10000,
+            tokensUsed: 3250,
+            billingCycle: "monthly"
+          }
+        },
+        {
+          id: "2",
+          name: "Mike Wilson",
+          email: "mike.wilson@legal.com",
+          plan: "Pro Se",
+          status: "trial",
+          nextBilling: "2024-04-01",
+          totalSpent: 0,
+          joinDate: "2024-02-10",
+          subscription: {
+            plan: "Pro Se",
+            tokenLimit: 1000,
+            tokensUsed: 250,
+            billingCycle: "monthly"
+          }
+        },
+        {
+          id: "3",
+          name: "Robert Davis",
+          email: "robert.davis@example.com",
+          plan: "Enterprise",
+          status: "active",
+          nextBilling: "2024-04-20",
+          totalSpent: 5970,
+          joinDate: "2023-08-05",
+          subscription: {
+            plan: "Enterprise",
+            tokenLimit: 50000,
+            tokensUsed: 12500,
+            billingCycle: "monthly"
+          }
+        }
+      ];
+      res.json(customers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch customers" });
+    }
+  });
+
+  app.get("/api/admin/transactions", async (req, res) => {
+    try {
+      const transactions = [
+        {
+          id: "txn_001",
+          customerName: "Sarah Johnson",
+          type: "subscription",
+          amount: 99,
+          status: "paid",
+          date: "2024-03-15",
+          description: "Professional Plan - March 2024"
+        },
+        {
+          id: "txn_002",
+          customerName: "Robert Davis",
+          type: "subscription",
+          amount: 299,
+          status: "paid",
+          date: "2024-03-20",
+          description: "Enterprise Plan - March 2024"
+        },
+        {
+          id: "txn_003",
+          customerName: "Mike Wilson",
+          type: "token_purchase",
+          amount: 49,
+          status: "failed",
+          date: "2024-03-18",
+          description: "Additional 2,000 tokens"
+        },
+        {
+          id: "txn_004",
+          customerName: "Sarah Johnson",
+          type: "overage",
+          amount: 15,
+          status: "paid",
+          date: "2024-03-12",
+          description: "Token overage charges"
+        }
+      ];
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
   // Admin routes
   app.use("/api/admin", adminRoutes);
 
