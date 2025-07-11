@@ -94,6 +94,18 @@ export default function AdminBilling() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
+  const [gatewaySettings, setGatewaySettings] = useState({
+    gateways: {
+      stripe: { enabled: true, primary: true, status: "active" },
+      helcim: { enabled: false, primary: false, status: "inactive" },
+      braintree: { enabled: true, primary: false, status: "active" }
+    },
+    primaryGateway: "stripe",
+    fallbackGateway: "braintree",
+    autoRetry: true,
+    gatewayFailover: true,
+    proration: true
+  });
 
   // Fetch data
   const { data: metrics, isLoading: metricsLoading } = useQuery({
@@ -130,6 +142,18 @@ export default function AdminBilling() {
       const response = await fetch('/api/admin/transactions');
       if (!response.ok) throw new Error('Failed to fetch transactions');
       return response.json();
+    },
+  });
+
+  const { data: paymentGatewaySettings } = useQuery({
+    queryKey: ['admin-gateway-settings'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/billing/gateway-settings');
+      if (!response.ok) throw new Error('Failed to fetch gateway settings');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setGatewaySettings(data);
     },
   });
 
@@ -184,6 +208,22 @@ export default function AdminBilling() {
     },
   });
 
+  const updateGatewaySettingsMutation = useMutation({
+    mutationFn: async (settings: typeof gatewaySettings) => {
+      const response = await fetch('/api/admin/billing/gateway-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (!response.ok) throw new Error('Failed to update gateway settings');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-gateway-settings'] });
+      toast({ title: "Settings Updated", description: "Payment gateway settings updated successfully." });
+    },
+  });
+
   // Filter customers
   const filteredCustomers = customers.filter((customer: Customer) => {
     const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -217,6 +257,30 @@ export default function AdminBilling() {
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
+  };
+
+  const handleGatewayToggle = (gateway: string, enabled: boolean) => {
+    const updatedSettings = {
+      ...gatewaySettings,
+      gateways: {
+        ...gatewaySettings.gateways,
+        [gateway]: {
+          ...gatewaySettings.gateways[gateway as keyof typeof gatewaySettings.gateways],
+          enabled
+        }
+      }
+    };
+    setGatewaySettings(updatedSettings);
+    updateGatewaySettingsMutation.mutate(updatedSettings);
+  };
+
+  const handleGatewayPriorityChange = (setting: string, value: string) => {
+    const updatedSettings = {
+      ...gatewaySettings,
+      [setting]: value
+    };
+    setGatewaySettings(updatedSettings);
+    updateGatewaySettingsMutation.mutate(updatedSettings);
   };
 
   return (
@@ -953,19 +1017,65 @@ export default function AdminBilling() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="font-semibold mb-4">Payment Processing</h3>
+                <h3 className="font-semibold mb-4">Payment Gateway Configuration</h3>
                 <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
+                    <h4 className="font-medium col-span-full mb-2">Active Payment Gateways</h4>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-purple-600" />
+                          Stripe
+                        </Label>
+                        <p className="text-xs text-gray-600">Primary payment processor</p>
+                      </div>
+                      <Switch 
+                        checked={gatewaySettings.gateways.stripe.enabled}
+                        onCheckedChange={(enabled) => handleGatewayToggle('stripe', enabled)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-blue-600" />
+                          Helcim
+                        </Label>
+                        <p className="text-xs text-gray-600">Canadian payment processing</p>
+                      </div>
+                      <Switch 
+                        checked={gatewaySettings.gateways.helcim.enabled}
+                        onCheckedChange={(enabled) => handleGatewayToggle('helcim', enabled)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-green-600" />
+                          Braintree
+                        </Label>
+                        <p className="text-xs text-gray-600">PayPal-owned processor</p>
+                      </div>
+                      <Switch 
+                        checked={gatewaySettings.gateways.braintree.enabled}
+                        onCheckedChange={(enabled) => handleGatewayToggle('braintree', enabled)}
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label>Enable Stripe Integration</Label>
-                      <p className="text-sm text-gray-600">Process payments through Stripe</p>
+                      <Label>Auto-retry Failed Payments</Label>
+                      <p className="text-sm text-gray-600">Automatically retry failed subscription payments</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label>Auto-retry Failed Payments</Label>
-                      <p className="text-sm text-gray-600">Automatically retry failed subscription payments</p>
+                      <Label>Gateway Failover</Label>
+                      <p className="text-sm text-gray-600">Automatically switch to backup gateway on failure</p>
                     </div>
                     <Switch defaultChecked />
                   </div>
@@ -1008,6 +1118,46 @@ export default function AdminBilling() {
                 </div>
               </div>
 
+              <Separator />
+
+              <div>
+                <h3 className="font-semibold mb-4">Payment Gateway Priority</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="primaryGateway">Primary Gateway</Label>
+                    <Select 
+                      value={gatewaySettings.primaryGateway}
+                      onValueChange={(value) => handleGatewayPriorityChange('primaryGateway', value)}
+                    >
+                      <SelectTrigger id="primaryGateway">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="stripe">Stripe</SelectItem>
+                        <SelectItem value="braintree">Braintree</SelectItem>
+                        <SelectItem value="helcim">Helcim</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="fallbackGateway">Fallback Gateway</Label>
+                    <Select 
+                      value={gatewaySettings.fallbackGateway}
+                      onValueChange={(value) => handleGatewayPriorityChange('fallbackGateway', value)}
+                    >
+                      <SelectTrigger id="fallbackGateway">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="stripe">Stripe</SelectItem>
+                        <SelectItem value="braintree">Braintree</SelectItem>
+                        <SelectItem value="helcim">Helcim</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              
               <Separator />
 
               <div>

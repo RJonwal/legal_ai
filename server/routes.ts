@@ -1536,6 +1536,71 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
+  // Payment gateway configuration endpoints
+  app.get("/api/admin/billing/gateway-settings", async (req, res) => {
+    try {
+      const settings = {
+        gateways: {
+          stripe: {
+            enabled: true,
+            primary: true,
+            status: "active"
+          },
+          helcim: {
+            enabled: false,
+            primary: false,
+            status: "inactive"
+          },
+          braintree: {
+            enabled: true,
+            primary: false,
+            status: "active"
+          }
+        },
+        primaryGateway: "stripe",
+        fallbackGateway: "braintree",
+        autoRetry: true,
+        gatewayFailover: true,
+        proration: true
+      };
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch gateway settings" });
+    }
+  });
+
+  app.put("/api/admin/billing/gateway-settings", async (req, res) => {
+    try {
+      const { gateways, primaryGateway, fallbackGateway, autoRetry, gatewayFailover, proration } = req.body;
+      
+      console.log("Updating payment gateway settings:", {
+        gateways,
+        primaryGateway,
+        fallbackGateway,
+        autoRetry,
+        gatewayFailover,
+        proration
+      });
+      
+      // Mock update response
+      res.json({
+        success: true,
+        message: "Payment gateway settings updated successfully",
+        settings: {
+          gateways,
+          primaryGateway,
+          fallbackGateway,
+          autoRetry,
+          gatewayFailover,
+          proration,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update gateway settings" });
+    }
+  });
+
   // Admin routes
   app.use("/api/admin", adminRoutes);
 
