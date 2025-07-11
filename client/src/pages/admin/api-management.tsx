@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,8 @@ import {
   Zap,
   Globe,
   Shield,
-  Activity
+  Activity,
+  RefreshCw
 } from "lucide-react";
 
 interface APIProvider {
@@ -156,6 +156,45 @@ export default function APIManagement() {
     },
   });
 
+  const testAppAPIMutation = useMutation({
+    mutationFn: async (apiId: string) => {
+      const response = await fetch(`/api/admin/app-apis/${apiId}/test`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Test failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-app-apis'] });
+    },
+  });
+
+  const testWebhookMutation = useMutation({
+    mutationFn: async (webhookId: string) => {
+      const response = await fetch(`/api/admin/webhooks/${webhookId}/test`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Test failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-webhooks'] });
+    },
+  });
+
+  const testPaymentGatewayMutation = useMutation({
+    mutationFn: async (gatewayId: string) => {
+      const response = await fetch(`/api/admin/payment-gateways/${gatewayId}/test`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Test failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-payment-gateways'] });
+    },
+  });
+
   const toggleApiKeyVisibility = (id: string) => {
     setShowApiKey(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -167,15 +206,15 @@ export default function APIManagement() {
 
   const fetchModelsForProvider = async (providerId: string, apiKey?: string, refresh = false) => {
     setFetchingModels(prev => ({ ...prev, [providerId]: true }));
-    
+
     try {
       const queryParams = new URLSearchParams();
       if (apiKey) queryParams.append('apiKey', apiKey);
       if (refresh) queryParams.append('refresh', 'true');
-      
+
       const response = await fetch(`/api/admin/ai-providers/${providerId}/models?${queryParams}`);
       if (!response.ok) throw new Error('Failed to fetch models');
-      
+
       const data = await response.json();
       setAvailableModels(prev => ({ ...prev, [providerId]: data.models }));
     } catch (error) {
@@ -207,27 +246,27 @@ export default function APIManagement() {
     // User Events
     'user.created', 'user.updated', 'user.deleted', 'user.login', 'user.logout', 'user.password_reset',
     'user.email_verified', 'user.profile_completed', 'user.subscription_changed',
-    
+
     // Case Events
     'case.created', 'case.updated', 'case.completed', 'case.deleted', 'case.assigned', 'case.status_changed',
     'case.deadline_approaching', 'case.overdue', 'case.archived', 'case.shared',
-    
+
     // Document Events
     'document.generated', 'document.updated', 'document.deleted', 'document.shared', 'document.signed',
     'document.reviewed', 'document.approved', 'document.rejected', 'document.exported',
-    
+
     // Payment Events
     'payment.completed', 'payment.failed', 'payment.refunded', 'payment.dispute_created',
     'payment.method_added', 'payment.method_updated', 'payment.method_deleted',
-    
+
     // Subscription Events
     'subscription.created', 'subscription.cancelled', 'subscription.renewed', 'subscription.expired',
     'subscription.upgraded', 'subscription.downgraded', 'subscription.paused', 'subscription.resumed',
-    
+
     // Billing Events
     'invoice.created', 'invoice.paid', 'invoice.failed', 'invoice.refunded',
     'token.purchased', 'token.overage', 'token.low_balance',
-    
+
     // System Events
     'system.maintenance', 'system.update', 'system.error', 'system.backup_completed',
     'api.rate_limit_exceeded', 'api.error', 'security.login_attempt', 'security.breach_detected'
@@ -282,7 +321,7 @@ export default function APIManagement() {
                     Export Logs
                   </Button>
                 </div>
-                
+
                 <div className="grid grid-cols-4 gap-4">
                   <Card>
                     <CardContent className="p-4">
@@ -309,7 +348,7 @@ export default function APIManagement() {
                     </CardContent>
                   </Card>
                 </div>
-                
+
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -346,7 +385,7 @@ export default function APIManagement() {
               </div>
             </DialogContent>
           </Dialog>
-          
+
           <Dialog>
             <DialogTrigger asChild>
               <Button>
@@ -384,7 +423,7 @@ export default function APIManagement() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Security Settings</CardTitle>
@@ -410,7 +449,7 @@ export default function APIManagement() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Logging & Monitoring</CardTitle>
@@ -514,7 +553,7 @@ export default function APIManagement() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="openai-model">Model</Label>
                         <div className="flex gap-2">
@@ -618,7 +657,7 @@ export default function APIManagement() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="deepseek-model">Model</Label>
                         <Select defaultValue="deepseek-chat">
@@ -692,7 +731,7 @@ export default function APIManagement() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="anthropic-model">Model</Label>
                         <Select defaultValue="claude-3-sonnet">
@@ -890,8 +929,17 @@ export default function APIManagement() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          <TestTube className="h-4 w-4" />
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => testAppAPIMutation.mutate('doc-service')}
+                          disabled={testAppAPIMutation.isPending}
+                        >
+                          {testAppAPIMutation.isPending ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <TestTube className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button size="sm" variant="outline">
                           <Edit className="h-4 w-4" />
@@ -934,8 +982,17 @@ export default function APIManagement() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          <TestTube className="h-4 w-4" />
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => testAppAPIMutation.mutate('doc-service')}
+                          disabled={testAppAPIMutation.isPending}
+                        >
+                          {testAppAPIMutation.isPending ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <TestTube className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button size="sm" variant="outline">
                           <Edit className="h-4 w-4" />
@@ -997,7 +1054,7 @@ export default function APIManagement() {
                           ))}
                         </div>
                       </div>
-                      
+
                       <div>
                         <Label>Data Sharing Controls</Label>
                         <div className="space-y-3 mt-2 border rounded-lg p-3">
@@ -1008,7 +1065,7 @@ export default function APIManagement() {
                             </div>
                             <Switch id="include-pii" />
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <div>
                               <Label className="text-sm">Include Payment Data</Label>
@@ -1016,7 +1073,7 @@ export default function APIManagement() {
                             </div>
                             <Switch id="include-payment" />
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <div>
                               <Label className="text-sm">Include Document Content</Label>
@@ -1024,7 +1081,7 @@ export default function APIManagement() {
                             </div>
                             <Switch id="include-content" />
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <div>
                               <Label className="text-sm">Include Case Details</Label>
@@ -1032,12 +1089,12 @@ export default function APIManagement() {
                             </div>
                             <Switch id="include-case-details" defaultChecked />
                           </div>
-                          
+
                           <div>
                             <Label htmlFor="data-retention">Data Retention (days)</Label>
                             <Input id="data-retention" type="number" defaultValue="30" placeholder="30" />
                           </div>
-                          
+
                           <div>
                             <Label htmlFor="webhook-filter">Event Filter (JSON)</Label>
                             <Textarea 
@@ -1106,9 +1163,19 @@ export default function APIManagement() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="flex-1">
-                          <TestTube className="mr-2 h-4 w-4" />
-                          Test
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => testWebhookMutation.mutate('crm-sync')}
+                          disabled={testWebhookMutation.isPending}
+                        >
+                          {testWebhookMutation.isPending ? (
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <TestTube className="mr-2 h-4 w-4" />
+                          )}
+                          {testWebhookMutation.isPending ? 'Testing...' : 'Test'}
                         </Button>
                         <Button size="sm" variant="outline">
                           <Edit className="h-4 w-4" />
@@ -1151,9 +1218,19 @@ export default function APIManagement() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="flex-1">
-                          <TestTube className="mr-2 h-4 w-4" />
-                          Test
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => testWebhookMutation.mutate('crm-sync')}
+                          disabled={testWebhookMutation.isPending}
+                        >
+                          {testWebhookMutation.isPending ? (
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <TestTube className="mr-2 h-4 w-4" />
+                          )}
+                          {testWebhookMutation.isPending ? 'Testing...' : 'Test'}
                         </Button>
                         <Button size="sm" variant="outline">
                           <Edit className="h-4 w-4" />
@@ -1304,9 +1381,18 @@ export default function APIManagement() {
                       </div>
 
                       <div className="flex gap-2">
-                        <Button size="sm" className="flex-1">
-                          <TestTube className="mr-2 h-4 w-4" />
-                          Test
+                        <Button 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => testPaymentGatewayMutation.mutate('stripe')}
+                          disabled={testPaymentGatewayMutation.isPending}
+                        >
+                          {testPaymentGatewayMutation.isPending ? (
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <TestTube className="mr-2 h-4 w-4" />
+                          )}
+                          {testPaymentGatewayMutation.isPending ? 'Testing...' : 'Test'}
                         </Button>
                         <Button size="sm" variant="outline">
                           <Settings className="h-4 w-4" />
@@ -1484,9 +1570,18 @@ export default function APIManagement() {
                       </div>
 
                       <div className="flex gap-2">
-                        <Button size="sm" className="flex-1">
-                          <TestTube className="mr-2 h-4 w-4" />
-                          Test
+                        <Button 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => testPaymentGatewayMutation.mutate('stripe')}
+                          disabled={testPaymentGatewayMutation.isPending}
+                        >
+                          {testPaymentGatewayMutation.isPending ? (
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <TestTube className="mr-2 h-4 w-4" />
+                          )}
+                          {testPaymentGatewayMutation.isPending ? 'Testing...' : 'Test'}
                         </Button>
                         <Button size="sm" variant="outline">
                           <Settings className="h-4 w-4" />

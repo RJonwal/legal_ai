@@ -1680,6 +1680,54 @@ app.get("/api/admin/impersonation/history", (req, res) => {
 
   // API Management endpoints
 
+  // AI Provider model fetching endpoint
+  app.get("/api/admin/ai-providers/:id/models", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { apiKey, refresh } = req.query;
+      
+      console.log(`Fetching models for provider: ${id}, refresh: ${refresh}`);
+      
+      // Mock model data based on provider
+      const modelData = {
+        openai: [
+          { id: "gpt-4o", name: "GPT-4o", description: "Most advanced model", contextLength: 128000 },
+          { id: "gpt-4o-mini", name: "GPT-4o Mini", description: "Faster, cost-effective", contextLength: 128000 },
+          { id: "gpt-4", name: "GPT-4", description: "Previous generation", contextLength: 8192 },
+          { id: "gpt-4-turbo", name: "GPT-4 Turbo", description: "Enhanced capabilities", contextLength: 128000 },
+          { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo", description: "Fast and efficient", contextLength: 16385 }
+        ],
+        anthropic: [
+          { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", description: "Latest and most capable", contextLength: 200000 },
+          { id: "claude-3-opus-20240229", name: "Claude 3 Opus", description: "Most powerful model", contextLength: 200000 },
+          { id: "claude-3-sonnet-20240229", name: "Claude 3 Sonnet", description: "Balanced performance", contextLength: 200000 },
+          { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku", description: "Fast and efficient", contextLength: 200000 }
+        ],
+        deepseek: [
+          { id: "deepseek-chat", name: "Deepseek Chat", description: "General conversation", contextLength: 32768 },
+          { id: "deepseek-coder", name: "Deepseek Coder", description: "Code generation", contextLength: 16384 },
+          { id: "deepseek-math", name: "Deepseek Math", description: "Mathematical reasoning", contextLength: 4096 }
+        ]
+      };
+      
+      const models = modelData[id as keyof typeof modelData] || [];
+      
+      res.json({ 
+        success: true, 
+        models,
+        lastUpdated: new Date().toISOString(),
+        source: refresh ? 'live_api' : 'cache'
+      });
+    } catch (error) {
+      console.error(`Error fetching models for provider ${req.params.id}:`, error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch models',
+        message: 'Unable to retrieve model list from provider'
+      });
+    }
+  });
+
   // AI Providers endpoints
   app.get("/api/admin/ai-providers", (req, res) => {
     console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/ai-providers 200`);
@@ -1721,12 +1769,52 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     res.json(providers);
   });
 
-  app.post("/api/admin/ai-providers/:id/test", (req, res) => {
+  app.post("/api/admin/ai-providers/:id/test", async (req, res) => {
     const { id } = req.params;
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/ai-providers/${id}/test 200`);
 
-    // Simulate test result
-    res.json({ success: true, message: "Provider test successful", responseTime: "120ms" });
+    try {
+      // Simulate different test scenarios
+      const testScenarios = {
+        openai: { success: true, responseTime: "1.2s", status: "healthy" },
+        anthropic: { success: true, responseTime: "0.8s", status: "healthy" },
+        deepseek: { success: false, responseTime: "timeout", status: "error", error: "Connection timeout" }
+      };
+
+      const result = testScenarios[id as keyof typeof testScenarios];
+      
+      if (!result) {
+        return res.status(404).json({ 
+          success: false, 
+          error: "Provider not found" 
+        });
+      }
+
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Provider test failed",
+          error: result.error,
+          responseTime: result.responseTime,
+          status: result.status
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Provider test successful",
+        responseTime: result.responseTime,
+        status: result.status,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error(`Provider test error for ${id}:`, error);
+      res.status(500).json({
+        success: false,
+        error: "Test failed",
+        message: "Unable to complete provider connectivity test"
+      });
+    }
   });
 
   // App APIs endpoints
@@ -1761,6 +1849,113 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     ];
 
     res.json(apis);
+  });
+
+  // Create new App API
+  app.post("/api/admin/app-apis", async (req, res) => {
+    try {
+      const { name, description, endpoint, method, authentication, headers } = req.body;
+      
+      if (!name || !endpoint || !method) {
+        return res.status(400).json({
+          error: "Missing required fields",
+          message: "Name, endpoint, and method are required"
+        });
+      }
+
+      const newApi = {
+        id: `api-${Date.now()}`,
+        name,
+        description: description || "",
+        endpoint,
+        method,
+        headers: headers || {},
+        authentication: authentication || "none",
+        isActive: true,
+        lastUsed: "Never",
+        successRate: 0,
+        createdAt: new Date().toISOString()
+      };
+
+      console.log("Created new App API:", newApi.name);
+      res.status(201).json(newApi);
+    } catch (error) {
+      console.error("App API creation error:", error);
+      res.status(500).json({ error: "Failed to create App API" });
+    }
+  });
+
+  // Update App API
+  app.put("/api/admin/app-apis/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      console.log(`Updating App API ${id}:`, updates);
+      
+      res.json({
+        success: true,
+        message: "App API updated successfully",
+        api: {
+          id,
+          ...updates,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("App API update error:", error);
+      res.status(500).json({ error: "Failed to update App API" });
+    }
+  });
+
+  // Delete App API
+  app.delete("/api/admin/app-apis/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`Deleting App API: ${id}`);
+      
+      res.json({
+        success: true,
+        message: "App API deleted successfully"
+      });
+    } catch (error) {
+      console.error("App API deletion error:", error);
+      res.status(500).json({ error: "Failed to delete App API" });
+    }
+  });
+
+  // Test App API
+  app.post("/api/admin/app-apis/:id/test", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`Testing App API: ${id}`);
+      
+      // Simulate API test
+      const success = Math.random() > 0.2; // 80% success rate
+      const responseTime = Math.floor(Math.random() * 2000) + 100; // 100ms - 2100ms
+      
+      if (success) {
+        res.json({
+          success: true,
+          message: "API test successful",
+          responseTime: `${responseTime}ms`,
+          status: 200,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "API test failed",
+          error: "Connection timeout",
+          responseTime: `${responseTime}ms`,
+          status: 504,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error("App API test error:", error);
+      res.status(500).json({ error: "Failed to test App API" });
+    }
   });
 
   // Enhanced webhook configuration with granular controls
@@ -1906,6 +2101,135 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     res.json(availableEvents);
   });
 
+  // Create new webhook
+  app.post("/api/admin/webhooks", async (req, res) => {
+    try {
+      const { 
+        name, 
+        url, 
+        events, 
+        secret, 
+        retryAttempts, 
+        includeUserData, 
+        includeDocumentContent, 
+        includePaymentData,
+        includeCaseDetails,
+        dataRetention,
+        eventFilter
+      } = req.body;
+      
+      if (!name || !url || !events || events.length === 0) {
+        return res.status(400).json({
+          error: "Missing required fields",
+          message: "Name, URL, and at least one event are required"
+        });
+      }
+
+      const newWebhook = {
+        id: `webhook-${Date.now()}`,
+        name,
+        url,
+        events,
+        secret: secret || "",
+        retryAttempts: retryAttempts || 3,
+        isActive: true,
+        lastTriggered: "Never",
+        deliveryRate: 100,
+        settings: {
+          includeUserData: includeUserData || false,
+          includeDocumentContent: includeDocumentContent || false,
+          includePaymentData: includePaymentData || false,
+          includeCaseDetails: includeCaseDetails || true,
+          dataRetention: dataRetention || 30,
+          eventFilter: eventFilter || {}
+        },
+        createdAt: new Date().toISOString()
+      };
+
+      console.log("Created new webhook:", newWebhook.name);
+      res.status(201).json(newWebhook);
+    } catch (error) {
+      console.error("Webhook creation error:", error);
+      res.status(500).json({ error: "Failed to create webhook" });
+    }
+  });
+
+  // Update webhook
+  app.put("/api/admin/webhooks/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      console.log(`Updating webhook ${id}:`, updates);
+      
+      res.json({
+        success: true,
+        message: "Webhook updated successfully",
+        webhook: {
+          id,
+          ...updates,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("Webhook update error:", error);
+      res.status(500).json({ error: "Failed to update webhook" });
+    }
+  });
+
+  // Delete webhook
+  app.delete("/api/admin/webhooks/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`Deleting webhook: ${id}`);
+      
+      res.json({
+        success: true,
+        message: "Webhook deleted successfully"
+      });
+    } catch (error) {
+      console.error("Webhook deletion error:", error);
+      res.status(500).json({ error: "Failed to delete webhook" });
+    }
+  });
+
+  // Test webhook
+  app.post("/api/admin/webhooks/:id/test", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { testEvent } = req.body;
+      
+      console.log(`Testing webhook ${id} with event: ${testEvent || 'ping'}`);
+      
+      // Simulate webhook test
+      const success = Math.random() > 0.1; // 90% success rate
+      const responseTime = Math.floor(Math.random() * 1000) + 100; // 100ms - 1100ms
+      
+      if (success) {
+        res.json({
+          success: true,
+          message: "Webhook test successful",
+          responseTime: `${responseTime}ms`,
+          status: 200,
+          event: testEvent || 'test.ping',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Webhook test failed",
+          error: "Endpoint unreachable",
+          responseTime: `${responseTime}ms`,
+          status: 404,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error("Webhook test error:", error);
+      res.status(500).json({ error: "Failed to test webhook" });
+    }
+  });
+
   // Payment Gateways endpoints
   app.get("/api/admin/payment-gateways", (req, res) => {
     console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/payment-gateways 200`);
@@ -1945,6 +2269,85 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     ];
 
     res.json(gateways);
+  });
+
+  // Update payment gateway configuration
+  app.put("/api/admin/payment-gateways/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { apiKey, secretKey, webhookSecret, environment, isActive } = req.body;
+      
+      console.log(`Updating payment gateway ${id}:`, { environment, isActive });
+      
+      res.json({
+        success: true,
+        message: "Payment gateway updated successfully",
+        gateway: {
+          id,
+          apiKey: apiKey ? "***updated***" : undefined,
+          secretKey: secretKey ? "***updated***" : undefined,
+          webhookSecret: webhookSecret ? "***updated***" : undefined,
+          environment,
+          isActive,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("Payment gateway update error:", error);
+      res.status(500).json({ error: "Failed to update payment gateway" });
+    }
+  });
+
+  // Test payment gateway
+  app.post("/api/admin/payment-gateways/:id/test", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`Testing payment gateway: ${id}`);
+      
+      // Simulate gateway test based on configuration
+      const testResults = {
+        stripe: { success: true, responseTime: "450ms", status: "healthy" },
+        braintree: { success: true, responseTime: "320ms", status: "healthy" },
+        helcim: { success: false, responseTime: "timeout", status: "error", error: "Invalid API credentials" }
+      };
+
+      const result = testResults[id as keyof typeof testResults];
+      
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          error: "Gateway not found"
+        });
+      }
+
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Gateway test failed",
+          error: result.error,
+          responseTime: result.responseTime,
+          status: result.status,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Gateway test successful",
+        responseTime: result.responseTime,
+        status: result.status,
+        testTransaction: {
+          id: `test_${Date.now()}`,
+          amount: 100, // $1.00 test charge
+          currency: "USD",
+          status: "succeeded"
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Payment gateway test error:", error);
+      res.status(500).json({ error: "Failed to test payment gateway" });
+    }
   });
 
   const httpServer = createServer(app);
