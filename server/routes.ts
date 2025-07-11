@@ -2364,6 +2364,233 @@ app.get('/api/admin/system/status', (req, res) => {
   });
 });
 
+// System configuration endpoints
+app.get('/api/admin/system/config', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/config 200');
+  
+  const config = {
+    security: {
+      twoFactorAuth: true,
+      sessionTimeout: true,
+      ipAllowlist: false,
+      passwordPolicy: "Minimum 8 characters, include uppercase, lowercase, number, and special character"
+    },
+    database: {
+      autoBackup: true,
+      backupRetention: 30,
+      lastBackup: "2 hours ago",
+      status: "healthy",
+      uptime: "99.9%"
+    },
+    api: {
+      rateLimit: 1000,
+      apiVersioning: true,
+      corsProtection: true,
+      requestTimeout: 30
+    },
+    maintenance: {
+      maintenanceMode: false,
+      maintenanceMessage: "System is currently undergoing scheduled maintenance. Please check back later."
+    }
+  };
+  
+  res.json(config);
+});
+
+app.put('/api/admin/system/config', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/system/config 200');
+  
+  const { section, config } = req.body;
+  
+  if (!section || !config) {
+    return res.status(400).json({ error: 'Section and config are required' });
+  }
+  
+  console.log('Updating system config section:', section, config);
+  
+  res.json({
+    success: true,
+    message: `${section} configuration updated successfully`,
+    config,
+    updatedAt: new Date().toISOString()
+  });
+});
+
+// Security configuration endpoints
+app.post('/api/admin/system/security/scan', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/system/security/scan 200');
+  
+  // Simulate security scan
+  setTimeout(() => {
+    res.json({
+      success: true,
+      message: 'Security scan completed successfully',
+      results: {
+        threatsDetected: 0,
+        vulnerabilities: 0,
+        scanDuration: '45 seconds',
+        lastScan: new Date().toISOString(),
+        status: 'healthy'
+      }
+    });
+  }, 1000);
+});
+
+// Database management endpoints
+app.post('/api/admin/system/database/backup', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/system/database/backup 200');
+  
+  // Simulate backup creation
+  const backupId = 'backup_' + Date.now();
+  
+  res.json({
+    success: true,
+    message: 'Database backup created successfully',
+    backup: {
+      id: backupId,
+      size: '2.4GB',
+      createdAt: new Date().toISOString(),
+      status: 'completed'
+    }
+  });
+});
+
+app.get('/api/admin/system/database/backups', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/database/backups 200');
+  
+  const backups = [
+    {
+      id: 'backup_001',
+      size: '2.4GB',
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      status: 'completed'
+    },
+    {
+      id: 'backup_002',
+      size: '2.3GB',
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed'
+    },
+    {
+      id: 'backup_003',
+      size: '2.2GB',
+      createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+      status: 'completed'
+    }
+  ];
+  
+  res.json(backups);
+});
+
+// Monitoring endpoints
+app.get('/api/admin/system/monitoring/metrics', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/monitoring/metrics 200');
+  
+  const metrics = {
+    system: {
+      cpu: 45.2,
+      memory: 68.7,
+      disk: 34.1,
+      network: 12.3
+    },
+    application: {
+      activeUsers: 127,
+      requestsPerMinute: 1247,
+      responseTime: 120,
+      errorRate: 0.02
+    },
+    database: {
+      connections: 15,
+      queries: 8420,
+      slowQueries: 2,
+      cacheHitRate: 94.5
+    }
+  };
+  
+  res.json(metrics);
+});
+
+app.get('/api/admin/system/monitoring/logs', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/system/monitoring/logs 200');
+  
+  const { level = 'all', limit = 100 } = req.query;
+  
+  const logs = [
+    {
+      timestamp: new Date().toISOString(),
+      level: 'info',
+      message: 'User authentication successful',
+      source: 'auth.service'
+    },
+    {
+      timestamp: new Date(Date.now() - 60000).toISOString(),
+      level: 'warning',
+      message: 'High memory usage detected',
+      source: 'system.monitor'
+    },
+    {
+      timestamp: new Date(Date.now() - 120000).toISOString(),
+      level: 'error',
+      message: 'Database connection timeout',
+      source: 'database.service'
+    }
+  ];
+  
+  res.json(logs.slice(0, parseInt(limit as string)));
+});
+
+// Maintenance mode endpoints
+app.put('/api/admin/system/maintenance/mode', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/system/maintenance/mode 200');
+  
+  const { enabled, message } = req.body;
+  
+  res.json({
+    success: true,
+    message: `Maintenance mode ${enabled ? 'enabled' : 'disabled'} successfully`,
+    maintenanceMode: enabled,
+    maintenanceMessage: message || "System is currently undergoing scheduled maintenance. Please check back later.",
+    updatedAt: new Date().toISOString()
+  });
+});
+
+app.post('/api/admin/system/maintenance/schedule', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/system/maintenance/schedule 200');
+  
+  const { scheduledFor, duration, message } = req.body;
+  
+  res.json({
+    success: true,
+    message: 'Maintenance scheduled successfully',
+    schedule: {
+      id: 'maint_' + Date.now(),
+      scheduledFor,
+      duration,
+      message,
+      createdAt: new Date().toISOString()
+    }
+  });
+});
+
+app.post('/api/admin/system/update/check', (req, res) => {
+  console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/system/update/check 200');
+  
+  // Simulate update check
+  const hasUpdate = Math.random() > 0.7; // 30% chance of update
+  
+  res.json({
+    success: true,
+    updateAvailable: hasUpdate,
+    currentVersion: '1.2.3',
+    latestVersion: hasUpdate ? '1.2.4' : '1.2.3',
+    releaseNotes: hasUpdate ? [
+      'Security improvements',
+      'Performance optimizations',
+      'Bug fixes'
+    ] : []
+  });
+});
+
 // Chat widget settings endpoints
 app.get('/api/admin/chat-widget-config', (req, res) => {
   res.json({
