@@ -83,7 +83,7 @@ function App() {
             </Route>
 
             {/* Main app routes */}
-            <Route path="/legal-assistant" component={LegalAssistant} />
+            <Route path="/dashboard" component={LegalAssistant} />
             <Route path="/new-case" component={NewCase} />
             <Route path="/search-cases" component={SearchCases} />
             <Route path="/profile" component={Profile} />

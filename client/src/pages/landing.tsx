@@ -36,7 +36,7 @@ export default function Landing() {
   const [email, setEmail] = useState("");
 
   const handleGetStarted = () => {
-    setLocation("/legal-assistant");
+    setLocation("/dashboard");
   };
 
   const handleWatchDemo = () => {
@@ -66,7 +66,7 @@ export default function Landing() {
               <a href="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">Pricing</a>
               <a href="#testimonials" className="text-gray-600 hover:text-blue-600 transition-colors">Reviews</a>
               <a href="#contact" className="text-gray-600 hover:text-blue-600 transition-colors">Contact</a>
-              <Button variant="outline" onClick={() => setLocation("/legal-assistant")}>
+              <Button variant="outline" onClick={() => setLocation("/dashboard")}>
                 Sign In
               </Button>
               <Button onClick={handleGetStarted} className="bg-blue-600 hover:bg-blue-700">

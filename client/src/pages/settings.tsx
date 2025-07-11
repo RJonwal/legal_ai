@@ -119,7 +119,7 @@ export default function Settings() {
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
-            onClick={() => setLocation("/legal-assistant")}
+            onClick={() => setLocation("/dashboard")}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
