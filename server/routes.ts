@@ -1625,8 +1625,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       siteId: '',
       chatId: '',
       customEndpoint: ''
-    },</old_str>
-      dashboardPermissions: {
+    },
+    dashboardPermissions: {
       legalAdvice: true,
       caseAnalysis: true,
       documentReview: true,
