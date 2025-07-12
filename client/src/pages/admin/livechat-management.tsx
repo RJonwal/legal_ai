@@ -30,7 +30,9 @@ import {
   Zap,
   Bot,
   Globe,
-  Smartphone
+  Smartphone,
+  Download,
+  Eye
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
