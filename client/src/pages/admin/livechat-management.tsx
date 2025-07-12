@@ -36,6 +36,7 @@ import {
   X
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface LiveChatConfig {
   enabled: boolean;
