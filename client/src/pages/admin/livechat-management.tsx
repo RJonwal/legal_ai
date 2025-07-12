@@ -506,7 +506,7 @@ export default function LiveChatManagement() {
           ...prev,
           [conversationId]: { active: true, hasControl: false }
         }));
-        toast({ title: "Screen share session started" });
+        toast({ title: "Screen share request sent to user - waiting for permission" });
       } else if (action === 'stop') {
         setScreenShareStatus(prev => ({
           ...prev,
@@ -518,7 +518,7 @@ export default function LiveChatManagement() {
           ...prev,
           [conversationId]: { ...prev[conversationId], hasControl: true }
         }));
-        toast({ title: "Control granted - you can now control the user's screen" });
+        toast({ title: "Control request sent to user - awaiting permission" });
       }
       
       queryClient.invalidateQueries({ queryKey: ['admin-livechat-messages', conversationId] });
@@ -1167,35 +1167,40 @@ export default function LiveChatManagement() {
               <div>
                 <Label>Chat Provider</Label>
                 <Select 
-                  value={currentConfig.plugin.type}
+                  value={currentConfig.plugin.type || 'crisp'}
                   onValueChange={(type) => {
                     const selectedProvider = chatProviders.find(p => p.value === type);
+                    console.log('Changing chat provider to:', type, selectedProvider);
+                    
+                    const newPluginConfig = {
+                      type: type as any,
+                      name: selectedProvider?.label || '',
+                      // Clear all fields when changing provider
+                      apiKey: '',
+                      websiteId: '',
+                      appId: '',
+                      widgetKey: '',
+                      subdomain: '',
+                      domain: '',
+                      propertyId: '',
+                      widgetId: '',
+                      licenseId: '',
+                      botId: '',
+                      publicKey: '',
+                      siteId: '',
+                      chatId: '',
+                      customEndpoint: ''
+                    };
+                    
                     handleUpdateConfig({
-                      plugin: {
-                        ...currentConfig.plugin,
-                        type: type as any,
-                        name: selectedProvider?.label || '',
-                        // Clear other fields when changing provider
-                        apiKey: '',
-                        websiteId: '',
-                        appId: '',
-                        widgetKey: '',
-                        subdomain: '',
-                        domain: '',
-                        propertyId: '',
-                        widgetId: '',
-                        licenseId: '',
-                        botId: '',
-                        publicKey: '',
-                        siteId: '',
-                        chatId: '',
-                        customEndpoint: ''
-                      }
+                      plugin: newPluginConfig
                     });
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a chat provider" />
+                    <SelectValue placeholder="Select a chat provider">
+                      {chatProviders.find(p => p.value === currentConfig.plugin.type)?.label || 'Select a chat provider'}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {chatProviders.map((provider) => (
@@ -2033,11 +2038,15 @@ export default function LiveChatManagement() {
                                 })}
                                 disabled={!currentConfig.realTimeMonitoring.allowIntercept || screenShareMutation.isPending}
                               >
-                                <Smartphone className="h-3 w-3 mr-1" />
-                                {screenShareMutation.isPending ? 'Starting...' : 'Start Screen Share'}
+                                <Eye className="h-3 w-3 mr-1" />
+                                {screenShareMutation.isPending ? 'Requesting...' : 'Request User Screen Share'}
                               </Button>
                             ) : (
                               <div className="flex gap-1">
+                                <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded text-xs text-blue-700">
+                                  <Eye className="h-3 w-3" />
+                                  Viewing User Screen
+                                </div>
                                 <Button 
                                   size="sm" 
                                   variant="outline"
@@ -2048,7 +2057,7 @@ export default function LiveChatManagement() {
                                   disabled={screenShareMutation.isPending}
                                 >
                                   <X className="h-3 w-3 mr-1" />
-                                  Stop Share
+                                  Stop Viewing
                                 </Button>
                                 {!screenShareStatus[selectedConversation || '']?.hasControl && (
                                   <Button 
@@ -2061,13 +2070,13 @@ export default function LiveChatManagement() {
                                     disabled={screenShareMutation.isPending}
                                   >
                                     <Settings className="h-3 w-3 mr-1" />
-                                    Request Control
+                                    {screenShareMutation.isPending ? 'Requesting...' : 'Request Control'}
                                   </Button>
                                 )}
                                 {screenShareStatus[selectedConversation || '']?.hasControl && (
                                   <div className="flex items-center gap-1 px-2 py-1 bg-green-50 rounded text-xs text-green-700">
                                     <CheckCircle className="h-3 w-3" />
-                                    Controlling
+                                    Controlling User Screen
                                   </div>
                                 )}
                               </div>

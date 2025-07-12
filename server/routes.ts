@@ -1992,24 +1992,29 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     
     switch (action) {
       case 'start':
-        message = 'Screen share session started - waiting for user permission';
+        message = 'Screen share request sent to user - they will receive a prompt to share their screen';
         additionalData = {
           permissionRequested: true,
           permissionTimeout: 30000, // 30 seconds
-          viewUrl: `https://screen-share.example.com/view/${sessionId}`
+          viewUrl: `https://screen-share.example.com/view/${sessionId}`,
+          userNotified: true,
+          isUserScreen: true // Flag to indicate this is for viewing user's screen
         };
         break;
       case 'stop':
-        message = 'Screen share session ended';
+        message = 'User screen share session ended';
         additionalData = {
-          sessionDuration: Math.floor(Math.random() * 600 + 60) + ' seconds'
+          sessionDuration: Math.floor(Math.random() * 600 + 60) + ' seconds',
+          isUserScreen: true
         };
         break;
       case 'request_control':
-        message = 'Control request sent to user - awaiting permission';
+        message = 'Control request sent to user - they will receive a prompt to allow remote control';
         additionalData = {
           controlRequested: true,
-          controlTimeout: 15000 // 15 seconds
+          controlTimeout: 15000, // 15 seconds
+          isUserScreen: true,
+          userNotified: true
         };
         break;
       default:
