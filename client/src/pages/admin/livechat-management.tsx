@@ -43,9 +43,20 @@ interface LiveChatConfig {
   provider: string;
   plugin: {
     name: string;
-    type: 'crisp' | 'intercom' | 'zendesk' | 'freshchat' | 'custom';
+    type: 'crisp' | 'intercom' | 'zendesk' | 'freshchat' | 'tawk' | 'livechat' | 'drift' | 'chatbot' | 'tidio' | 'olark' | 'purechat' | 'chatra' | 'custom';
     apiKey: string;
     websiteId: string;
+    appId?: string;
+    widgetKey?: string;
+    subdomain?: string;
+    domain?: string;
+    propertyId?: string;
+    widgetId?: string;
+    licenseId?: string;
+    botId?: string;
+    publicKey?: string;
+    siteId?: string;
+    chatId?: string;
     customEndpoint?: string;
   };
   permissions: {
@@ -140,6 +151,8 @@ export default function LiveChatManagement() {
   const [newTriggerKeyword, setNewTriggerKeyword] = useState("");
   const [showSetupGuide, setShowSetupGuide] = useState(false);
   const [showLiveChatMonitor, setShowLiveChatMonitor] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [interceptMessage, setInterceptMessage] = useState("");
 
   // Default configuration
   const defaultConfig: LiveChatConfig = useMemo(() => ({
@@ -256,6 +269,43 @@ export default function LiveChatManagement() {
     },
   });
 
+  // Fetch live chat conversations
+  const { data: conversations } = useQuery({
+    queryKey: ['admin-livechat-conversations'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/livechat/conversations');
+      if (!response.ok) throw new Error('Failed to fetch conversations');
+      return response.json();
+    },
+    refetchInterval: 5000, // Refresh every 5 seconds
+    enabled: showLiveChatMonitor
+  });
+
+  // Fetch messages for selected conversation
+  const { data: messages } = useQuery({
+    queryKey: ['admin-livechat-messages', selectedConversation],
+    queryFn: async () => {
+      if (!selectedConversation) return [];
+      const response = await fetch(`/api/admin/livechat/conversations/${selectedConversation}/messages`);
+      if (!response.ok) throw new Error('Failed to fetch messages');
+      return response.json();
+    },
+    refetchInterval: 2000, // Refresh every 2 seconds
+    enabled: !!selectedConversation
+  });
+
+  // Fetch live chat analytics
+  const { data: analytics } = useQuery({
+    queryKey: ['admin-livechat-analytics'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/livechat/analytics');
+      if (!response.ok) throw new Error('Failed to fetch analytics');
+      return response.json();
+    },
+    refetchInterval: 10000, // Refresh every 10 seconds
+    enabled: showLiveChatMonitor
+  });
+
   // Update configuration mutation
   const updateConfigMutation = useMutation({
     mutationFn: async (config: Partial<LiveChatConfig>) => {
@@ -273,6 +323,46 @@ export default function LiveChatManagement() {
     },
     onError: () => {
       toast({ title: "Failed to update configuration", variant: "destructive" });
+    },
+  });
+
+  // Intercept conversation mutation
+  const interceptMutation = useMutation({
+    mutationFn: async ({ conversationId, message }: { conversationId: string; message: string }) => {
+      const response = await fetch(`/api/admin/livechat/conversations/${conversationId}/intercept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      if (!response.ok) throw new Error('Failed to intercept conversation');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-livechat-messages', selectedConversation] });
+      setInterceptMessage("");
+      toast({ title: "Conversation intercepted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to intercept conversation", variant: "destructive" });
+    },
+  });
+
+  // Escalate conversation mutation
+  const escalateMutation = useMutation({
+    mutationFn: async (conversationId: string) => {
+      const response = await fetch(`/api/admin/livechat/conversations/${conversationId}/escalate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to escalate conversation');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-livechat-conversations'] });
+      toast({ title: "Conversation escalated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to escalate conversation", variant: "destructive" });
     },
   });
 
@@ -342,7 +432,7 @@ export default function LiveChatManagement() {
           "3. Copy your Website ID from the installation code",
           "4. Go to Settings > API",
           "5. Generate a new API key with 'website:conversation:write' scope",
-          "6. Paste both values in the form above"
+          "6. Paste API Key and Website ID in the form above"
         ],
         docs: "https://docs.crisp.chat/guides/chatbox-sdks/"
       },
@@ -351,10 +441,10 @@ export default function LiveChatManagement() {
         steps: [
           "1. Sign in to your Intercom workspace",
           "2. Go to Settings > Installation",
-          "3. Copy your App ID",
+          "3. Copy your App ID from the installation code",
           "4. Go to Developer Hub > Your Apps",
-          "5. Create a new app and get your access token",
-          "6. Paste both values in the form above"
+          "5. Create a new app and get your access token (API Key)",
+          "6. Paste API Key and App ID in the form above"
         ],
         docs: "https://developers.intercom.com/installing-intercom/docs"
       },
@@ -364,11 +454,23 @@ export default function LiveChatManagement() {
           "1. Log into your Zendesk Chat dashboard",
           "2. Go to Settings > Widget",
           "3. Copy your Widget Key from the embed code",
-          "4. Go to Settings > API",
-          "5. Generate a new OAuth token",
-          "6. Paste both values in the form above"
+          "4. Note your subdomain (e.g., 'yourcompany' from yourcompany.zendesk.com)",
+          "5. Go to Settings > API and generate OAuth token",
+          "6. Paste API Key, Widget Key, and Subdomain in the form above"
         ],
         docs: "https://developer.zendesk.com/api-reference/live-chat/introduction/"
+      },
+      freshchat: {
+        title: "Freshchat Setup",
+        steps: [
+          "1. Log into your Freshchat account",
+          "2. Go to Settings > Integration",
+          "3. Copy your Widget ID from the installation code",
+          "4. Note your domain (e.g., 'yourcompany.freshchat.com')",
+          "5. Go to API section and generate API key",
+          "6. Paste API Key, Widget ID, and Domain in the form above"
+        ],
+        docs: "https://developers.freshchat.com/"
       },
       tawk: {
         title: "Tawk.to Setup",
@@ -376,9 +478,9 @@ export default function LiveChatManagement() {
           "1. Create account at https://tawk.to",
           "2. Add your website in the dashboard",
           "3. Go to Administration > Channels",
-          "4. Copy your Property ID and Widget ID from the code",
-          "5. Generate API key in Administration > API",
-          "6. Paste values in the form above"
+          "4. Copy Property ID and Widget ID from the installation code",
+          "5. Note: API Key not required for basic integration",
+          "6. Paste Property ID and Widget ID in the form above"
         ],
         docs: "https://help.tawk.to/article/api-introduction"
       },
@@ -387,10 +489,10 @@ export default function LiveChatManagement() {
         steps: [
           "1. Sign up at https://livechat.com",
           "2. Go to Settings > Installation",
-          "3. Copy your License ID",
+          "3. Copy your License ID from the tracking code",
           "4. Go to Developer Console > Apps",
-          "5. Create new app and get access token",
-          "6. Paste both values in the form above"
+          "5. Create new app and get access token (API Key)",
+          "6. Paste API Key and License ID in the form above"
         ],
         docs: "https://developers.livechat.com/docs/"
       },
@@ -400,11 +502,70 @@ export default function LiveChatManagement() {
           "1. Create account at https://drift.com",
           "2. Go to Settings > Widget Setup",
           "3. Copy your App ID from the installation code",
-          "4. Go to Settings > App Credentials",
-          "5. Generate new OAuth token",
-          "6. Paste both values in the form above"
+          "4. Go to Settings > API Credentials",
+          "5. Generate new OAuth access token (API Key)",
+          "6. Paste API Key and App ID in the form above"
         ],
         docs: "https://devdocs.drift.com/"
+      },
+      chatbot: {
+        title: "Chatbot.com Setup",
+        steps: [
+          "1. Create account at https://chatbot.com",
+          "2. Create a new chatbot or select existing one",
+          "3. Go to Integrations > Website Widget",
+          "4. Copy your Bot ID from the embed code",
+          "5. Go to Settings > API and generate API key",
+          "6. Paste API Key and Bot ID in the form above"
+        ],
+        docs: "https://www.chatbot.com/docs/"
+      },
+      tidio: {
+        title: "Tidio Setup",
+        steps: [
+          "1. Create account at https://tidio.com",
+          "2. Go to Settings > Developer",
+          "3. Copy your Public Key from the integration section",
+          "4. Generate API key in the same section",
+          "5. Paste API Key and Public Key in the form above"
+        ],
+        docs: "https://developer.tidio.com/"
+      },
+      olark: {
+        title: "Olark Setup",
+        steps: [
+          "1. Create account at https://olark.com",
+          "2. Go to Settings > Site Configuration",
+          "3. Copy your Site ID from the installation code",
+          "4. Go to Settings > API",
+          "5. Generate API key with chat permissions",
+          "6. Paste API Key and Site ID in the form above"
+        ],
+        docs: "https://www.olark.com/api"
+      },
+      purechat: {
+        title: "Pure Chat Setup",
+        steps: [
+          "1. Create account at https://purechat.com",
+          "2. Go to Settings > Installation",
+          "3. Copy your Widget ID from the tracking code",
+          "4. Go to Settings > API Access",
+          "5. Generate API key for integration",
+          "6. Paste API Key and Widget ID in the form above"
+        ],
+        docs: "https://purechat.com/api"
+      },
+      chatra: {
+        title: "Chatra Setup",
+        steps: [
+          "1. Create account at https://chatra.com",
+          "2. Go to Settings > Installation",
+          "3. Copy your Chat ID from the widget code",
+          "4. Go to Settings > API",
+          "5. Generate API key for external integrations",
+          "6. Paste API Key and Chat ID in the form above"
+        ],
+        docs: "https://chatra.com/api/"
       }
     };
     
@@ -416,19 +577,84 @@ export default function LiveChatManagement() {
   };
 
   const chatProviders = [
-    { value: 'crisp', label: 'Crisp Chat', description: 'Modern customer messaging platform' },
-    { value: 'intercom', label: 'Intercom', description: 'Customer messaging platform' },
-    { value: 'zendesk', label: 'Zendesk Chat', description: 'Help desk software with live chat' },
-    { value: 'freshchat', label: 'Freshchat', description: 'Modern messaging software' },
-    { value: 'tawk', label: 'Tawk.to', description: 'Free live chat software' },
-    { value: 'livechat', label: 'LiveChat', description: 'Customer service platform' },
-    { value: 'drift', label: 'Drift', description: 'Conversational marketing platform' },
-    { value: 'chatbot', label: 'Chatbot.com', description: 'Visual chatbot builder' },
-    { value: 'tidio', label: 'Tidio', description: 'Live chat and chatbots' },
-    { value: 'olark', label: 'Olark', description: 'Live chat for small business' },
-    { value: 'purechat', label: 'Pure Chat', description: 'Website chat widget' },
-    { value: 'chatra', label: 'Chatra', description: 'Live chat messenger' },
-    { value: 'custom', label: 'Custom Integration', description: 'Your own chat system' }
+    { 
+      value: 'crisp', 
+      label: 'Crisp Chat', 
+      description: 'Modern customer messaging platform',
+      params: ['apiKey', 'websiteId']
+    },
+    { 
+      value: 'intercom', 
+      label: 'Intercom', 
+      description: 'Customer messaging platform',
+      params: ['apiKey', 'appId']
+    },
+    { 
+      value: 'zendesk', 
+      label: 'Zendesk Chat', 
+      description: 'Help desk software with live chat',
+      params: ['apiKey', 'widgetKey', 'subdomain']
+    },
+    { 
+      value: 'freshchat', 
+      label: 'Freshchat', 
+      description: 'Modern messaging software',
+      params: ['apiKey', 'widgetId', 'domain']
+    },
+    { 
+      value: 'tawk', 
+      label: 'Tawk.to', 
+      description: 'Free live chat software',
+      params: ['propertyId', 'widgetId']
+    },
+    { 
+      value: 'livechat', 
+      label: 'LiveChat', 
+      description: 'Customer service platform',
+      params: ['apiKey', 'licenseId']
+    },
+    { 
+      value: 'drift', 
+      label: 'Drift', 
+      description: 'Conversational marketing platform',
+      params: ['apiKey', 'appId']
+    },
+    { 
+      value: 'chatbot', 
+      label: 'Chatbot.com', 
+      description: 'Visual chatbot builder',
+      params: ['apiKey', 'botId']
+    },
+    { 
+      value: 'tidio', 
+      label: 'Tidio', 
+      description: 'Live chat and chatbots',
+      params: ['apiKey', 'publicKey']
+    },
+    { 
+      value: 'olark', 
+      label: 'Olark', 
+      description: 'Live chat for small business',
+      params: ['siteId', 'apiKey']
+    },
+    { 
+      value: 'purechat', 
+      label: 'Pure Chat', 
+      description: 'Website chat widget',
+      params: ['apiKey', 'widgetId']
+    },
+    { 
+      value: 'chatra', 
+      label: 'Chatra', 
+      description: 'Live chat messenger',
+      params: ['apiKey', 'chatId']
+    },
+    { 
+      value: 'custom', 
+      label: 'Custom Integration', 
+      description: 'Your own chat system',
+      params: ['customEndpoint', 'apiKey']
+    }
   ];
 
   const permissionCategories = [
@@ -739,38 +965,49 @@ export default function LiveChatManagement() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>API Key</Label>
-                  <Input 
-                    type="password"
-                    value={currentConfig.plugin.apiKey}
-                    placeholder="Enter your API key"
-                    onChange={(e) =>
-                      handleUpdateConfig({
-                        plugin: {
-                          ...currentConfig.plugin,
-                          apiKey: e.target.value
-                        }
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label>Website ID</Label>
-                  <Input 
-                    value={currentConfig.plugin.websiteId}
-                    placeholder="Your website/chat ID"
-                    onChange={(e) =>
-                      handleUpdateConfig({
-                        plugin: {
-                          ...currentConfig.plugin,
-                          websiteId: e.target.value
-                        }
-                      })
-                    }
-                  />
-                </div>
+                {/* Dynamic parameter fields based on selected provider */}
+                {(() => {
+                  const selectedProvider = chatProviders.find(p => p.value === currentConfig.plugin.type);
+                  if (!selectedProvider) return null;
+                  
+                  return selectedProvider.params.map((param) => {
+                    const paramLabels = {
+                      apiKey: 'API Key',
+                      websiteId: 'Website ID',
+                      appId: 'App ID',
+                      widgetKey: 'Widget Key',
+                      subdomain: 'Subdomain',
+                      domain: 'Domain',
+                      propertyId: 'Property ID',
+                      widgetId: 'Widget ID',
+                      licenseId: 'License ID',
+                      botId: 'Bot ID',
+                      publicKey: 'Public Key',
+                      siteId: 'Site ID',
+                      chatId: 'Chat ID',
+                      customEndpoint: 'Custom Endpoint'
+                    };
+                    
+                    return (
+                      <div key={param}>
+                        <Label>{paramLabels[param as keyof typeof paramLabels] || param}</Label>
+                        <Input 
+                          type={param === 'apiKey' ? 'password' : 'text'}
+                          value={currentConfig.plugin[param as keyof typeof currentConfig.plugin] || ''}
+                          placeholder={`Enter your ${paramLabels[param as keyof typeof paramLabels] || param}`}
+                          onChange={(e) =>
+                            handleUpdateConfig({
+                              plugin: {
+                                ...currentConfig.plugin,
+                                [param]: e.target.value
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    );
+                  });
+                })()}
               </div>
 
               {currentConfig.plugin.type === 'custom' && (
@@ -1096,7 +1333,7 @@ export default function LiveChatManagement() {
                     <Card className="p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-2xl font-bold text-green-600">12</div>
+                          <div className="text-2xl font-bold text-green-600">{analytics?.activeChats || 0}</div>
                           <div className="text-sm text-muted-foreground">Active Chats</div>
                         </div>
                         <MessageSquare className="h-8 w-8 text-green-600" />
@@ -1105,7 +1342,7 @@ export default function LiveChatManagement() {
                     <Card className="p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-2xl font-bold text-blue-600">3</div>
+                          <div className="text-2xl font-bold text-blue-600">{analytics?.aiResponding || 0}</div>
                           <div className="text-sm text-muted-foreground">AI Responding</div>
                         </div>
                         <Bot className="h-8 w-8 text-blue-600" />
@@ -1114,7 +1351,7 @@ export default function LiveChatManagement() {
                     <Card className="p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-2xl font-bold text-orange-600">1</div>
+                          <div className="text-2xl font-bold text-orange-600">{analytics?.pendingEscalation || 0}</div>
                           <div className="text-sm text-muted-foreground">Pending Escalation</div>
                         </div>
                         <Users className="h-8 w-8 text-orange-600" />
@@ -1148,19 +1385,19 @@ export default function LiveChatManagement() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="p-4">
-                  <div className="text-2xl font-bold">89%</div>
+                  <div className="text-2xl font-bold">{analytics?.aiResolutionRate || 0}%</div>
                   <div className="text-sm text-muted-foreground">AI Resolution Rate</div>
                 </Card>
                 <Card className="p-4">
-                  <div className="text-2xl font-bold">2.3s</div>
+                  <div className="text-2xl font-bold">{analytics?.avgResponseTime || 0}s</div>
                   <div className="text-sm text-muted-foreground">Avg Response Time</div>
                 </Card>
                 <Card className="p-4">
-                  <div className="text-2xl font-bold">4.8/5</div>
+                  <div className="text-2xl font-bold">{analytics?.customerSatisfaction || 0}/5</div>
                   <div className="text-sm text-muted-foreground">Customer Satisfaction</div>
                 </Card>
                 <Card className="p-4">
-                  <div className="text-2xl font-bold">156</div>
+                  <div className="text-2xl font-bold">{analytics?.totalToday || 0}</div>
                   <div className="text-sm text-muted-foreground">Chats Today</div>
                 </Card>
               </div>
@@ -1257,22 +1494,40 @@ export default function LiveChatManagement() {
                   <CardContent className="p-0">
                     <ScrollArea className="h-64">
                       <div className="space-y-2 p-3">
-                        {[1,2,3,4,5].map((chat) => (
-                          <div key={chat} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                        {conversations?.map((conversation: any) => (
+                          <div 
+                            key={conversation.id} 
+                            className={`p-3 border rounded-lg hover:bg-gray-50 cursor-pointer ${
+                              selectedConversation === conversation.id ? 'bg-blue-50 border-blue-200' : ''
+                            }`}
+                            onClick={() => setSelectedConversation(conversation.id)}
+                          >
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <div className={`w-2 h-2 rounded-full ${
+                                conversation.status === 'active' ? 'bg-green-500' : 
+                                conversation.status === 'pending' ? 'bg-orange-500' : 'bg-gray-500'
+                              }`}></div>
                               <div className="flex-1">
-                                <div className="font-medium text-sm">User {chat}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {chat % 2 === 0 ? 'AI Responding' : 'Waiting for response'}
+                                <div className="font-medium text-sm">{conversation.user.name}</div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {conversation.lastMessage}
                                 </div>
                               </div>
-                              <Badge variant={chat % 2 === 0 ? 'default' : 'secondary'} className="text-xs">
-                                {chat % 2 === 0 ? 'AI' : 'Queue'}
-                              </Badge>
+                              <div className="text-right">
+                                <Badge variant={conversation.assignedTo === 'ai' ? 'default' : 'secondary'} className="text-xs">
+                                  {conversation.assignedTo === 'ai' ? 'AI' : conversation.assignedTo ? 'Human' : 'Queue'}
+                                </Badge>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {conversation.messageCount} msgs
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        ))}
+                        )) || (
+                          <div className="p-4 text-center text-muted-foreground">
+                            No active conversations
+                          </div>
+                        )}
                       </div>
                     </ScrollArea>
                   </CardContent>
@@ -1282,87 +1537,111 @@ export default function LiveChatManagement() {
                 <Card className="lg:col-span-2">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm">Conversation with User 1</CardTitle>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-3 w-3 mr-1" />
-                          Intercept
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Users className="h-3 w-3 mr-1" />
-                          Escalate
-                        </Button>
-                      </div>
+                      <CardTitle className="text-sm">
+                        {selectedConversation ? 
+                          `Conversation with ${conversations?.find((c: any) => c.id === selectedConversation)?.user.name || 'User'}` :
+                          'Select a conversation'
+                        }
+                      </CardTitle>
+                      {selectedConversation && (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              if (interceptMessage.trim()) {
+                                interceptMutation.mutate({ 
+                                  conversationId: selectedConversation, 
+                                  message: interceptMessage 
+                                });
+                              }
+                            }}
+                            disabled={!interceptMessage.trim() || interceptMutation.isPending}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            Intercept
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => escalateMutation.mutate(selectedConversation)}
+                            disabled={escalateMutation.isPending}
+                          >
+                            <Users className="h-3 w-3 mr-1" />
+                            Escalate
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-80 mb-4">
                       <div className="space-y-4">
-                        <div className="flex gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs">U</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="bg-gray-100 rounded-lg p-2 text-sm">
-                              Hi, I need help with filing a motion in court. What documents do I need?
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">2 minutes ago</div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs bg-blue-100">AI</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="bg-blue-50 rounded-lg p-2 text-sm">
-                              I'd be happy to help you with filing a motion. The required documents typically include:
-                              1. The motion document itself
-                              2. A supporting brief or memorandum
-                              3. Any relevant exhibits
-                              4. A certificate of service
-                              
-                              What type of motion are you looking to file?
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">1 minute ago</div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs">U</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="bg-gray-100 rounded-lg p-2 text-sm">
-                              It's a motion to dismiss. I think the case against me doesn't have merit.
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">30 seconds ago</div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs bg-blue-100">AI</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="bg-blue-50 rounded-lg p-2 text-sm border-l-4 border-blue-400">
-                              <div className="flex items-center gap-1 mb-1">
-                                <Bot className="h-3 w-3" />
-                                <span className="text-xs font-medium">AI is typing...</span>
+                        {selectedConversation && messages?.map((message: any) => (
+                          <div key={message.id} className="flex gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className={`text-xs ${
+                                message.sender === 'ai' ? 'bg-blue-100' : 
+                                message.sender === 'human' ? 'bg-green-100' : ''
+                              }`}>
+                                {message.sender === 'ai' ? 'AI' : 
+                                 message.sender === 'human' ? 'H' : 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className={`rounded-lg p-2 text-sm ${
+                                message.sender === 'ai' ? 'bg-blue-50' : 
+                                message.sender === 'human' ? 'bg-green-50' : 'bg-gray-100'
+                              }`}>
+                                {message.content}
                               </div>
-                              For a motion to dismiss, you'll need to draft the motion citing specific legal grounds such as...
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {new Date(message.timestamp).toLocaleTimeString()}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )) || (
+                          <div className="text-center text-muted-foreground py-8">
+                            {selectedConversation ? 'Loading messages...' : 'Select a conversation to view messages'}
+                          </div>
+                        )}
                       </div>
                     </ScrollArea>
                     
-                    <div className="border-t pt-4">
-                      <div className="flex gap-2">
-                        <Input placeholder="Type to intercept this conversation..." className="flex-1" />
-                        <Button size="sm">Send</Button>
+                    {selectedConversation && (
+                      <div className="border-t pt-4">
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="Type to intercept this conversation..." 
+                            className="flex-1"
+                            value={interceptMessage}
+                            onChange={(e) => setInterceptMessage(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && interceptMessage.trim()) {
+                                interceptMutation.mutate({ 
+                                  conversationId: selectedConversation, 
+                                  message: interceptMessage 
+                                });
+                              }
+                            }}
+                          />
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              if (interceptMessage.trim()) {
+                                interceptMutation.mutate({ 
+                                  conversationId: selectedConversation, 
+                                  message: interceptMessage 
+                                });
+                              }
+                            }}
+                            disabled={!interceptMessage.trim() || interceptMutation.isPending}
+                          >
+                            Send
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
