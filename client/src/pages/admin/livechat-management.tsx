@@ -45,16 +45,58 @@ interface LiveChatConfig {
     customEndpoint?: string;
   };
   permissions: {
-    viewUserProfiles: boolean;
-    accessCaseHistory: boolean;
-    modifyUserAccounts: boolean;
-    processPayments: boolean;
-    scheduleAppointments: boolean;
-    accessDocuments: boolean;
-    generateReports: boolean;
-    systemAdministration: boolean;
+    // Core Legal Services
+    legalAdvice: boolean;
+    caseAnalysis: boolean;
+    documentReview: boolean;
+    legalResearch: boolean;
+    procedureGuidance: boolean;
+    courtDeadlines: boolean;
+    filingRequirements: boolean;
+    jurisdictionHelp: boolean;
+    legalFormAssistance: boolean;
+    caseStrategyDiscussion: boolean;
+    
+    // Client Services
+    clientOnboarding: boolean;
+    caseStatusUpdates: boolean;
+    appointmentScheduling: boolean;
+    documentRequests: boolean;
+    progressTracking: boolean;
+    caseFileAccess: boolean;
+    clientPortalNavigation: boolean;
+    
+    // Business Operations
+    serviceInformation: boolean;
+    pricingQuotes: boolean;
+    billingSupport: boolean;
+    paymentProcessing: boolean;
+    subscriptionChanges: boolean;
+    refundInquiries: boolean;
+    planUpgrades: boolean;
+    
+    // Platform Support
+    navigationAssistance: boolean;
+    featureExplanation: boolean;
+    troubleshooting: boolean;
+    accountSetup: boolean;
+    integrationSupport: boolean;
+    dataExport: boolean;
+    
+    // Advanced Operations
+    documentGeneration: boolean;
+    reportGeneration: boolean;
+    auditAccess: boolean;
+    userAccountManagement: boolean;
+    accessPermissions: boolean;
+    systemStatus: boolean;
+    
+    // Emergency & Escalation
+    urgentMatters: boolean;
     escalationManagement: boolean;
-    knowledgeBaseAccess: boolean;
+    emergencyContact: boolean;
+    afterHoursSupport: boolean;
+    crisisEscalation: boolean;
   };
   workingHours: {
     enabled: boolean;
@@ -105,16 +147,58 @@ export default function LiveChatManagement() {
       customEndpoint: ''
     },
     permissions: {
-      viewUserProfiles: true,
-      accessCaseHistory: true,
-      modifyUserAccounts: false,
-      processPayments: false,
-      scheduleAppointments: true,
-      accessDocuments: true,
-      generateReports: false,
-      systemAdministration: false,
+      // Core Legal Services - Enable most for autonomy
+      legalAdvice: true,
+      caseAnalysis: true,
+      documentReview: true,
+      legalResearch: true,
+      procedureGuidance: true,
+      courtDeadlines: true,
+      filingRequirements: true,
+      jurisdictionHelp: true,
+      legalFormAssistance: true,
+      caseStrategyDiscussion: false, // Requires human oversight
+      
+      // Client Services - Full autonomy
+      clientOnboarding: true,
+      caseStatusUpdates: true,
+      appointmentScheduling: true,
+      documentRequests: true,
+      progressTracking: true,
+      caseFileAccess: true,
+      clientPortalNavigation: true,
+      
+      // Business Operations - Selective autonomy
+      serviceInformation: true,
+      pricingQuotes: true,
+      billingSupport: true,
+      paymentProcessing: true,
+      subscriptionChanges: true,
+      refundInquiries: false, // Requires human approval
+      planUpgrades: true,
+      
+      // Platform Support - Full autonomy
+      navigationAssistance: true,
+      featureExplanation: true,
+      troubleshooting: true,
+      accountSetup: true,
+      integrationSupport: true,
+      dataExport: true,
+      
+      // Advanced Operations - Limited autonomy
+      documentGeneration: true,
+      reportGeneration: true,
+      auditAccess: false, // Security sensitive
+      userAccountManagement: true,
+      accessPermissions: false, // Security sensitive
+      systemStatus: true,
+      
+      // Emergency & Escalation - Human oversight
+      urgentMatters: true,
       escalationManagement: true,
-      knowledgeBaseAccess: true
+      emergencyContact: true,
+      afterHoursSupport: true,
+      crisisEscalation: true
     },
     workingHours: {
       enabled: true,
@@ -252,28 +336,74 @@ export default function LiveChatManagement() {
 
   const permissionCategories = [
     {
-      title: "User Access",
+      title: "Core Legal Services",
       permissions: [
-        { key: 'viewUserProfiles', label: 'View User Profiles', icon: Users },
-        { key: 'accessCaseHistory', label: 'Access Case History', icon: FileText },
-        { key: 'modifyUserAccounts', label: 'Modify User Accounts', icon: Settings }
+        { key: 'legalAdvice', label: 'Legal Advice', icon: Users },
+        { key: 'caseAnalysis', label: 'Case Analysis', icon: FileText },
+        { key: 'documentReview', label: 'Document Review', icon: FileText },
+        { key: 'legalResearch', label: 'Legal Research', icon: Brain },
+        { key: 'procedureGuidance', label: 'Procedure Guidance', icon: MessageSquare },
+        { key: 'courtDeadlines', label: 'Court Deadlines', icon: Calendar },
+        { key: 'filingRequirements', label: 'Filing Requirements', icon: Shield },
+        { key: 'jurisdictionHelp', label: 'Jurisdiction Help', icon: Globe },
+        { key: 'legalFormAssistance', label: 'Legal Form Assistance', icon: FileText },
+        { key: 'caseStrategyDiscussion', label: 'Case Strategy Discussion', icon: Brain }
       ]
     },
     {
-      title: "Operations",
+      title: "Client Services",
       permissions: [
-        { key: 'processPayments', label: 'Process Payments', icon: CreditCard },
-        { key: 'scheduleAppointments', label: 'Schedule Appointments', icon: Calendar },
-        { key: 'accessDocuments', label: 'Access Documents', icon: FileText }
+        { key: 'clientOnboarding', label: 'Client Onboarding', icon: Users },
+        { key: 'caseStatusUpdates', label: 'Case Status Updates', icon: Activity },
+        { key: 'appointmentScheduling', label: 'Appointment Scheduling', icon: Calendar },
+        { key: 'documentRequests', label: 'Document Requests', icon: FileText },
+        { key: 'progressTracking', label: 'Progress Tracking', icon: Activity },
+        { key: 'caseFileAccess', label: 'Case File Access', icon: FileText },
+        { key: 'clientPortalNavigation', label: 'Client Portal Navigation', icon: Globe }
       ]
     },
     {
-      title: "Administration",
+      title: "Business Operations",
       permissions: [
-        { key: 'generateReports', label: 'Generate Reports', icon: Activity },
-        { key: 'systemAdministration', label: 'System Administration', icon: Shield },
+        { key: 'serviceInformation', label: 'Service Information', icon: MessageSquare },
+        { key: 'pricingQuotes', label: 'Pricing Quotes', icon: CreditCard },
+        { key: 'billingSupport', label: 'Billing Support', icon: CreditCard },
+        { key: 'paymentProcessing', label: 'Payment Processing', icon: CreditCard },
+        { key: 'subscriptionChanges', label: 'Subscription Changes', icon: Settings },
+        { key: 'refundInquiries', label: 'Refund Inquiries', icon: CreditCard },
+        { key: 'planUpgrades', label: 'Plan Upgrades', icon: Settings }
+      ]
+    },
+    {
+      title: "Platform Support",
+      permissions: [
+        { key: 'navigationAssistance', label: 'Navigation Assistance', icon: Globe },
+        { key: 'featureExplanation', label: 'Feature Explanation', icon: MessageSquare },
+        { key: 'troubleshooting', label: 'Troubleshooting', icon: Activity },
+        { key: 'accountSetup', label: 'Account Setup', icon: Settings },
+        { key: 'integrationSupport', label: 'Integration Support', icon: Zap },
+        { key: 'dataExport', label: 'Data Export', icon: Download }
+      ]
+    },
+    {
+      title: "Advanced Operations",
+      permissions: [
+        { key: 'documentGeneration', label: 'Document Generation', icon: FileText },
+        { key: 'reportGeneration', label: 'Report Generation', icon: Activity },
+        { key: 'auditAccess', label: 'Audit Access', icon: Eye },
+        { key: 'userAccountManagement', label: 'User Account Management', icon: Users },
+        { key: 'accessPermissions', label: 'Access Permissions', icon: Shield },
+        { key: 'systemStatus', label: 'System Status', icon: Activity }
+      ]
+    },
+    {
+      title: "Emergency & Escalation",
+      permissions: [
+        { key: 'urgentMatters', label: 'Urgent Matters', icon: AlertCircle },
         { key: 'escalationManagement', label: 'Escalation Management', icon: Users },
-        { key: 'knowledgeBaseAccess', label: 'Knowledge Base Access', icon: Brain }
+        { key: 'emergencyContact', label: 'Emergency Contact', icon: Phone },
+        { key: 'afterHoursSupport', label: 'After Hours Support', icon: Clock },
+        { key: 'crisisEscalation', label: 'Crisis Escalation', icon: AlertCircle }
       ]
     }
   ];

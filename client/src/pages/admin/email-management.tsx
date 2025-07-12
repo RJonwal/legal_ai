@@ -114,18 +114,55 @@ interface EmailConfig {
     provider: string;
     model: string;
     permissions: {
-      userManagement: boolean;
+      // Core Legal Services
+      legalConsultation: boolean;
+      caseAnalysis: boolean;
+      documentReview: boolean;
+      legalResearch: boolean;
+      procedureGuidance: boolean;
+      filingDeadlines: boolean;
+      courtRequirements: boolean;
+      jurisdictionAdvice: boolean;
+      legalFormCompletion: boolean;
+      caseStrategyAdvice: boolean;
+      
+      // Client Management
+      clientOnboarding: boolean;
+      caseStatusUpdates: boolean;
+      appointmentScheduling: boolean;
+      documentRequests: boolean;
+      caseFileAccess: boolean;
+      clientCommunication: boolean;
+      progressReporting: boolean;
+      
+      // Business Operations
       billingInquiries: boolean;
-      technicalSupport: boolean;
-      accountSettings: boolean;
-      caseManagement: boolean;
-      documentGeneration: boolean;
       paymentProcessing: boolean;
-      subscriptionChanges: boolean;
+      subscriptionManagement: boolean;
+      servicePlanChanges: boolean;
+      refundProcessing: boolean;
+      invoiceGeneration: boolean;
+      
+      // Technical Support
+      platformNavigation: boolean;
+      featureExplanation: boolean;
+      troubleshooting: boolean;
+      accountSetup: boolean;
       dataExport: boolean;
-      systemStatus: boolean;
-      generalInquiries: boolean;
+      systemIntegration: boolean;
+      
+      // Administrative
+      userAccountManagement: boolean;
+      accessPermissions: boolean;
+      dataBackup: boolean;
+      reportGeneration: boolean;
+      auditTrails: boolean;
+      
+      // Emergency & Escalation
+      urgentLegalMatters: boolean;
+      escalateToAttorney: boolean;
       escalateToHuman: boolean;
+      emergencyContact: boolean;
     };
     responseSettings: {
       maxTokens: number;
@@ -135,43 +172,7 @@ interface EmailConfig {
       escalationThreshold: number;
     };
   };
-  liveChat: {
-    enabled: boolean;
-    provider: string;
-    permissions: {
-      viewUserProfiles: boolean;
-      accessCaseHistory: boolean;
-      modifyUserAccounts: boolean;
-      processPayments: boolean;
-      scheduleAppointments: boolean;
-      accessDocuments: boolean;
-      generateReports: boolean;
-      systemAdministration: boolean;
-      escalationManagement: boolean;
-      knowledgeBaseAccess: boolean;
-    };
-    workingHours: {
-      enabled: boolean;
-      timezone: string;
-      schedule: Record<string, { start: string; end: string; active: boolean }>;
-    };
-    autoResponses: {
-      welcomeMessage: string;
-      offlineMessage: string;
-      escalationMessage: string;
-    };
-    realTimeMonitoring: {
-      enabled: boolean;
-      allowIntercept: boolean;
-      showTypingIndicator: boolean;
-      recordConversations: boolean;
-    };
-    knowledgeBase: {
-      enabled: boolean;
-      categories: string[];
-      autoSuggestions: boolean;
-    };
-  };
+  
   adminTools: {
     canRespond: boolean;
     canIntercept: boolean;
@@ -212,18 +213,55 @@ const defaultConfig: EmailConfig = {
     provider: 'openai',
     model: 'gpt-4',
     permissions: {
-      userManagement: true,
+      // Core Legal Services - Enable most for autonomy
+      legalConsultation: true,
+      caseAnalysis: true,
+      documentReview: true,
+      legalResearch: true,
+      procedureGuidance: true,
+      filingDeadlines: true,
+      courtRequirements: true,
+      jurisdictionAdvice: true,
+      legalFormCompletion: true,
+      caseStrategyAdvice: false, // Requires human oversight
+      
+      // Client Management - Full autonomy
+      clientOnboarding: true,
+      caseStatusUpdates: true,
+      appointmentScheduling: true,
+      documentRequests: true,
+      caseFileAccess: true,
+      clientCommunication: true,
+      progressReporting: true,
+      
+      // Business Operations - Selective autonomy
       billingInquiries: true,
-      technicalSupport: true,
-      accountSettings: true,
-      caseManagement: true,
-      documentGeneration: true,
-      paymentProcessing: false,
-      subscriptionChanges: true,
+      paymentProcessing: true,
+      subscriptionManagement: true,
+      servicePlanChanges: true,
+      refundProcessing: false, // Requires human approval
+      invoiceGeneration: true,
+      
+      // Technical Support - Full autonomy
+      platformNavigation: true,
+      featureExplanation: true,
+      troubleshooting: true,
+      accountSetup: true,
       dataExport: true,
-      systemStatus: true,
-      generalInquiries: true,
-      escalateToHuman: true
+      systemIntegration: true,
+      
+      // Administrative - Limited autonomy
+      userAccountManagement: true,
+      accessPermissions: false, // Security sensitive
+      dataBackup: true,
+      reportGeneration: true,
+      auditTrails: true,
+      
+      // Emergency & Escalation - Human oversight required
+      urgentLegalMatters: true,
+      escalateToAttorney: true,
+      escalateToHuman: true,
+      emergencyContact: true
     },
     responseSettings: {
       maxTokens: 500,
@@ -233,51 +271,7 @@ const defaultConfig: EmailConfig = {
       escalationThreshold: 80
     }
   },
-  liveChat: {
-    enabled: true,
-    provider: 'internal',
-    permissions: {
-      viewUserProfiles: true,
-      accessCaseHistory: true,
-      modifyUserAccounts: false,
-      processPayments: false,
-      scheduleAppointments: true,
-      accessDocuments: true,
-      generateReports: false,
-      systemAdministration: false,
-      escalationManagement: true,
-      knowledgeBaseAccess: true
-    },
-    workingHours: {
-      enabled: true,
-      timezone: 'UTC',
-      schedule: {
-        monday: { start: '09:00', end: '17:00', active: true },
-        tuesday: { start: '09:00', end: '17:00', active: true },
-        wednesday: { start: '09:00', end: '17:00', active: true },
-        thursday: { start: '09:00', end: '17:00', active: true },
-        friday: { start: '09:00', end: '17:00', active: true },
-        saturday: { start: '10:00', end: '14:00', active: false },
-        sunday: { start: '10:00', end: '14:00', active: false }
-      }
-    },
-    autoResponses: {
-      welcomeMessage: 'Welcome to LegalAI Pro support! How can I help you today?',
-      offlineMessage: 'Thank you for contacting us. We are currently offline but will respond soon.',
-      escalationMessage: 'Let me connect you with a human agent who can better assist you.'
-    },
-    realTimeMonitoring: {
-      enabled: true,
-      allowIntercept: true,
-      showTypingIndicator: true,
-      recordConversations: true
-    },
-    knowledgeBase: {
-      enabled: true,
-      categories: ['billing', 'technical', 'legal', 'account'],
-      autoSuggestions: true
-    }
-  },
+  
   adminTools: {
     canRespond: true,
     canIntercept: true,
@@ -505,11 +499,30 @@ export default function EmailManagement() {
 
   const aiPermissionCategories = [
     {
-      title: "User Management",
+      title: "Core Legal Services",
       permissions: [
-        { key: 'userManagement', label: 'User Management', icon: Users },
-        { key: 'accountSettings', label: 'Account Settings', icon: Settings },
-        { key: 'dataExport', label: 'Data Export', icon: Download }
+        { key: 'legalConsultation', label: 'Legal Consultation', icon: Users },
+        { key: 'caseAnalysis', label: 'Case Analysis', icon: FileText },
+        { key: 'documentReview', label: 'Document Review', icon: FileText },
+        { key: 'legalResearch', label: 'Legal Research', icon: Brain },
+        { key: 'procedureGuidance', label: 'Procedure Guidance', icon: MessageSquare },
+        { key: 'filingDeadlines', label: 'Filing Deadlines', icon: Calendar },
+        { key: 'courtRequirements', label: 'Court Requirements', icon: Shield },
+        { key: 'jurisdictionAdvice', label: 'Jurisdiction Advice', icon: Globe },
+        { key: 'legalFormCompletion', label: 'Legal Form Completion', icon: FileText },
+        { key: 'caseStrategyAdvice', label: 'Case Strategy Advice', icon: Brain }
+      ]
+    },
+    {
+      title: "Client Management",
+      permissions: [
+        { key: 'clientOnboarding', label: 'Client Onboarding', icon: Users },
+        { key: 'caseStatusUpdates', label: 'Case Status Updates', icon: Activity },
+        { key: 'appointmentScheduling', label: 'Appointment Scheduling', icon: Calendar },
+        { key: 'documentRequests', label: 'Document Requests', icon: FileText },
+        { key: 'caseFileAccess', label: 'Case File Access', icon: FileText },
+        { key: 'clientCommunication', label: 'Client Communication', icon: MessageSquare },
+        { key: 'progressReporting', label: 'Progress Reporting', icon: Activity }
       ]
     },
     {
@@ -517,54 +530,45 @@ export default function EmailManagement() {
       permissions: [
         { key: 'billingInquiries', label: 'Billing Inquiries', icon: CreditCard },
         { key: 'paymentProcessing', label: 'Payment Processing', icon: CreditCard },
-        { key: 'subscriptionChanges', label: 'Subscription Changes', icon: Settings }
+        { key: 'subscriptionManagement', label: 'Subscription Management', icon: Settings },
+        { key: 'servicePlanChanges', label: 'Service Plan Changes', icon: Settings },
+        { key: 'refundProcessing', label: 'Refund Processing', icon: CreditCard },
+        { key: 'invoiceGeneration', label: 'Invoice Generation', icon: FileText }
       ]
     },
     {
-      title: "Legal Services",
+      title: "Technical Support",
       permissions: [
-        { key: 'caseManagement', label: 'Case Management', icon: FileText },
-        { key: 'documentGeneration', label: 'Document Generation', icon: FileText },
-        { key: 'technicalSupport', label: 'Technical Support', icon: Activity }
+        { key: 'platformNavigation', label: 'Platform Navigation', icon: Globe },
+        { key: 'featureExplanation', label: 'Feature Explanation', icon: MessageSquare },
+        { key: 'troubleshooting', label: 'Troubleshooting', icon: Activity },
+        { key: 'accountSetup', label: 'Account Setup', icon: Settings },
+        { key: 'dataExport', label: 'Data Export', icon: Download },
+        { key: 'systemIntegration', label: 'System Integration', icon: Zap }
       ]
     },
     {
-      title: "System Operations",
+      title: "Administrative",
       permissions: [
-        { key: 'systemStatus', label: 'System Status', icon: Activity },
-        { key: 'generalInquiries', label: 'General Inquiries', icon: MessageSquare },
-        { key: 'escalateToHuman', label: 'Escalate to Human', icon: Users }
+        { key: 'userAccountManagement', label: 'User Account Management', icon: Users },
+        { key: 'accessPermissions', label: 'Access Permissions', icon: Shield },
+        { key: 'dataBackup', label: 'Data Backup', icon: Archive },
+        { key: 'reportGeneration', label: 'Report Generation', icon: Activity },
+        { key: 'auditTrails', label: 'Audit Trails', icon: Eye }
+      ]
+    },
+    {
+      title: "Emergency & Escalation",
+      permissions: [
+        { key: 'urgentLegalMatters', label: 'Urgent Legal Matters', icon: AlertCircle },
+        { key: 'escalateToAttorney', label: 'Escalate to Attorney', icon: Users },
+        { key: 'escalateToHuman', label: 'Escalate to Human', icon: Users },
+        { key: 'emergencyContact', label: 'Emergency Contact', icon: Phone }
       ]
     }
   ];
 
-  const liveChatPermissionCategories = [
-    {
-      title: "User Access",
-      permissions: [
-        { key: 'viewUserProfiles', label: 'View User Profiles', icon: Users },
-        { key: 'accessCaseHistory', label: 'Access Case History', icon: FileText },
-        { key: 'modifyUserAccounts', label: 'Modify User Accounts', icon: Settings }
-      ]
-    },
-    {
-      title: "Operations",
-      permissions: [
-        { key: 'processPayments', label: 'Process Payments', icon: CreditCard },
-        { key: 'scheduleAppointments', label: 'Schedule Appointments', icon: Calendar },
-        { key: 'accessDocuments', label: 'Access Documents', icon: FileText }
-      ]
-    },
-    {
-      title: "Administration",
-      permissions: [
-        { key: 'generateReports', label: 'Generate Reports', icon: Activity },
-        { key: 'systemAdministration', label: 'System Administration', icon: Shield },
-        { key: 'escalationManagement', label: 'Escalation Management', icon: Users },
-        { key: 'knowledgeBaseAccess', label: 'Knowledge Base Access', icon: Brain }
-      ]
-    }
-  ];
+  
 
   const filteredEmails = currentConfig.emailLogs?.filter(email => {
     if (emailFilters.type !== 'all' && email.type !== emailFilters.type) return false;
@@ -582,13 +586,12 @@ export default function EmailManagement() {
       </div>
 
       <Tabs defaultValue="configuration" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="configuration">SMTP Config</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="signatures">Signatures</TabsTrigger>
           <TabsTrigger value="logs">Email Logs</TabsTrigger>
           <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
-          <TabsTrigger value="live-chat">Live Chat</TabsTrigger>
           <TabsTrigger value="admin-tools">Admin Tools</TabsTrigger>
         </TabsList>
 
@@ -1249,191 +1252,7 @@ export default function EmailManagement() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="live-chat" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Live Chat Configuration
-              </CardTitle>
-              <CardDescription>Configure live chat with AI assistance and real-time monitoring</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="chat-enabled">Enable Live Chat</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Allow real-time chat support with AI and human agents
-                  </p>
-                </div>
-                <Switch
-                  id="chat-enabled"
-                  checked={currentConfig.liveChat.enabled}
-                  onCheckedChange={(checked) => handleUpdateConfig({
-                    liveChat: { ...currentConfig.liveChat, enabled: checked }
-                  })}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <Label>Real-time Monitoring</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="monitoring-enabled"
-                      checked={currentConfig.liveChat.realTimeMonitoring.enabled}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        liveChat: {
-                          ...currentConfig.liveChat,
-                          realTimeMonitoring: {
-                            ...currentConfig.liveChat.realTimeMonitoring,
-                            enabled: checked
-                          }
-                        }
-                      })}
-                    />
-                    <Label htmlFor="monitoring-enabled">Enable Real-time Monitoring</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="allow-intercept"
-                      checked={currentConfig.liveChat.realTimeMonitoring.allowIntercept}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        liveChat: {
-                          ...currentConfig.liveChat,
-                          realTimeMonitoring: {
-                            ...currentConfig.liveChat.realTimeMonitoring,
-                            allowIntercept: checked
-                          }
-                        }
-                      })}
-                    />
-                    <Label htmlFor="allow-intercept">Allow Admin Intercept</Label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label>Auto Responses</Label>
-                <div className="space-y-2">
-                  <div>
-                    <Label className="text-sm">Welcome Message</Label>
-                    <Input
-                      value={currentConfig.liveChat.autoResponses.welcomeMessage}
-                      onChange={(e) => handleUpdateConfig({
-                        liveChat: {
-                          ...currentConfig.liveChat,
-                          autoResponses: {
-                            ...currentConfig.liveChat.autoResponses,
-                            welcomeMessage: e.target.value
-                          }
-                        }
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Offline Message</Label>
-                    <Input
-                      value={currentConfig.liveChat.autoResponses.offlineMessage}
-                      onChange={(e) => handleUpdateConfig({
-                        liveChat: {
-                          ...currentConfig.liveChat,
-                          autoResponses: {
-                            ...currentConfig.liveChat.autoResponses,
-                            offlineMessage: e.target.value
-                          }
-                        }
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Escalation Message</Label>
-                    <Input
-                      value={currentConfig.liveChat.autoResponses.escalationMessage}
-                      onChange={(e) => handleUpdateConfig({
-                        liveChat: {
-                          ...currentConfig.liveChat,
-                          autoResponses: {
-                            ...currentConfig.liveChat.autoResponses,
-                            escalationMessage: e.target.value
-                          }
-                        }
-                      })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label>AI Chat Permissions</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enhanced AI chat permissions based on your business model
-                </p>
-                {liveChatPermissionCategories.map((category) => (
-                  <div key={category.title} className="space-y-2">
-                    <h4 className="font-medium text-sm">{category.title}</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {category.permissions.map((permission) => (
-                        <div key={permission.key} className="flex items-center space-x-2">
-                          <Switch
-                            id={`chat-${permission.key}`}
-                            checked={currentConfig.liveChat.permissions[permission.key as keyof typeof currentConfig.liveChat.permissions]}
-                            onCheckedChange={(checked) => handleUpdateConfig({
-                              liveChat: {
-                                ...currentConfig.liveChat,
-                                permissions: {
-                                  ...currentConfig.liveChat.permissions,
-                                  [permission.key]: checked
-                                }
-                              }
-                            })}
-                          />
-                          <Label htmlFor={`chat-${permission.key}`} className="text-sm flex items-center gap-1">
-                            <permission.icon className="h-3 w-3" />
-                            {permission.label}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-4">
-                <Label>Knowledge Base Integration</Label>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="kb-enabled"
-                    checked={currentConfig.liveChat.knowledgeBase.enabled}
-                    onCheckedChange={(checked) => handleUpdateConfig({
-                      liveChat: {
-                        ...currentConfig.liveChat,
-                        knowledgeBase: {
-                          ...currentConfig.liveChat.knowledgeBase,
-                          enabled: checked
-                        }
-                      }
-                    })}
-                  />
-                  <Label htmlFor="kb-enabled">Enable Knowledge Base Integration</Label>
-                </div>
-                <div>
-                  <Label className="text-sm">Knowledge Base Categories</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Configure categories for AI to provide contextual help
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {currentConfig.liveChat.knowledgeBase.categories.map((category, index) => (
-                      <Badge key={index} variant="outline">
-                        {category}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        
 
         <TabsContent value="admin-tools" className="space-y-4">
           <Card>

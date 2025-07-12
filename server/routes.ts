@@ -473,7 +473,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         {
           name: 'Settlement Negotiations',
           status: daysActive > 60 ? 'in_progress' : 'pending',
-          progress: daysActive > 60 ? Math.min(85, Math.floor(((daysActive - 60) / 30) * 100)) : 0,
+          progress: daysActive > 60 ? Math.min(85, Math.floor(((days - 60) / 30) * 100)) : 0,
           estimatedDays: daysActive > 60 ? Math.max(14, 90 - daysActive) : null
         },
         {
@@ -856,7 +856,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       else if (number.startsWith('5')) brand = 'Mastercard';
       else if (number.startsWith('3')) brand = 'American Express';
 
-      // Mock payment method update
+      // Mock payment method```python
+ update
       res.json({ 
         success: true,         message: 'Payment method updated successfully',
         paymentmethod: {
@@ -2635,7 +2636,8 @@ app.get("/api/admin/impersonation/history", (req, res) => {
           trendValue: 12.5
         },
         {
-          category: 'Revenue',
+          ```python
+category: 'Revenue',
           subcategory: 'Token Purchases',
           amount: 4290,
           percentage: 14.3,

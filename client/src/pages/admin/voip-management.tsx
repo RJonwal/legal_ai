@@ -89,13 +89,53 @@ interface VoIPConfig {
     temperature: number;
     systemPrompt: string;
     permissions: {
-      scheduleAppointments: boolean;
-      accessCaseInfo: boolean;
-      processPayments: boolean;
-      provideQuotes: boolean;
-      transferCalls: boolean;
-      takeMessages: boolean;
-      accessKnowledgeBase: boolean;
+      // Core Legal Services
+      legalConsultation: boolean;
+      caseAnalysis: boolean;
+      procedureGuidance: boolean;
+      legalResearch: boolean;
+      courtDeadlines: boolean;
+      filingRequirements: boolean;
+      jurisdictionAdvice: boolean;
+      documentGuidance: boolean;
+      caseStrategy: boolean;
+      
+      // Client Management
+      clientIntake: boolean;
+      appointmentScheduling: boolean;
+      caseStatusInquiry: boolean;
+      documentCollection: boolean;
+      progressUpdates: boolean;
+      caseFileAccess: boolean;
+      
+      // Business Operations
+      serviceQuotes: boolean;
+      pricingInformation: boolean;
+      billingInquiries: boolean;
+      paymentProcessing: boolean;
+      subscriptionManagement: boolean;
+      refundRequests: boolean;
+      
+      // Technical Support
+      platformNavigation: boolean;
+      featureGuidance: boolean;
+      troubleshooting: boolean;
+      accountSupport: boolean;
+      integrationHelp: boolean;
+      
+      // Call Management
+      transferToAttorney: boolean;
+      transferToSpecialist: boolean;
+      takeDetailedMessages: boolean;
+      scheduleCallbacks: boolean;
+      escalateUrgent: boolean;
+      recordCalls: boolean;
+      
+      // Emergency Handling
+      urgentLegalMatters: boolean;
+      emergencyEscalation: boolean;
+      afterHoursSupport: boolean;
+      crisisManagement: boolean;
     };
   };
   analytics: {
@@ -169,13 +209,53 @@ export default function VoipManagement() {
       temperature: 0.7,
       systemPrompt: 'You are a professional AI assistant for LegalAI Pro. Provide helpful, accurate information about legal services while maintaining confidentiality.',
       permissions: {
-        scheduleAppointments: true,
-        accessCaseInfo: false,
-        processPayments: false,
-        provideQuotes: true,
-        transferCalls: true,
-        takeMessages: true,
-        accessKnowledgeBase: true
+        // Core Legal Services - Enable most for autonomy
+        legalConsultation: true,
+        caseAnalysis: true,
+        procedureGuidance: true,
+        legalResearch: true,
+        courtDeadlines: true,
+        filingRequirements: true,
+        jurisdictionAdvice: true,
+        documentGuidance: true,
+        caseStrategy: false, // Requires human oversight
+        
+        // Client Management - Full autonomy
+        clientIntake: true,
+        appointmentScheduling: true,
+        caseStatusInquiry: true,
+        documentCollection: true,
+        progressUpdates: true,
+        caseFileAccess: true,
+        
+        // Business Operations - Selective autonomy
+        serviceQuotes: true,
+        pricingInformation: true,
+        billingInquiries: true,
+        paymentProcessing: true,
+        subscriptionManagement: true,
+        refundRequests: false, // Requires human approval
+        
+        // Technical Support - Full autonomy
+        platformNavigation: true,
+        featureGuidance: true,
+        troubleshooting: true,
+        accountSupport: true,
+        integrationHelp: true,
+        
+        // Call Management - Full autonomy
+        transferToAttorney: true,
+        transferToSpecialist: true,
+        takeDetailedMessages: true,
+        scheduleCallbacks: true,
+        escalateUrgent: true,
+        recordCalls: true,
+        
+        // Emergency Handling - Human oversight
+        urgentLegalMatters: true,
+        emergencyEscalation: true,
+        afterHoursSupport: true,
+        crisisManagement: true
       }
     },
     analytics: {
@@ -1123,29 +1203,118 @@ export default function VoipManagement() {
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-4">AI Assistant Permissions</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(currentConfig.aiAssistant.permissions).map(([key, value]) => (
-                        <div key={key} className="flex items-center space-x-3">
-                          <Checkbox
-                            checked={value}
-                            onCheckedChange={(checked) => {
-                              handleUpdateConfig({
-                                aiAssistant: {
-                                  ...currentConfig.aiAssistant,
-                                  permissions: {
-                                    ...currentConfig.aiAssistant.permissions,
-                                    [key]: checked
-                                  }
-                                }
-                              });
-                            }}
-                          />
-                          <Label className="text-sm capitalize">
-                            {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                          </Label>
+                    <h4 className="font-medium mb-4">AI Voice Assistant Permissions</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Configure what the AI can handle during voice calls for your legal service business
+                    </p>
+                    <div className="space-y-6">
+                      <div>
+                        <h5 className="font-medium text-sm mb-2">Core Legal Services</h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['legalConsultation', 'caseAnalysis', 'procedureGuidance', 'legalResearch', 'courtDeadlines', 'filingRequirements', 'jurisdictionAdvice', 'documentGuidance', 'caseStrategy'].map((key) => (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentConfig.aiAssistant.permissions[key as keyof typeof currentConfig.aiAssistant.permissions]}
+                                onCheckedChange={(checked) => {
+                                  handleUpdateConfig({
+                                    aiAssistant: {
+                                      ...currentConfig.aiAssistant,
+                                      permissions: {
+                                        ...currentConfig.aiAssistant.permissions,
+                                        [key]: checked
+                                      }
+                                    }
+                                  });
+                                }}
+                              />
+                              <Label className="text-sm">
+                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                              </Label>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </div>
+                      
+                      <div>
+                        <h5 className="font-medium text-sm mb-2">Client Management</h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['clientIntake', 'appointmentScheduling', 'caseStatusInquiry', 'documentCollection', 'progressUpdates', 'caseFileAccess'].map((key) => (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentConfig.aiAssistant.permissions[key as keyof typeof currentConfig.aiAssistant.permissions]}
+                                onCheckedChange={(checked) => {
+                                  handleUpdateConfig({
+                                    aiAssistant: {
+                                      ...currentConfig.aiAssistant,
+                                      permissions: {
+                                        ...currentConfig.aiAssistant.permissions,
+                                        [key]: checked
+                                      }
+                                    }
+                                  });
+                                }}
+                              />
+                              <Label className="text-sm">
+                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h5 className="font-medium text-sm mb-2">Business Operations</h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['serviceQuotes', 'pricingInformation', 'billingInquiries', 'paymentProcessing', 'subscriptionManagement', 'refundRequests'].map((key) => (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentConfig.aiAssistant.permissions[key as keyof typeof currentConfig.aiAssistant.permissions]}
+                                onCheckedChange={(checked) => {
+                                  handleUpdateConfig({
+                                    aiAssistant: {
+                                      ...currentConfig.aiAssistant,
+                                      permissions: {
+                                        ...currentConfig.aiAssistant.permissions,
+                                        [key]: checked
+                                      }
+                                    }
+                                  });
+                                }}
+                              />
+                              <Label className="text-sm">
+                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h5 className="font-medium text-sm mb-2">Emergency & Escalation</h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['urgentLegalMatters', 'emergencyEscalation', 'afterHoursSupport', 'crisisManagement'].map((key) => (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentConfig.aiAssistant.permissions[key as keyof typeof currentConfig.aiAssistant.permissions]}
+                                onCheckedChange={(checked) => {
+                                  handleUpdateConfig({
+                                    aiAssistant: {
+                                      ...currentConfig.aiAssistant,
+                                      permissions: {
+                                        ...currentConfig.aiAssistant.permissions,
+                                        [key]: checked
+                                      }
+                                    }
+                                  });
+                                }}
+                              />
+                              <Label className="text-sm">
+                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </>
