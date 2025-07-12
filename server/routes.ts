@@ -1602,6 +1602,270 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
+  // LiveChat configuration endpoints
+  app.get("/api/admin/livechat/config", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/config 200');
+    
+    const config = {
+      enabled: true,
+      dashboardEnabled: true,
+      landingEnabled: false,
+      provider: 'internal',
+      plugin: {
+        name: 'Crisp Chat',
+        type: 'crisp',
+        apiKey: '',
+        websiteId: '',
+        customEndpoint: ''
+      },
+      dashboardPermissions: {
+        legalAdvice: true,
+        caseAnalysis: true,
+        documentReview: true,
+        legalResearch: true,
+        procedureGuidance: true,
+        courtDeadlines: true,
+        filingRequirements: true,
+        jurisdictionHelp: true,
+        legalFormAssistance: true,
+        caseStrategyDiscussion: false,
+        clientOnboarding: true,
+        caseStatusUpdates: true,
+        appointmentScheduling: true,
+        documentRequests: true,
+        progressTracking: true,
+        caseFileAccess: true,
+        clientPortalNavigation: true,
+        serviceInformation: true,
+        pricingQuotes: true,
+        billingSupport: true,
+        paymentProcessing: true,
+        subscriptionChanges: true,
+        refundInquiries: false,
+        planUpgrades: true,
+        navigationAssistance: true,
+        featureExplanation: true,
+        troubleshooting: true,
+        accountSetup: true,
+        integrationSupport: true,
+        dataExport: true,
+        documentGeneration: true,
+        reportGeneration: true,
+        auditAccess: false,
+        userAccountManagement: true,
+        accessPermissions: false,
+        systemStatus: true,
+        urgentMatters: true,
+        escalationManagement: true,
+        emergencyContact: true,
+        afterHoursSupport: true,
+        crisisEscalation: true
+      },
+      landingPermissions: {
+        legalAdvice: false,
+        caseAnalysis: false,
+        documentReview: false,
+        legalResearch: true,
+        procedureGuidance: true,
+        courtDeadlines: false,
+        filingRequirements: false,
+        jurisdictionHelp: true,
+        legalFormAssistance: false,
+        caseStrategyDiscussion: false,
+        clientOnboarding: true,
+        caseStatusUpdates: false,
+        appointmentScheduling: true,
+        documentRequests: false,
+        progressTracking: false,
+        caseFileAccess: false,
+        clientPortalNavigation: true,
+        serviceInformation: true,
+        pricingQuotes: true,
+        billingSupport: false,
+        paymentProcessing: false,
+        subscriptionChanges: false,
+        refundInquiries: false,
+        planUpgrades: true,
+        navigationAssistance: true,
+        featureExplanation: true,
+        troubleshooting: false,
+        accountSetup: true,
+        integrationSupport: false,
+        dataExport: false,
+        documentGeneration: false,
+        reportGeneration: false,
+        auditAccess: false,
+        userAccountManagement: false,
+        accessPermissions: false,
+        systemStatus: false,
+        urgentMatters: false,
+        escalationManagement: true,
+        emergencyContact: true,
+        afterHoursSupport: false,
+        crisisEscalation: false
+      },
+      workingHours: {
+        enabled: true,
+        timezone: 'UTC',
+        schedule: {
+          monday: { start: '09:00', end: '17:00', active: true },
+          tuesday: { start: '09:00', end: '17:00', active: true },
+          wednesday: { start: '09:00', end: '17:00', active: true },
+          thursday: { start: '09:00', end: '17:00', active: true },
+          friday: { start: '09:00', end: '17:00', active: true },
+          saturday: { start: '10:00', end: '14:00', active: false },
+          sunday: { start: '10:00', end: '14:00', active: false }
+        }
+      },
+      autoResponses: {
+        welcomeMessage: 'Welcome to LegalAI Pro support! How can I help you today?',
+        offlineMessage: 'Thank you for contacting us. We are currently offline but will respond soon.',
+        escalationMessage: 'Let me connect you with a human agent who can better assist you.',
+        queueMessage: 'You are currently #{{position}} in the queue. Estimated wait time: {{waitTime}} minutes.'
+      },
+      humanHandoff: {
+        enabled: true,
+        triggerKeywords: ['human', 'agent', 'speak to someone', 'urgent', 'complaint', 'refund'],
+        escalationThreshold: 3,
+        forwardToEmails: ['support@legalai.pro'],
+        autoEscalateTime: 15
+      },
+      realTimeMonitoring: {
+        enabled: true,
+        allowIntercept: true,
+        showTypingIndicator: true,
+        supervisorNotifications: true
+      },
+      aiSettings: {
+        confidenceThreshold: 0.7,
+        maxResponseTime: 30,
+        fallbackToHuman: true,
+        learningMode: true
+      }
+    };
+    
+    res.json(config);
+  });
+
+  app.put("/api/admin/livechat/config", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/livechat/config 200');
+    console.log('Updating livechat config:', req.body);
+    
+    res.json({ 
+      success: true, 
+      message: 'Configuration updated successfully',
+      config: req.body
+    });
+  });
+
+  app.get("/api/admin/livechat/conversations", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/conversations 200');
+    
+    const conversations = [
+      {
+        id: 'conv_001',
+        user: { name: 'John Doe', email: 'john@example.com' },
+        lastMessage: 'I need help with my case documents',
+        status: 'active',
+        assignedTo: 'ai',
+        messageCount: 5,
+        createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'conv_002',
+        user: { name: 'Sarah Smith', email: 'sarah@example.com' },
+        lastMessage: 'When is my court date?',
+        status: 'pending',
+        assignedTo: 'queue',
+        messageCount: 3,
+        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'conv_003',
+        user: { name: 'Mike Johnson', email: 'mike@example.com' },
+        lastMessage: 'Thank you for the assistance',
+        status: 'active',
+        assignedTo: 'human',
+        messageCount: 8,
+        createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString()
+      }
+    ];
+    
+    res.json(conversations);
+  });
+
+  app.get("/api/admin/livechat/conversations/:id/messages", (req, res) => {
+    const { id } = req.params;
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/conversations/' + id + '/messages 200');
+    
+    const messages = [
+      {
+        id: 'msg_001',
+        conversationId: id,
+        content: 'Hello, I need help with my legal case',
+        sender: 'user',
+        timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'msg_002',
+        conversationId: id,
+        content: 'I\'d be happy to help you with your legal case. What specific assistance do you need?',
+        sender: 'ai',
+        timestamp: new Date(Date.now() - 9 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'msg_003',
+        conversationId: id,
+        content: 'I need to understand the filing requirements for my motion',
+        sender: 'user',
+        timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString()
+      }
+    ];
+    
+    res.json(messages);
+  });
+
+  app.post("/api/admin/livechat/conversations/:id/intercept", (req, res) => {
+    const { id } = req.params;
+    const { message } = req.body;
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/livechat/conversations/' + id + '/intercept 200');
+    console.log('Intercepting conversation', id, 'with message:', message);
+    
+    res.json({
+      success: true,
+      message: 'Message sent successfully',
+      messageId: 'msg_' + Date.now(),
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  app.post("/api/admin/livechat/conversations/:id/escalate", (req, res) => {
+    const { id } = req.params;
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/livechat/conversations/' + id + '/escalate 200');
+    
+    res.json({
+      success: true,
+      message: 'Conversation escalated to human agent',
+      escalatedAt: new Date().toISOString()
+    });
+  });
+
+  app.get("/api/admin/livechat/analytics", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/analytics 200');
+    
+    const analytics = {
+      activeChats: 3,
+      aiResponding: 2,
+      pendingEscalation: 1,
+      aiResolutionRate: 85,
+      avgResponseTime: 12,
+      customerSatisfaction: 4.2,
+      totalToday: 47
+    };
+    
+    res.json(analytics);
+  });
+
   // Admin routes
   app.use("/api/admin", adminRoutes);
 

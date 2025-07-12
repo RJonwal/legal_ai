@@ -40,6 +40,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface LiveChatConfig {
   enabled: boolean;
+  dashboardEnabled: boolean;
+  landingEnabled: boolean;
   provider: string;
   plugin: {
     name: string;
@@ -59,7 +61,61 @@ interface LiveChatConfig {
     chatId?: string;
     customEndpoint?: string;
   };
-  permissions: {
+  dashboardPermissions: {
+    // Core Legal Services
+    legalAdvice: boolean;
+    caseAnalysis: boolean;
+    documentReview: boolean;
+    legalResearch: boolean;
+    procedureGuidance: boolean;
+    courtDeadlines: boolean;
+    filingRequirements: boolean;
+    jurisdictionHelp: boolean;
+    legalFormAssistance: boolean;
+    caseStrategyDiscussion: boolean;
+    
+    // Client Services
+    clientOnboarding: boolean;
+    caseStatusUpdates: boolean;
+    appointmentScheduling: boolean;
+    documentRequests: boolean;
+    progressTracking: boolean;
+    caseFileAccess: boolean;
+    clientPortalNavigation: boolean;
+    
+    // Business Operations
+    serviceInformation: boolean;
+    pricingQuotes: boolean;
+    billingSupport: boolean;
+    paymentProcessing: boolean;
+    subscriptionChanges: boolean;
+    refundInquiries: boolean;
+    planUpgrades: boolean;
+    
+    // Platform Support
+    navigationAssistance: boolean;
+    featureExplanation: boolean;
+    troubleshooting: boolean;
+    accountSetup: boolean;
+    integrationSupport: boolean;
+    dataExport: boolean;
+    
+    // Advanced Operations
+    documentGeneration: boolean;
+    reportGeneration: boolean;
+    auditAccess: boolean;
+    userAccountManagement: boolean;
+    accessPermissions: boolean;
+    systemStatus: boolean;
+    
+    // Emergency & Escalation
+    urgentMatters: boolean;
+    escalationManagement: boolean;
+    emergencyContact: boolean;
+    afterHoursSupport: boolean;
+    crisisEscalation: boolean;
+  };
+  landingPermissions: {
     // Core Legal Services
     legalAdvice: boolean;
     caseAnalysis: boolean;
@@ -153,10 +209,13 @@ export default function LiveChatManagement() {
   const [showLiveChatMonitor, setShowLiveChatMonitor] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [interceptMessage, setInterceptMessage] = useState("");
+  const [isIntercepting, setIsIntercepting] = useState(false);
 
   // Default configuration
   const defaultConfig: LiveChatConfig = useMemo(() => ({
     enabled: true,
+    dashboardEnabled: true,
+    landingEnabled: false,
     provider: 'internal',
     plugin: {
       name: 'Crisp Chat',
@@ -165,7 +224,7 @@ export default function LiveChatManagement() {
       websiteId: '',
       customEndpoint: ''
     },
-    permissions: {
+    dashboardPermissions: {
       // Core Legal Services - Enable most for autonomy
       legalAdvice: true,
       caseAnalysis: true,
@@ -218,6 +277,60 @@ export default function LiveChatManagement() {
       emergencyContact: true,
       afterHoursSupport: true,
       crisisEscalation: true
+    },
+    landingPermissions: {
+      // Core Legal Services - Limited for landing page
+      legalAdvice: false,
+      caseAnalysis: false,
+      documentReview: false,
+      legalResearch: true,
+      procedureGuidance: true,
+      courtDeadlines: false,
+      filingRequirements: false,
+      jurisdictionHelp: true,
+      legalFormAssistance: false,
+      caseStrategyDiscussion: false,
+      
+      // Client Services - Basic info only
+      clientOnboarding: true,
+      caseStatusUpdates: false,
+      appointmentScheduling: true,
+      documentRequests: false,
+      progressTracking: false,
+      caseFileAccess: false,
+      clientPortalNavigation: true,
+      
+      // Business Operations - Sales focused
+      serviceInformation: true,
+      pricingQuotes: true,
+      billingSupport: false,
+      paymentProcessing: false,
+      subscriptionChanges: false,
+      refundInquiries: false,
+      planUpgrades: true,
+      
+      // Platform Support - Basic navigation
+      navigationAssistance: true,
+      featureExplanation: true,
+      troubleshooting: false,
+      accountSetup: true,
+      integrationSupport: false,
+      dataExport: false,
+      
+      // Advanced Operations - None
+      documentGeneration: false,
+      reportGeneration: false,
+      auditAccess: false,
+      userAccountManagement: false,
+      accessPermissions: false,
+      systemStatus: false,
+      
+      // Emergency & Escalation - Basic only
+      urgentMatters: false,
+      escalationManagement: true,
+      emergencyContact: true,
+      afterHoursSupport: false,
+      crisisEscalation: false
     },
     workingHours: {
       enabled: true,
@@ -337,13 +450,19 @@ export default function LiveChatManagement() {
       if (!response.ok) throw new Error('Failed to intercept conversation');
       return response.json();
     },
+    onMutate: () => {
+      setIsIntercepting(true);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-livechat-messages', selectedConversation] });
+      queryClient.invalidateQueries({ queryKey: ['admin-livechat-conversations'] });
       setInterceptMessage("");
-      toast({ title: "Conversation intercepted successfully" });
+      setIsIntercepting(false);
+      toast({ title: "Message sent successfully" });
     },
     onError: () => {
-      toast({ title: "Failed to intercept conversation", variant: "destructive" });
+      setIsIntercepting(false);
+      toast({ title: "Failed to send message", variant: "destructive" });
     },
   });
 
@@ -762,14 +881,46 @@ export default function LiveChatManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  checked={currentConfig.enabled}
-                  onCheckedChange={(enabled) => 
-                    handleUpdateConfig({ enabled })
-                  }
-                />
-                <Label>Enable Live Chat</Label>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    checked={currentConfig.enabled}
+                    onCheckedChange={(enabled) => 
+                      handleUpdateConfig({ enabled })
+                    }
+                  />
+                  <Label>Enable Live Chat System</Label>
+                </div>
+
+                {currentConfig.enabled && (
+                  <div className="ml-6 space-y-3 border-l-2 border-gray-200 pl-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Dashboard Chat Widget</Label>
+                        <p className="text-xs text-gray-600">Show chat widget on user dashboard</p>
+                      </div>
+                      <Switch 
+                        checked={currentConfig.dashboardEnabled}
+                        onCheckedChange={(dashboardEnabled) => 
+                          handleUpdateConfig({ dashboardEnabled })
+                        }
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Landing Page Chat Widget</Label>
+                        <p className="text-xs text-gray-600">Show chat widget on landing and marketing pages</p>
+                      </div>
+                      <Switch 
+                        checked={currentConfig.landingEnabled}
+                        onCheckedChange={(landingEnabled) => 
+                          handleUpdateConfig({ landingEnabled })
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {currentConfig.enabled && (
@@ -1079,40 +1230,82 @@ export default function LiveChatManagement() {
                 AI Chat Permissions
               </CardTitle>
               <CardDescription>
-                Control what the AI can access and respond to in chat conversations
+                Control what the AI can access and respond to in chat conversations for different areas
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-96">
-                <div className="space-y-6">
-                  {permissionCategories.map((category) => (
-                    <div key={category.title}>
-                      <h4 className="font-medium text-sm text-muted-foreground mb-3">
-                        {category.title}
-                      </h4>
-                      <div className="grid grid-cols-1 gap-3">
-                        {category.permissions.map(({ key, label, icon: Icon }) => (
-                          <div key={key} className="flex items-center space-x-3">
-                            <Checkbox
-                              checked={currentConfig.permissions[key as keyof typeof currentConfig.permissions]}
-                              onCheckedChange={(checked) => {
-                                handleUpdateConfig({
-                                  permissions: {
-                                    ...currentConfig.permissions,
-                                    [key]: checked
-                                  }
-                                });
-                              }}
-                            />
-                            <Icon className="h-4 w-4 text-muted-foreground" />
-                            <Label className="text-sm">{label}</Label>
+              <Tabs defaultValue="dashboard" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="dashboard">Dashboard Chat</TabsTrigger>
+                  <TabsTrigger value="landing">Landing Page Chat</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="dashboard">
+                  <ScrollArea className="h-96">
+                    <div className="space-y-6">
+                      {permissionCategories.map((category) => (
+                        <div key={category.title}>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-3">
+                            {category.title}
+                          </h4>
+                          <div className="grid grid-cols-1 gap-3">
+                            {category.permissions.map(({ key, label, icon: Icon }) => (
+                              <div key={key} className="flex items-center space-x-3">
+                                <Checkbox
+                                  checked={currentConfig.dashboardPermissions[key as keyof typeof currentConfig.dashboardPermissions]}
+                                  onCheckedChange={(checked) => {
+                                    handleUpdateConfig({
+                                      dashboardPermissions: {
+                                        ...currentConfig.dashboardPermissions,
+                                        [key]: checked
+                                      }
+                                    });
+                                  }}
+                                />
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                <Label className="text-sm">{label}</Label>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="landing">
+                  <ScrollArea className="h-96">
+                    <div className="space-y-6">
+                      {permissionCategories.map((category) => (
+                        <div key={category.title}>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-3">
+                            {category.title}
+                          </h4>
+                          <div className="grid grid-cols-1 gap-3">
+                            {category.permissions.map(({ key, label, icon: Icon }) => (
+                              <div key={key} className="flex items-center space-x-3">
+                                <Checkbox
+                                  checked={currentConfig.landingPermissions[key as keyof typeof currentConfig.landingPermissions]}
+                                  onCheckedChange={(checked) => {
+                                    handleUpdateConfig({
+                                      landingPermissions: {
+                                        ...currentConfig.landingPermissions,
+                                        [key]: checked
+                                      }
+                                    });
+                                  }}
+                                />
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                <Label className="text-sm">{label}</Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1497,10 +1690,16 @@ export default function LiveChatManagement() {
                         {conversations?.map((conversation: any) => (
                           <div 
                             key={conversation.id} 
-                            className={`p-3 border rounded-lg hover:bg-gray-50 cursor-pointer ${
+                            className={`p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
                               selectedConversation === conversation.id ? 'bg-blue-50 border-blue-200' : ''
                             }`}
-                            onClick={() => setSelectedConversation(conversation.id)}
+                            onClick={() => {
+                              if (selectedConversation !== conversation.id) {
+                                setSelectedConversation(conversation.id);
+                                setInterceptMessage("");
+                                setIsIntercepting(false);
+                              }
+                            }}
                           >
                             <div className="flex items-center gap-2">
                               <div className={`w-2 h-2 rounded-full ${
@@ -1556,10 +1755,10 @@ export default function LiveChatManagement() {
                                 });
                               }
                             }}
-                            disabled={!interceptMessage.trim() || interceptMutation.isPending}
+                            disabled={!interceptMessage.trim() || isIntercepting}
                           >
                             <Eye className="h-3 w-3 mr-1" />
-                            Intercept
+                            {isIntercepting ? 'Sending...' : 'Send Message'}
                           </Button>
                           <Button 
                             size="sm" 
@@ -1635,9 +1834,9 @@ export default function LiveChatManagement() {
                                 });
                               }
                             }}
-                            disabled={!interceptMessage.trim() || interceptMutation.isPending}
+                            disabled={!interceptMessage.trim() || isIntercepting}
                           >
-                            Send
+                            {isIntercepting ? 'Sending...' : 'Send'}
                           </Button>
                         </div>
                       </div>
