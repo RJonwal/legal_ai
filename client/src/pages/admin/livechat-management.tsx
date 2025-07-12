@@ -210,6 +210,8 @@ export default function LiveChatManagement() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [interceptMessage, setInterceptMessage] = useState("");
   const [isIntercepting, setIsIntercepting] = useState(false);
+  const [screenShareStatus, setScreenShareStatus] = useState<{[key: string]: {active: boolean, hasControl: boolean}}>({});
+  const [imageUploadStatus, setImageUploadStatus] = useState<{[key: string]: boolean}>({});
 
   // Default configuration
   const defaultConfig: LiveChatConfig = useMemo(() => ({
@@ -482,6 +484,82 @@ export default function LiveChatManagement() {
     },
     onError: () => {
       toast({ title: "Failed to escalate conversation", variant: "destructive" });
+    },
+  });
+
+  // Screen share mutation
+  const screenShareMutation = useMutation({
+    mutationFn: async ({ conversationId, action }: { conversationId: string; action: 'start' | 'stop' | 'request_control' }) => {
+      const response = await fetch(`/api/admin/livechat/conversations/${conversationId}/screen-share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      if (!response.ok) throw new Error('Failed to manage screen share');
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      const { conversationId, action } = variables;
+      
+      if (action === 'start') {
+        setScreenShareStatus(prev => ({
+          ...prev,
+          [conversationId]: { active: true, hasControl: false }
+        }));
+        toast({ title: "Screen share session started" });
+      } else if (action === 'stop') {
+        setScreenShareStatus(prev => ({
+          ...prev,
+          [conversationId]: { active: false, hasControl: false }
+        }));
+        toast({ title: "Screen share session ended" });
+      } else if (action === 'request_control') {
+        setScreenShareStatus(prev => ({
+          ...prev,
+          [conversationId]: { ...prev[conversationId], hasControl: true }
+        }));
+        toast({ title: "Control granted - you can now control the user's screen" });
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['admin-livechat-messages', conversationId] });
+    },
+    onError: (error, variables) => {
+      toast({ 
+        title: "Screen share action failed", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // File upload mutation
+  const fileUploadMutation = useMutation({
+    mutationFn: async ({ conversationId, file }: { conversationId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch(`/api/admin/livechat/conversations/${conversationId}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) throw new Error('Failed to upload file');
+      return response.json();
+    },
+    onMutate: ({ conversationId }) => {
+      setImageUploadStatus(prev => ({ ...prev, [conversationId]: true }));
+    },
+    onSuccess: (data, variables) => {
+      setImageUploadStatus(prev => ({ ...prev, [variables.conversationId]: false }));
+      queryClient.invalidateQueries({ queryKey: ['admin-livechat-messages', variables.conversationId] });
+      toast({ title: "File uploaded successfully" });
+    },
+    onError: (error, variables) => {
+      setImageUploadStatus(prev => ({ ...prev, [variables.conversationId]: false }));
+      toast({ 
+        title: "File upload failed", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 
@@ -1090,31 +1168,34 @@ export default function LiveChatManagement() {
                 <Label>Chat Provider</Label>
                 <Select 
                   value={currentConfig.plugin.type}
-                  onValueChange={(type) =>
+                  onValueChange={(type) => {
+                    const selectedProvider = chatProviders.find(p => p.value === type);
                     handleUpdateConfig({
                       plugin: {
                         ...currentConfig.plugin,
                         type: type as any,
-                        name: chatProviders.find(p => p.value === type)?.label || ''
+                        name: selectedProvider?.label || '',
+                        // Clear other fields when changing provider
+                        apiKey: '',
+                        websiteId: '',
+                        appId: '',
+                        widgetKey: '',
+                        subdomain: '',
+                        domain: '',
+                        propertyId: '',
+                        widgetId: '',
+                        licenseId: '',
+                        botId: '',
+                        publicKey: '',
+                        siteId: '',
+                        chatId: '',
+                        customEndpoint: ''
                       }
-                    })
-                  }
+                    });
+                  }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a chat provider">
-                      {currentConfig.plugin.type ? (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {chatProviders.find(p => p.value === currentConfig.plugin.type)?.label}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            ({chatProviders.find(p => p.value === currentConfig.plugin.type)?.description})
-                          </span>
-                        </div>
-                      ) : (
-                        "Select a chat provider"
-                      )}
-                    </SelectValue>
+                    <SelectValue placeholder="Select a chat provider" />
                   </SelectTrigger>
                   <SelectContent>
                     {chatProviders.map((provider) => (
@@ -1921,42 +2002,76 @@ export default function LiveChatManagement() {
                           <div className="flex gap-2">
                             <input
                               type="file"
-                              accept="image/*"
+                              accept="image/*,application/pdf,.doc,.docx"
                               className="hidden"
-                              id="image-upload"
+                              id={`image-upload-${selectedConversation}`}
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (file) {
-                                  // Handle image upload
-                                  console.log('Image uploaded:', file.name);
+                                if (file && selectedConversation) {
+                                  fileUploadMutation.mutate({ conversationId: selectedConversation, file });
                                 }
+                                e.target.value = '';
                               }}
                             />
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => document.getElementById('image-upload')?.click()}
-                              disabled={!currentConfig.realTimeMonitoring.allowIntercept}
+                              onClick={() => document.getElementById(`image-upload-${selectedConversation}`)?.click()}
+                              disabled={!currentConfig.realTimeMonitoring.allowIntercept || imageUploadStatus[selectedConversation || '']}
                             >
                               <Download className="h-3 w-3 mr-1" />
-                              Upload Image
+                              {imageUploadStatus[selectedConversation || ''] ? 'Uploading...' : 'Upload File'}
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              disabled={!currentConfig.realTimeMonitoring.allowIntercept}
-                            >
-                              <Smartphone className="h-3 w-3 mr-1" />
-                              Screen Share
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              disabled={!currentConfig.realTimeMonitoring.allowIntercept}
-                            >
-                              <Settings className="h-3 w-3 mr-1" />
-                              Request Control
-                            </Button>
+                            
+                            {!screenShareStatus[selectedConversation || '']?.active ? (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => selectedConversation && screenShareMutation.mutate({ 
+                                  conversationId: selectedConversation, 
+                                  action: 'start' 
+                                })}
+                                disabled={!currentConfig.realTimeMonitoring.allowIntercept || screenShareMutation.isPending}
+                              >
+                                <Smartphone className="h-3 w-3 mr-1" />
+                                {screenShareMutation.isPending ? 'Starting...' : 'Start Screen Share'}
+                              </Button>
+                            ) : (
+                              <div className="flex gap-1">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => selectedConversation && screenShareMutation.mutate({ 
+                                    conversationId: selectedConversation, 
+                                    action: 'stop' 
+                                  })}
+                                  disabled={screenShareMutation.isPending}
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  Stop Share
+                                </Button>
+                                {!screenShareStatus[selectedConversation || '']?.hasControl && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => selectedConversation && screenShareMutation.mutate({ 
+                                      conversationId: selectedConversation, 
+                                      action: 'request_control' 
+                                    })}
+                                    disabled={screenShareMutation.isPending}
+                                  >
+                                    <Settings className="h-3 w-3 mr-1" />
+                                    Request Control
+                                  </Button>
+                                )}
+                                {screenShareStatus[selectedConversation || '']?.hasControl && (
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-green-50 rounded text-xs text-green-700">
+                                    <CheckCircle className="h-3 w-3" />
+                                    Controlling
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                           
                           {/* Message input */}

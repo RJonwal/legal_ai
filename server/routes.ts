@@ -1751,10 +1751,13 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/livechat/config 200');
     console.log('Updating livechat config:', req.body);
     
+    // Store the updated config (in real app, save to database)
+    // For now, just acknowledge the update
     res.json({ 
       success: true, 
       message: 'Configuration updated successfully',
-      config: req.body
+      config: req.body,
+      timestamp: new Date().toISOString()
     });
   });
 
@@ -1939,6 +1942,87 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         bidirectionalSync: true,
         messagesInSync: true
       }
+    });
+  });
+
+  // Enhanced file upload endpoint for live chat
+  app.post("/api/admin/livechat/conversations/:id/upload", (req, res) => {
+    const { id } = req.params;
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/livechat/conversations/' + id + '/upload 200');
+    
+    // Mock file upload handling with better error simulation
+    const uploadSuccess = Math.random() > 0.1; // 90% success rate
+    
+    if (!uploadSuccess) {
+      return res.status(400).json({
+        success: false,
+        error: 'Upload failed',
+        message: 'File size too large or unsupported format'
+      });
+    }
+
+    const uploadedFile = {
+      id: 'file_' + Date.now(),
+      name: 'uploaded-file.' + (Math.random() > 0.5 ? 'jpg' : 'pdf'),
+      type: Math.random() > 0.5 ? 'image/jpeg' : 'application/pdf',
+      size: (Math.random() * 5 + 0.5).toFixed(1) + 'MB',
+      url: '/api/uploads/uploaded-file-' + Date.now(),
+      timestamp: new Date().toISOString()
+    };
+
+    res.json({
+      success: true,
+      message: 'File uploaded successfully',
+      file: uploadedFile
+    });
+  });
+
+  // Enhanced screen share request endpoint
+  app.post("/api/admin/livechat/conversations/:id/screen-share", (req, res) => {
+    const { id } = req.params;
+    const { action } = req.body; // 'start', 'stop', 'request_control'
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/livechat/conversations/' + id + '/screen-share 200');
+    console.log('Screen share action:', action, 'for conversation:', id);
+    
+    const sessionId = 'screen_' + Date.now();
+    
+    // Simulate different response messages based on action
+    let message = '';
+    let additionalData = {};
+    
+    switch (action) {
+      case 'start':
+        message = 'Screen share session started - waiting for user permission';
+        additionalData = {
+          permissionRequested: true,
+          permissionTimeout: 30000, // 30 seconds
+          viewUrl: `https://screen-share.example.com/view/${sessionId}`
+        };
+        break;
+      case 'stop':
+        message = 'Screen share session ended';
+        additionalData = {
+          sessionDuration: Math.floor(Math.random() * 600 + 60) + ' seconds'
+        };
+        break;
+      case 'request_control':
+        message = 'Control request sent to user - awaiting permission';
+        additionalData = {
+          controlRequested: true,
+          controlTimeout: 15000 // 15 seconds
+        };
+        break;
+      default:
+        message = 'Unknown screen share action';
+    }
+    
+    res.json({
+      success: true,
+      message,
+      sessionId,
+      action,
+      timestamp: new Date().toISOString(),
+      ...additionalData
     });
   });
 
