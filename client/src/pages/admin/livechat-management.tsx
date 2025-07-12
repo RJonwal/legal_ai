@@ -32,7 +32,8 @@ import {
   Globe,
   Smartphone,
   Download,
-  Eye
+  Eye,
+  X
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -136,6 +137,8 @@ export default function LiveChatManagement() {
   const queryClient = useQueryClient();
   const [newForwardEmail, setNewForwardEmail] = useState("");
   const [newTriggerKeyword, setNewTriggerKeyword] = useState("");
+  const [showSetupGuide, setShowSetupGuide] = useState(false);
+  const [showLiveChatMonitor, setShowLiveChatMonitor] = useState(false);
 
   // Default configuration
   const defaultConfig: LiveChatConfig = useMemo(() => ({
@@ -328,11 +331,102 @@ export default function LiveChatManagement() {
     });
   };
 
+  const getSetupInstructions = (providerType: string) => {
+    const instructions = {
+      crisp: {
+        title: "Crisp Chat Setup",
+        steps: [
+          "1. Go to https://crisp.chat and create an account",
+          "2. Navigate to Settings > Website Settings",
+          "3. Copy your Website ID from the installation code",
+          "4. Go to Settings > API",
+          "5. Generate a new API key with 'website:conversation:write' scope",
+          "6. Paste both values in the form above"
+        ],
+        docs: "https://docs.crisp.chat/guides/chatbox-sdks/"
+      },
+      intercom: {
+        title: "Intercom Setup", 
+        steps: [
+          "1. Sign in to your Intercom workspace",
+          "2. Go to Settings > Installation",
+          "3. Copy your App ID",
+          "4. Go to Developer Hub > Your Apps",
+          "5. Create a new app and get your access token",
+          "6. Paste both values in the form above"
+        ],
+        docs: "https://developers.intercom.com/installing-intercom/docs"
+      },
+      zendesk: {
+        title: "Zendesk Chat Setup",
+        steps: [
+          "1. Log into your Zendesk Chat dashboard",
+          "2. Go to Settings > Widget",
+          "3. Copy your Widget Key from the embed code",
+          "4. Go to Settings > API",
+          "5. Generate a new OAuth token",
+          "6. Paste both values in the form above"
+        ],
+        docs: "https://developer.zendesk.com/api-reference/live-chat/introduction/"
+      },
+      tawk: {
+        title: "Tawk.to Setup",
+        steps: [
+          "1. Create account at https://tawk.to",
+          "2. Add your website in the dashboard",
+          "3. Go to Administration > Channels",
+          "4. Copy your Property ID and Widget ID from the code",
+          "5. Generate API key in Administration > API",
+          "6. Paste values in the form above"
+        ],
+        docs: "https://help.tawk.to/article/api-introduction"
+      },
+      livechat: {
+        title: "LiveChat Setup",
+        steps: [
+          "1. Sign up at https://livechat.com",
+          "2. Go to Settings > Installation",
+          "3. Copy your License ID",
+          "4. Go to Developer Console > Apps",
+          "5. Create new app and get access token",
+          "6. Paste both values in the form above"
+        ],
+        docs: "https://developers.livechat.com/docs/"
+      },
+      drift: {
+        title: "Drift Setup",
+        steps: [
+          "1. Create account at https://drift.com",
+          "2. Go to Settings > Widget Setup",
+          "3. Copy your App ID from the installation code",
+          "4. Go to Settings > App Credentials",
+          "5. Generate new OAuth token",
+          "6. Paste both values in the form above"
+        ],
+        docs: "https://devdocs.drift.com/"
+      }
+    };
+    
+    return instructions[providerType as keyof typeof instructions] || {
+      title: "Generic Setup",
+      steps: ["Please refer to your provider's documentation for setup instructions"],
+      docs: ""
+    };
+  };
+
   const chatProviders = [
     { value: 'crisp', label: 'Crisp Chat', description: 'Modern customer messaging platform' },
     { value: 'intercom', label: 'Intercom', description: 'Customer messaging platform' },
     { value: 'zendesk', label: 'Zendesk Chat', description: 'Help desk software with live chat' },
     { value: 'freshchat', label: 'Freshchat', description: 'Modern messaging software' },
+    { value: 'tawk', label: 'Tawk.to', description: 'Free live chat software' },
+    { value: 'livechat', label: 'LiveChat', description: 'Customer service platform' },
+    { value: 'drift', label: 'Drift', description: 'Conversational marketing platform' },
+    { value: 'chatbot', label: 'Chatbot.com', description: 'Visual chatbot builder' },
+    { value: 'tidio', label: 'Tidio', description: 'Live chat and chatbots' },
+    { value: 'olark', label: 'Olark', description: 'Live chat for small business' },
+    { value: 'purechat', label: 'Pure Chat', description: 'Website chat widget' },
+    { value: 'chatra', label: 'Chatra', description: 'Live chat messenger' },
     { value: 'custom', label: 'Custom Integration', description: 'Your own chat system' }
   ];
 
@@ -719,6 +813,22 @@ export default function LiveChatManagement() {
                   Test Connection
                 </Button>
               </div>
+
+              <Separator className="my-6" />
+
+              <div className="text-center">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowSetupGuide(true)}
+                  className="w-full"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  View Setup Instructions for Chat Providers
+                </Button>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Step-by-step guide to integrate each chat provider with your application
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1010,7 +1120,10 @@ export default function LiveChatManagement() {
                       </div>
                     </Card>
                   </div>
-                  <Button className="w-full">
+                  <Button 
+                    className="w-full"
+                    onClick={() => setShowLiveChatMonitor(true)}
+                  >
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Open Live Chat Monitor
                   </Button>
@@ -1054,6 +1167,208 @@ export default function LiveChatManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Setup Guide Modal */}
+      {showSetupGuide && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-4xl max-h-[80vh] m-4">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Chat Provider Setup Guide
+                </CardTitle>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowSetupGuide(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardDescription>
+                Follow these instructions to integrate chat providers with your application
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-96">
+                <div className="space-y-6">
+                  {chatProviders.filter(p => p.value !== 'custom').map((provider) => {
+                    const instructions = getSetupInstructions(provider.value);
+                    return (
+                      <Card key={provider.value} className="p-4">
+                        <h3 className="font-semibold text-lg mb-2">{instructions.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-4">{provider.description}</p>
+                        <div className="space-y-2">
+                          {instructions.steps.map((step, index) => (
+                            <div key={index} className="text-sm">{step}</div>
+                          ))}
+                        </div>
+                        {instructions.docs && (
+                          <div className="mt-4">
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={instructions.docs} target="_blank" rel="noopener noreferrer">
+                                <Globe className="h-3 w-3 mr-1" />
+                                View Documentation
+                              </a>
+                            </Button>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Live Chat Monitor Modal */}
+      {showLiveChatMonitor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-6xl max-h-[90vh] m-4">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Live Chat Monitor
+                </CardTitle>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowLiveChatMonitor(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardDescription>
+                Monitor and manage active chat conversations in real-time
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[70vh]">
+                {/* Active Chats List */}
+                <Card className="lg:col-span-1">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Active Conversations</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <ScrollArea className="h-64">
+                      <div className="space-y-2 p-3">
+                        {[1,2,3,4,5].map((chat) => (
+                          <div key={chat} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">User {chat}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {chat % 2 === 0 ? 'AI Responding' : 'Waiting for response'}
+                                </div>
+                              </div>
+                              <Badge variant={chat % 2 === 0 ? 'default' : 'secondary'} className="text-xs">
+                                {chat % 2 === 0 ? 'AI' : 'Queue'}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+
+                {/* Chat Conversation */}
+                <Card className="lg:col-span-2">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Conversation with User 1</CardTitle>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-3 w-3 mr-1" />
+                          Intercept
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Users className="h-3 w-3 mr-1" />
+                          Escalate
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-80 mb-4">
+                      <div className="space-y-4">
+                        <div className="flex gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-xs">U</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="bg-gray-100 rounded-lg p-2 text-sm">
+                              Hi, I need help with filing a motion in court. What documents do I need?
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">2 minutes ago</div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-xs bg-blue-100">AI</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="bg-blue-50 rounded-lg p-2 text-sm">
+                              I'd be happy to help you with filing a motion. The required documents typically include:
+                              1. The motion document itself
+                              2. A supporting brief or memorandum
+                              3. Any relevant exhibits
+                              4. A certificate of service
+                              
+                              What type of motion are you looking to file?
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">1 minute ago</div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-xs">U</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="bg-gray-100 rounded-lg p-2 text-sm">
+                              It's a motion to dismiss. I think the case against me doesn't have merit.
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">30 seconds ago</div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-xs bg-blue-100">AI</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="bg-blue-50 rounded-lg p-2 text-sm border-l-4 border-blue-400">
+                              <div className="flex items-center gap-1 mb-1">
+                                <Bot className="h-3 w-3" />
+                                <span className="text-xs font-medium">AI is typing...</span>
+                              </div>
+                              For a motion to dismiss, you'll need to draft the motion citing specific legal grounds such as...
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </ScrollArea>
+                    
+                    <div className="border-t pt-4">
+                      <div className="flex gap-2">
+                        <Input placeholder="Type to intercept this conversation..." className="flex-1" />
+                        <Button size="sm">Send</Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
