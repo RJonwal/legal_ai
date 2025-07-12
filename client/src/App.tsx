@@ -24,7 +24,6 @@ import AdminAnalytics from "@/pages/admin/analytics";
 import AdminSystem from "@/pages/admin/system";
 import AdminBilling from "@/pages/admin/billing";
 import AdminAPIManagement from "@/pages/admin/api-management";
-import EmailSettings from "@/pages/admin/email-settings";
 import EmailManagement from "@/pages/admin/email-management";
 import LiveChatManagement from "@/pages/admin/livechat-management";
 import VoipManagement from "@/pages/admin/voip-management";
@@ -76,13 +75,13 @@ function App() {
               </AdminLayout>
             </Route>
 
-            <Route path="/admin/email-settings">
+            <Route path="/admin/email-management">
               <AdminLayout>
-                <EmailSettings />
+                <EmailManagement />
               </AdminLayout>
             </Route>
-
-            <Route path="/admin/email-management">
+            
+             <Route path="/admin/email-settings">
               <AdminLayout>
                 <EmailManagement />
               </AdminLayout>

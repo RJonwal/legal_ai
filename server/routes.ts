@@ -3345,6 +3345,74 @@ router.post("/admin/email/test", (req: Request, res: Response) => {
   });
 });
 
+// Send email response
+router.post("/admin/email/respond", (req: Request, res: Response) => {
+  const { emailId, content, signature } = req.body;
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/respond 200`);
+  res.json({ 
+    success: true, 
+    message: `Response sent for email ${emailId}`,
+    responseId: 'resp_' + Date.now()
+  });
+});
+
+// Intercept AI email response
+router.post("/admin/email/intercept", (req: Request, res: Response) => {
+  const { emailId, action } = req.body;
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/intercept 200`);
+  res.json({ 
+    success: true, 
+    message: `Email ${emailId} ${action}`,
+    interceptedAt: new Date().toISOString()
+  });
+});
+
+// Get email signatures
+router.get("/admin/email/signatures", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/signatures 200`);
+  res.json([
+    {
+      id: '1',
+      name: 'Default Support',
+      content: 'Best regards,\nLegalAI Pro Support Team\n\nEmail: support@legalai.pro\nPhone: +1 (555) 123-4567\nWebsite: https://legalai.pro',
+      isDefault: true,
+      department: 'support'
+    },
+    {
+      id: '2',
+      name: 'Legal Team',
+      content: 'Best regards,\nLegalAI Pro Legal Team\n\nEmail: legal@legalai.pro\nPhone: +1 (555) 123-4567\nWebsite: https://legalai.pro',
+      isDefault: false,
+      department: 'legal'
+    }
+  ]);
+});
+
+// Create email signature
+router.post("/admin/email/signatures", (req: Request, res: Response) => {
+  const signature = {
+    ...req.body,
+    id: Date.now().toString(),
+    isDefault: false
+  };
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/signatures 201`);
+  res.status(201).json(signature);
+});
+
+// Update email signature
+router.put("/admin/email/signatures/:id", (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/signatures/${id} 200`);
+  res.json({ success: true, signature: { ...req.body, id } });
+});
+
+// Delete email signature
+router.delete("/admin/email/signatures/:id", (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/email/signatures/${id} 200`);
+  res.json({ success: true, message: `Signature ${id} deleted` });
+});
+
   // This API defines report export and scheduling endpoints.
 
 // Mock cases data

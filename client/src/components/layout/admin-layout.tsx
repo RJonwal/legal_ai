@@ -33,6 +33,7 @@ import {
   FileText
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Link } from "wouter";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -95,12 +96,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       url: "/admin/page-management",
       icon: FileText,
       isActive: location === "/admin/page-management"
-    },
-    {
-      title: "Email Settings",
-      url: "/admin/email-settings",
-      icon: Settings,
-      isActive: location === "/admin/email-settings"
     },
     {
       title: "System",
