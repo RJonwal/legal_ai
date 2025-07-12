@@ -1198,9 +1198,7 @@ export default function LiveChatManagement() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a chat provider">
-                      {chatProviders.find(p => p.value === currentConfig.plugin.type)?.label || 'Select a chat provider'}
-                    </SelectValue>
+                    <SelectValue placeholder="Select a chat provider" />
                   </SelectTrigger>
                   <SelectContent>
                     {chatProviders.map((provider) => (

@@ -1602,161 +1602,184 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
+  // LiveChat configuration state management
+  let liveChatConfigState = {
+    enabled: true,
+    dashboardEnabled: true,
+    landingEnabled: false,
+    provider: 'internal',
+    plugin: {
+      name: 'Crisp Chat',
+      type: 'crisp',
+      apiKey: '',
+      websiteId: '',
+      appId: '',
+      widgetKey: '',
+      subdomain: '',
+      domain: '',
+      propertyId: '',
+      widgetId: '',
+      licenseId: '',
+      botId: '',
+      publicKey: '',
+      siteId: '',
+      chatId: '',
+      customEndpoint: ''
+    },</old_str>
+      dashboardPermissions: {
+      legalAdvice: true,
+      caseAnalysis: true,
+      documentReview: true,
+      legalResearch: true,
+      procedureGuidance: true,
+      courtDeadlines: true,
+      filingRequirements: true,
+      jurisdictionHelp: true,
+      legalFormAssistance: true,
+      caseStrategyDiscussion: false,
+      clientOnboarding: true,
+      caseStatusUpdates: true,
+      appointmentScheduling: true,
+      documentRequests: true,
+      progressTracking: true,
+      caseFileAccess: true,
+      clientPortalNavigation: true,
+      serviceInformation: true,
+      pricingQuotes: true,
+      billingSupport: true,
+      paymentProcessing: true,
+      subscriptionChanges: true,
+      refundInquiries: false,
+      planUpgrades: true,
+      navigationAssistance: true,
+      featureExplanation: true,
+      troubleshooting: true,
+      accountSetup: true,
+      integrationSupport: true,
+      dataExport: true,
+      documentGeneration: true,
+      reportGeneration: true,
+      auditAccess: false,
+      userAccountManagement: true,
+      accessPermissions: false,
+      systemStatus: true,
+      urgentMatters: true,
+      escalationManagement: true,
+      emergencyContact: true,
+      afterHoursSupport: true,
+      crisisEscalation: true
+    },
+    landingPermissions: {
+      legalAdvice: false,
+      caseAnalysis: false,
+      documentReview: false,
+      legalResearch: true,
+      procedureGuidance: true,
+      courtDeadlines: false,
+      filingRequirements: false,
+      jurisdictionHelp: true,
+      legalFormAssistance: false,
+      caseStrategyDiscussion: false,
+      clientOnboarding: true,
+      caseStatusUpdates: false,
+      appointmentScheduling: true,
+      documentRequests: false,
+      progressTracking: false,
+      caseFileAccess: false,
+      clientPortalNavigation: true,
+      serviceInformation: true,
+      pricingQuotes: true,
+      billingSupport: false,
+      paymentProcessing: false,
+      subscriptionChanges: false,
+      refundInquiries: false,
+      planUpgrades: true,
+      navigationAssistance: true,
+      featureExplanation: true,
+      troubleshooting: false,
+      accountSetup: true,
+      integrationSupport: false,
+      dataExport: false,
+      documentGeneration: false,
+      reportGeneration: false,
+      auditAccess: false,
+      userAccountManagement: false,
+      accessPermissions: false,
+      systemStatus: false,
+      urgentMatters: false,
+      escalationManagement: true,
+      emergencyContact: true,
+      afterHoursSupport: false,
+      crisisEscalation: false
+    },
+    workingHours: {
+      enabled: true,
+      timezone: 'UTC',
+      schedule: {
+        monday: { start: '09:00', end: '17:00', active: true },
+        tuesday: { start: '09:00', end: '17:00', active: true },
+        wednesday: { start: '09:00', end: '17:00', active: true },
+        thursday: { start: '09:00', end: '17:00', active: true },
+        friday: { start: '09:00', end: '17:00', active: true },
+        saturday: { start: '10:00', end: '14:00', active: false },
+        sunday: { start: '10:00', end: '14:00', active: false }
+      }
+    },
+    autoResponses: {
+      welcomeMessage: 'Welcome to LegalAI Pro support! How can I help you today?',
+      offlineMessage: 'Thank you for contacting us. We are currently offline but will respond soon.',
+      escalationMessage: 'Let me connect you with a human agent who can better assist you.',
+      queueMessage: 'You are currently #{{position}} in the queue. Estimated wait time: {{waitTime}} minutes.'
+    },
+    humanHandoff: {
+      enabled: true,
+      triggerKeywords: ['human', 'agent', 'speak to someone', 'urgent', 'complaint', 'refund'],
+      escalationThreshold: 3,
+      forwardToEmails: ['support@legalai.pro'],
+      autoEscalateTime: 15
+    },
+    realTimeMonitoring: {
+      enabled: true,
+      allowIntercept: true,
+      showTypingIndicator: true,
+      supervisorNotifications: true
+    },
+    aiSettings: {
+      confidenceThreshold: 0.7,
+      maxResponseTime: 30,
+      fallbackToHuman: true,
+      learningMode: true
+    }
+  };
+
   // LiveChat configuration endpoints
   app.get("/api/admin/livechat/config", (req, res) => {
     console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/config 200');
     
-    const config = {
-      enabled: true,
-      dashboardEnabled: true,
-      landingEnabled: false,
-      provider: 'internal',
-      plugin: {
-        name: 'Crisp Chat',
-        type: 'crisp',
-        apiKey: '',
-        websiteId: '',
-        customEndpoint: ''
-      },
-      dashboardPermissions: {
-        legalAdvice: true,
-        caseAnalysis: true,
-        documentReview: true,
-        legalResearch: true,
-        procedureGuidance: true,
-        courtDeadlines: true,
-        filingRequirements: true,
-        jurisdictionHelp: true,
-        legalFormAssistance: true,
-        caseStrategyDiscussion: false,
-        clientOnboarding: true,
-        caseStatusUpdates: true,
-        appointmentScheduling: true,
-        documentRequests: true,
-        progressTracking: true,
-        caseFileAccess: true,
-        clientPortalNavigation: true,
-        serviceInformation: true,
-        pricingQuotes: true,
-        billingSupport: true,
-        paymentProcessing: true,
-        subscriptionChanges: true,
-        refundInquiries: false,
-        planUpgrades: true,
-        navigationAssistance: true,
-        featureExplanation: true,
-        troubleshooting: true,
-        accountSetup: true,
-        integrationSupport: true,
-        dataExport: true,
-        documentGeneration: true,
-        reportGeneration: true,
-        auditAccess: false,
-        userAccountManagement: true,
-        accessPermissions: false,
-        systemStatus: true,
-        urgentMatters: true,
-        escalationManagement: true,
-        emergencyContact: true,
-        afterHoursSupport: true,
-        crisisEscalation: true
-      },
-      landingPermissions: {
-        legalAdvice: false,
-        caseAnalysis: false,
-        documentReview: false,
-        legalResearch: true,
-        procedureGuidance: true,
-        courtDeadlines: false,
-        filingRequirements: false,
-        jurisdictionHelp: true,
-        legalFormAssistance: false,
-        caseStrategyDiscussion: false,
-        clientOnboarding: true,
-        caseStatusUpdates: false,
-        appointmentScheduling: true,
-        documentRequests: false,
-        progressTracking: false,
-        caseFileAccess: false,
-        clientPortalNavigation: true,
-        serviceInformation: true,
-        pricingQuotes: true,
-        billingSupport: false,
-        paymentProcessing: false,
-        subscriptionChanges: false,
-        refundInquiries: false,
-        planUpgrades: true,
-        navigationAssistance: true,
-        featureExplanation: true,
-        troubleshooting: false,
-        accountSetup: true,
-        integrationSupport: false,
-        dataExport: false,
-        documentGeneration: false,
-        reportGeneration: false,
-        auditAccess: false,
-        userAccountManagement: false,
-        accessPermissions: false,
-        systemStatus: false,
-        urgentMatters: false,
-        escalationManagement: true,
-        emergencyContact: true,
-        afterHoursSupport: false,
-        crisisEscalation: false
-      },
-      workingHours: {
-        enabled: true,
-        timezone: 'UTC',
-        schedule: {
-          monday: { start: '09:00', end: '17:00', active: true },
-          tuesday: { start: '09:00', end: '17:00', active: true },
-          wednesday: { start: '09:00', end: '17:00', active: true },
-          thursday: { start: '09:00', end: '17:00', active: true },
-          friday: { start: '09:00', end: '17:00', active: true },
-          saturday: { start: '10:00', end: '14:00', active: false },
-          sunday: { start: '10:00', end: '14:00', active: false }
-        }
-      },
-      autoResponses: {
-        welcomeMessage: 'Welcome to LegalAI Pro support! How can I help you today?',
-        offlineMessage: 'Thank you for contacting us. We are currently offline but will respond soon.',
-        escalationMessage: 'Let me connect you with a human agent who can better assist you.',
-        queueMessage: 'You are currently #{{position}} in the queue. Estimated wait time: {{waitTime}} minutes.'
-      },
-      humanHandoff: {
-        enabled: true,
-        triggerKeywords: ['human', 'agent', 'speak to someone', 'urgent', 'complaint', 'refund'],
-        escalationThreshold: 3,
-        forwardToEmails: ['support@legalai.pro'],
-        autoEscalateTime: 15
-      },
-      realTimeMonitoring: {
-        enabled: true,
-        allowIntercept: true,
-        showTypingIndicator: true,
-        supervisorNotifications: true
-      },
-      aiSettings: {
-        confidenceThreshold: 0.7,
-        maxResponseTime: 30,
-        fallbackToHuman: true,
-        learningMode: true
-      }
-    };
-    
-    res.json(config);
+    res.json(liveChatConfigState);
   });
 
   app.put("/api/admin/livechat/config", (req, res) => {
     console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/livechat/config 200');
     console.log('Updating livechat config:', req.body);
     
+    // Validate the plugin configuration
+    if (req.body.plugin && req.body.plugin.type) {
+      console.log('Plugin type updated to:', req.body.plugin.type);
+      console.log('Plugin name updated to:', req.body.plugin.name);
+    }
+    
+    // Merge the updates into the existing state
+    liveChatConfigState = {
+      ...liveChatConfigState,
+      ...req.body
+    };
+    
     // Store the updated config (in real app, save to database)
-    // For now, just acknowledge the update
     res.json({ 
       success: true, 
       message: 'Configuration updated successfully',
-      config: req.body,
+      config: liveChatConfigState,
       timestamp: new Date().toISOString()
     });
   });
