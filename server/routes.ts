@@ -1769,7 +1769,12 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         status: 'active',
         assignedTo: 'ai',
         messageCount: 5,
-        createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString()
+        source: 'dashboard', // Track source: 'dashboard' or 'landing'
+        hasUploads: true,
+        hasScreenShare: false,
+        createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+        externalProvider: 'crisp', // Track which external provider if any
+        syncedWithProvider: true
       },
       {
         id: 'conv_002',
@@ -1778,7 +1783,12 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         status: 'pending',
         assignedTo: 'queue',
         messageCount: 3,
-        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+        source: 'landing',
+        hasUploads: false,
+        hasScreenShare: false,
+        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        externalProvider: 'crisp',
+        syncedWithProvider: true
       },
       {
         id: 'conv_003',
@@ -1787,7 +1797,12 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         status: 'active',
         assignedTo: 'human',
         messageCount: 8,
-        createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString()
+        source: 'dashboard',
+        hasUploads: false,
+        hasScreenShare: true,
+        createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+        externalProvider: 'crisp',
+        syncedWithProvider: true
       }
     ];
     
@@ -1804,7 +1819,15 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         conversationId: id,
         content: 'Hello, I need help with my legal case',
         sender: 'user',
-        timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString()
+        timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+        attachments: [
+          {
+            type: 'image',
+            name: 'contract-scan.jpg',
+            url: '/api/uploads/contract-scan.jpg',
+            size: '2.1MB'
+          }
+        ]
       },
       {
         id: 'msg_002',
@@ -1819,6 +1842,18 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         content: 'I need to understand the filing requirements for my motion',
         sender: 'user',
         timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'msg_004',
+        conversationId: id,
+        content: 'I can help you with that. Let me share my screen to show you the court website',
+        sender: 'user',
+        timestamp: new Date(Date.now() - 7 * 60 * 1000).toISOString(),
+        screenShare: {
+          active: true,
+          sessionId: 'screen_001',
+          allowControl: false
+        }
       }
     ];
     
@@ -1847,6 +1882,63 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       success: true,
       message: 'Conversation escalated to human agent',
       escalatedAt: new Date().toISOString()
+    });
+  });
+
+  // File upload endpoint for live chat
+  app.post("/api/admin/livechat/conversations/:id/upload", (req, res) => {
+    const { id } = req.params;
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/livechat/conversations/' + id + '/upload 200');
+    
+    // Mock file upload handling
+    const uploadedFile = {
+      id: 'file_' + Date.now(),
+      name: 'uploaded-image.jpg',
+      type: 'image/jpeg',
+      size: '1.2MB',
+      url: '/api/uploads/uploaded-image.jpg',
+      timestamp: new Date().toISOString()
+    };
+
+    res.json({
+      success: true,
+      message: 'File uploaded successfully',
+      file: uploadedFile
+    });
+  });
+
+  // Screen share request endpoint
+  app.post("/api/admin/livechat/conversations/:id/screen-share", (req, res) => {
+    const { id } = req.params;
+    const { action } = req.body; // 'start', 'stop', 'request_control'
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/livechat/conversations/' + id + '/screen-share 200');
+    
+    const sessionId = 'screen_' + Date.now();
+    
+    res.json({
+      success: true,
+      message: `Screen share ${action} successful`,
+      sessionId,
+      action,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Provider sync status endpoint
+  app.get("/api/admin/livechat/provider-sync/:id", (req, res) => {
+    const { id } = req.params;
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/provider-sync/' + id + ' 200');
+    
+    res.json({
+      success: true,
+      conversationId: id,
+      syncStatus: {
+        isConnected: true,
+        lastSync: new Date().toISOString(),
+        provider: 'crisp',
+        bidirectionalSync: true,
+        messagesInSync: true
+      }
     });
   });
 

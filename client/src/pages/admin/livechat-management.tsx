@@ -1094,13 +1094,27 @@ export default function LiveChatManagement() {
                     handleUpdateConfig({
                       plugin: {
                         ...currentConfig.plugin,
-                        type: type as any
+                        type: type as any,
+                        name: chatProviders.find(p => p.value === type)?.label || ''
                       }
                     })
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select a chat provider">
+                      {currentConfig.plugin.type ? (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {chatProviders.find(p => p.value === currentConfig.plugin.type)?.label}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            ({chatProviders.find(p => p.value === currentConfig.plugin.type)?.description})
+                          </span>
+                        </div>
+                      ) : (
+                        "Select a chat provider"
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {chatProviders.map((provider) => (
@@ -1190,6 +1204,13 @@ export default function LiveChatManagement() {
                         'Not connected - Please add your API credentials'
                       }
                     </p>
+                    {currentConfig.plugin.apiKey && (
+                      <div className="mt-2 text-xs text-blue-600">
+                        <div>✓ Bidirectional sync enabled</div>
+                        <div>✓ All chats appear in both systems</div>
+                        <div>✓ Messages synced in real-time</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1707,10 +1728,40 @@ export default function LiveChatManagement() {
                                 conversation.status === 'pending' ? 'bg-orange-500' : 'bg-gray-500'
                               }`}></div>
                               <div className="flex-1">
-                                <div className="font-medium text-sm">{conversation.user.name}</div>
+                                <div className="flex items-center gap-2">
+                                  <div className="font-medium text-sm">{conversation.user.name}</div>
+                                  <Badge 
+                                    variant={conversation.source === 'dashboard' ? 'default' : 'outline'} 
+                                    className="text-xs"
+                                  >
+                                    {conversation.source === 'dashboard' ? (
+                                      <div className="flex items-center gap-1">
+                                        <Settings className="h-3 w-3" />
+                                        Dashboard
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-1">
+                                        <Globe className="h-3 w-3" />
+                                        Landing
+                                      </div>
+                                    )}
+                                  </Badge>
+                                </div>
                                 <div className="text-xs text-muted-foreground truncate">
                                   {conversation.lastMessage}
                                 </div>
+                                {conversation.hasUploads && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Download className="h-3 w-3 text-blue-500" />
+                                    <span className="text-xs text-blue-500">Has attachments</span>
+                                  </div>
+                                )}
+                                {conversation.hasScreenShare && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Smartphone className="h-3 w-3 text-green-500" />
+                                    <span className="text-xs text-green-500">Screen sharing</span>
+                                  </div>
+                                )}
                               </div>
                               <div className="text-right">
                                 <Badge variant={conversation.assignedTo === 'ai' ? 'default' : 'secondary'} className="text-xs">
@@ -1793,6 +1844,62 @@ export default function LiveChatManagement() {
                                 message.sender === 'human' ? 'bg-green-50' : 'bg-gray-100'
                               }`}>
                                 {message.content}
+                                {message.attachments && message.attachments.length > 0 && (
+                                  <div className="mt-2 space-y-2">
+                                    {message.attachments.map((attachment: any, index: number) => (
+                                      <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border">
+                                        {attachment.type === 'image' ? (
+                                          <>
+                                            <img 
+                                              src={attachment.url} 
+                                              alt={attachment.name}
+                                              className="h-16 w-16 object-cover rounded"
+                                            />
+                                            <div className="flex-1">
+                                              <div className="font-medium text-xs">{attachment.name}</div>
+                                              <div className="text-xs text-muted-foreground">{attachment.size}</div>
+                                            </div>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Download className="h-4 w-4" />
+                                            <div className="flex-1">
+                                              <div className="font-medium text-xs">{attachment.name}</div>
+                                              <div className="text-xs text-muted-foreground">{attachment.size}</div>
+                                            </div>
+                                          </>
+                                        )}
+                                        <Button size="sm" variant="outline">
+                                          <Download className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {message.screenShare && (
+                                  <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                                    <div className="flex items-center gap-2">
+                                      <Smartphone className="h-4 w-4 text-green-600" />
+                                      <span className="text-sm text-green-700">Screen sharing session</span>
+                                      {message.screenShare.active && (
+                                        <Badge variant="outline" className="text-xs bg-green-100">
+                                          Active
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {message.screenShare.active && (
+                                      <div className="mt-2 flex gap-2">
+                                        <Button size="sm" variant="outline">
+                                          <Eye className="h-3 w-3 mr-1" />
+                                          View Screen
+                                        </Button>
+                                        <Button size="sm" variant="outline">
+                                          Request Control
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
                                 {new Date(message.timestamp).toLocaleTimeString()}
@@ -1809,35 +1916,87 @@ export default function LiveChatManagement() {
                     
                     {selectedConversation && (
                       <div className="border-t pt-4">
-                        <div className="flex gap-2">
-                          <Input 
-                            placeholder="Type to intercept this conversation..." 
-                            className="flex-1"
-                            value={interceptMessage}
-                            onChange={(e) => setInterceptMessage(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && interceptMessage.trim()) {
-                                interceptMutation.mutate({ 
-                                  conversationId: selectedConversation, 
-                                  message: interceptMessage 
-                                });
-                              }
-                            }}
-                          />
-                          <Button 
-                            size="sm"
-                            onClick={() => {
-                              if (interceptMessage.trim()) {
-                                interceptMutation.mutate({ 
-                                  conversationId: selectedConversation, 
-                                  message: interceptMessage 
-                                });
-                              }
-                            }}
-                            disabled={!interceptMessage.trim() || isIntercepting}
-                          >
-                            {isIntercepting ? 'Sending...' : 'Send'}
-                          </Button>
+                        <div className="space-y-3">
+                          {/* File upload and screen share controls */}
+                          <div className="flex gap-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              id="image-upload"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  // Handle image upload
+                                  console.log('Image uploaded:', file.name);
+                                }
+                              }}
+                            />
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => document.getElementById('image-upload')?.click()}
+                              disabled={!currentConfig.realTimeMonitoring.allowIntercept}
+                            >
+                              <Download className="h-3 w-3 mr-1" />
+                              Upload Image
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              disabled={!currentConfig.realTimeMonitoring.allowIntercept}
+                            >
+                              <Smartphone className="h-3 w-3 mr-1" />
+                              Screen Share
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              disabled={!currentConfig.realTimeMonitoring.allowIntercept}
+                            >
+                              <Settings className="h-3 w-3 mr-1" />
+                              Request Control
+                            </Button>
+                          </div>
+                          
+                          {/* Message input */}
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="Type to intercept this conversation..." 
+                              className="flex-1"
+                              value={interceptMessage}
+                              onChange={(e) => setInterceptMessage(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && interceptMessage.trim()) {
+                                  interceptMutation.mutate({ 
+                                    conversationId: selectedConversation, 
+                                    message: interceptMessage 
+                                  });
+                                }
+                              }}
+                            />
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                if (interceptMessage.trim()) {
+                                  interceptMutation.mutate({ 
+                                    conversationId: selectedConversation, 
+                                    message: interceptMessage 
+                                  });
+                                }
+                              }}
+                              disabled={!interceptMessage.trim() || isIntercepting}
+                            >
+                              {isIntercepting ? 'Sending...' : 'Send'}
+                            </Button>
+                          </div>
+
+                          {/* Permission notice */}
+                          {!currentConfig.realTimeMonitoring.allowIntercept && (
+                            <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                              Note: Some features are disabled. Enable "Allow Human Intercept" in monitoring settings to access file upload and screen sharing.
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
