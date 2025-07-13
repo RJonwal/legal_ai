@@ -872,4 +872,151 @@ router.put("/system/maintenance/mode", (req: Request, res: Response) => {
   });
 });
 
+// Global Prompt Management
+let globalPrompts = [
+  {
+    id: "1",
+    name: "Core Legal AI System Prompt",
+    content: `You are a senior legal AI assistant with 20+ years of experience in legal practice. Your primary role is to provide strategic legal analysis, case management guidance, and document generation support.
+
+CORE PRINCIPLES:
+1. Always maintain professional legal standards
+2. Provide strategic thinking and proactive recommendations
+3. Think like an experienced attorney, not just a document generator
+4. Consider all legal implications and potential outcomes
+5. Offer actionable next steps for case progression
+
+CAPABILITIES:
+- Legal case analysis and strategy development
+- Document generation (motions, briefs, contracts, letters)
+- Legal research and precedent identification
+- Risk assessment and mitigation strategies
+- Client communication guidance
+- Court procedure and deadline management
+
+IMPORTANT DISCLAIMERS:
+- This service does not create an attorney-client relationship
+- All outputs are for informational purposes only
+- Users should consult with licensed attorneys for legal advice
+- Do not provide advice on illegal activities
+
+RESPONSE FORMAT:
+- Be concise but comprehensive
+- Use professional legal language
+- Provide specific actionable recommendations
+- Include relevant legal citations when appropriate
+- Always suggest next steps for case progression
+
+Remember: You are not just answering questions - you are providing strategic legal guidance to help users achieve their legal objectives effectively.`,
+    category: 'system',
+    isActive: true,
+    lastModified: "2024-01-15T10:00:00Z",
+    version: 3,
+    description: "Main system prompt that defines the AI's behavior and capabilities"
+  }
+];
+
+// Get all global prompts
+router.get("/global-prompts", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/global-prompts 200`);
+  res.json(globalPrompts);
+});
+
+// Get single global prompt
+router.get("/global-prompts/:id", (req: Request, res: Response) => {
+  const { id } = req.params;
+  const prompt = globalPrompts.find(p => p.id === id);
+
+  if (!prompt) {
+    return res.status(404).json({ error: "Prompt not found" });
+  }
+
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/global-prompts/${id} 200`);
+  res.json(prompt);
+});
+
+// Create new global prompt
+router.post("/global-prompts", (req: Request, res: Response) => {
+  try {
+    const newPrompt = {
+      id: Date.now().toString(),
+      ...req.body,
+      lastModified: new Date().toISOString(),
+      version: 1
+    };
+
+    globalPrompts.push(newPrompt);
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/global-prompts 201`);
+    res.status(201).json(newPrompt);
+  } catch (error) {
+    console.error("Error creating prompt:", error);
+    res.status(500).json({ error: "Failed to create prompt" });
+  }
+});
+
+// Update global prompt
+router.put("/global-prompts/:id", (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const promptIndex = globalPrompts.findIndex(p => p.id === id);
+
+    if (promptIndex === -1) {
+      return res.status(404).json({ error: "Prompt not found" });
+    }
+
+    globalPrompts[promptIndex] = {
+      ...globalPrompts[promptIndex],
+      ...req.body,
+      lastModified: new Date().toISOString(),
+      version: globalPrompts[promptIndex].version + 1
+    };
+
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/global-prompts/${id} 200`);
+    res.json(globalPrompts[promptIndex]);
+  } catch (error) {
+    console.error("Error updating prompt:", error);
+    res.status(500).json({ error: "Failed to update prompt" });
+  }
+});
+
+// Delete global prompt
+router.delete("/global-prompts/:id", (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const promptIndex = globalPrompts.findIndex(p => p.id === id);
+
+    if (promptIndex === -1) {
+      return res.status(404).json({ error: "Prompt not found" });
+    }
+
+    globalPrompts.splice(promptIndex, 1);
+    console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/global-prompts/${id} 200`);
+    res.json({ success: true, message: "Prompt deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting prompt:", error);
+    res.status(500).json({ error: "Failed to delete prompt" });
+  }
+});
+
+// Toggle prompt active status
+router.patch("/global-prompts/:id/toggle", (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const promptIndex = globalPrompts.findIndex(p => p.id === id);
+
+    if (promptIndex === -1) {
+      return res.status(404).json({ error: "Prompt not found" });
+    }
+
+    globalPrompts[promptIndex].isActive = !globalPrompts[promptIndex].isActive;
+    globalPrompts[promptIndex].lastModified = new Date().toISOString();
+
+    console.log(`${new Date().toLocaleTimeString()} [express] PATCH /api/admin/global-prompts/${id}/toggle 200`);
+    res.json(globalPrompts[promptIndex]);
+  } catch (error) {
+    console.error("Error toggling prompt:", error);
+    res.status(500).json({ error: "Failed to toggle prompt status" });
+  }
+});
+
 export default router;

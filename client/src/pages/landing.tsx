@@ -39,6 +39,23 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
 
+  // Load landing page configuration
+  const { data: landingConfig } = useQuery({
+    queryKey: ['landing-config'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/landing-config');
+      return response.json();
+    }
+  });
+
+  const { data: brandingConfig } = useQuery({
+    queryKey: ['branding-config'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/branding-config');
+      return response.json();
+    }
+  });
+
   const handleGetStarted = () => {
     setLocation("/dashboard");
   };
@@ -63,7 +80,7 @@ export default function Landing() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <Scale className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">LegalAI Pro</span>
+              <span className="text-xl font-bold text-gray-900">{brandingConfig?.brand?.companyName || "LegalAI Pro"}</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-blue-600 transition-colors">Features</a>
@@ -91,12 +108,11 @@ export default function Landing() {
               AI-Powered Legal Assistant
             </Badge>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 tracking-tight">
-              Your AI Legal
+              {landingConfig?.hero?.title || "Your AI Legal"}
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Partner</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed">
-              Revolutionize your legal practice with AI-powered case management, document generation, 
-              and strategic analysis. Built for attorneys and pro se litigants alike.
+              {landingConfig?.hero?.subtitle || "Revolutionize your legal practice with AI-powered case management, document generation, and strategic analysis. Built for attorneys and pro se litigants alike."}
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <Button 
@@ -104,7 +120,7 @@ export default function Landing() {
                 onClick={handleGetStarted}
                 className="bg-blue-600 hover:bg-blue-700 px-8 py-4 text-lg font-semibold"
               >
-                Start Free Trial
+                {landingConfig?.hero?.ctaText || "Start Free Trial"}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
