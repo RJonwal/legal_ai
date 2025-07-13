@@ -5,17 +5,73 @@ import { openaiService } from "./services/openai";
 import { insertChatMessageSchema, insertDocumentSchema, insertTimelineSchema } from "@shared/schema";
 import { z } from "zod";
 import adminRoutes from "./routes/admin";
+import authRoutes from "./routes/auth";
+import paymentRoutes from "./routes/payment";
+import uploadRoutes from "./routes/uploads";
+import { authenticateToken, type AuthRequest } from "./services/auth";
 import { Request, Response } from "express";
+import rateLimit from "express-rate-limit";
+import express from "express";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get current user (mock for now)
-  app.get("/api/user", async (req, res) => {
+  // Rate limiting
+  const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: "Too many requests from this IP, please try again later"
+  });
+
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per windowMs for auth routes
+    message: "Too many authentication attempts, please try again later"
+  });
+
+  // Apply rate limiting
+  app.use("/api", generalLimiter);
+  app.use("/api/auth/login", authLimiter);
+  app.use("/api/auth/register", authLimiter);
+  app.use("/api/auth/forgot-password", authLimiter);
+
+  // Raw body parser for Stripe webhooks
+  app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
+
+  // Authentication routes
+  app.use("/api/auth", authRoutes);
+
+  // Payment routes
+  app.use("/api/payment", paymentRoutes);
+
+  // File upload routes
+  app.use("/api/uploads", uploadRoutes);
+
+  // Admin routes
+  app.use("/api/admin", adminRoutes);
+
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      version: "1.0.0"
+    });
+  });
+
+  // Get current user (authenticated)
+  app.get("/api/user", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const user = await storage.getUser(1); // Mock user ID
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.json(user);
+      const user = req.user!;
+      res.json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        userType: user.userType,
+        isVerified: user.isVerified,
+        subscriptionStatus: user.subscriptionStatus,
+        createdAt: user.createdAt
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ 
@@ -26,9 +82,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user cases
-  app.get("/api/cases", async (req, res) => {
+  app.get("/api/cases", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const cases = await storage.getCasesByUser(1); // Mock user ID
+      const userId = req.user!.id;
+      const cases = await storage.getCasesByUser(userId);
       res.json(cases);
     } catch (error) {
       res.status(500).json({ message: "Failed to get cases" });
@@ -36,9 +93,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get recent cases (top 3 most recently accessed)
-  app.get("/api/cases/recent", async (req, res) => {
+  app.get("/api/cases/recent", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const recentCases = await storage.getRecentCases(1, 3); // Get top 3 recent cases for user
+      const userId = req.user!.id;
+      const recentCases = await storage.getRecentCases(userId, 3);
       res.json(recentCases);
     } catch (error) {
       res.status(500).json({ message: "Failed to get recent cases" });
@@ -46,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Search cases
-  app.get("/api/cases/search", async (req, res) => {
+  app.get("/api/cases/search", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { q } = req.query;
       if (!q || typeof q !== 'string') {

@@ -6,13 +6,21 @@ import {
   type Document, type InsertDocument,
   type TimelineEvent, type InsertTimelineEvent
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, like, or, and } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User>;
+  updateUserStripe(id: number, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User>;
+  verifyUser(id: number): Promise<User>;
+  updatePassword(id: number, hashedPassword: string): Promise<User>;
+  setResetToken(email: string, token: string, expiry: Date): Promise<User | undefined>;
 
   // Case operations
   getCase(id: number): Promise<Case | undefined>;
@@ -481,4 +489,6 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from "./database-storage";
+
+export const storage = new DatabaseStorage();
