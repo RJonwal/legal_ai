@@ -121,7 +121,7 @@ export class RateLimiter {
 // Create rate limiters for different endpoints
 export const rateLimiters = {
   api: new RateLimiter('api', 60000, 100), // 100 requests per minute
-  auth: new RateLimiter('auth', 300000, 5), // 5 requests per 5 minutes
+  auth: new RateLimiter('auth', 300000, 50), // 50 requests per 5 minutes
   upload: new RateLimiter('upload', 3600000, 20), // 20 requests per hour
   export: new RateLimiter('export', 3600000, 10) // 10 requests per hour
 };

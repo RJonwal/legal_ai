@@ -225,7 +225,7 @@ export const securityMiddleware = {
       const clientIP = req.ip || req.connection.remoteAddress;
       const now = Date.now();
       const windowMs = 15 * 60 * 1000; // 15 minutes
-      const maxRequests = 100;
+      const maxRequests = 1000;
       
       if (!requests.has(clientIP)) {
         requests.set(clientIP, { count: 1, resetTime: now + windowMs });
