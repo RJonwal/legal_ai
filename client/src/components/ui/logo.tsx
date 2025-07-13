@@ -6,36 +6,60 @@ import { apiRequest } from "@/lib/queryClient";
 interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary';
 }
 
-interface LogoConfig {
-  logoUrl?: string;
-  companyName: string;
-  showText: boolean;
-  logoHeight: number;
-  logoWidth: number;
+interface BrandingConfig {
+  logo: {
+    primaryLogo: string | null;
+    secondaryLogo: string | null;
+    logoHeight: number;
+    logoWidth: number;
+    showText: boolean;
+    textPosition: string;
+  };
+  brand: {
+    companyName: string;
+    tagline: string;
+  };
+  colors: {
+    primary: string;
+    text: string;
+  };
 }
 
-export function Logo({ className = "", size = "md" }: LogoProps) {
-  const [logoConfig, setLogoConfig] = useState<LogoConfig>({
-    companyName: "LegalAssist AI",
-    showText: true,
-    logoHeight: 32,
-    logoWidth: 32
+export function Logo({ className = "", size = "md", variant = "primary" }: LogoProps) {
+  const [brandingConfig, setBrandingConfig] = useState<BrandingConfig>({
+    logo: {
+      primaryLogo: null,
+      secondaryLogo: null,
+      logoHeight: 32,
+      logoWidth: 32,
+      showText: true,
+      textPosition: "right"
+    },
+    brand: {
+      companyName: "LegalAI Pro",
+      tagline: "AI-Powered Legal Excellence"
+    },
+    colors: {
+      primary: "#3b82f6",
+      text: "#1e293b"
+    }
   });
 
-  // Query admin logo configuration
-  const { data: adminLogoConfig } = useQuery({
-    queryKey: ['/api/admin/logo-config'],
+  // Query branding configuration
+  const { data: brandingData } = useQuery({
+    queryKey: ['/api/admin/branding-config'],
     retry: false,
     onSuccess: (data) => {
       if (data) {
-        setLogoConfig(prev => ({ ...prev, ...data }));
+        setBrandingConfig(data);
       }
     },
     onError: () => {
       // Silently fail and use default config if admin endpoint doesn't exist yet
-      console.log('Using default logo configuration');
+      console.log('Using default branding configuration');
     }
   });
 
@@ -46,41 +70,71 @@ export function Logo({ className = "", size = "md" }: LogoProps) {
   };
 
   const currentSize = sizeClasses[size];
+  const logoUrl = variant === 'secondary' && brandingConfig.logo.secondaryLogo 
+    ? brandingConfig.logo.secondaryLogo 
+    : brandingConfig.logo.primaryLogo;
+
+  const logoElement = logoUrl ? (
+    <img
+      src={logoUrl}
+      alt={`${brandingConfig.brand.companyName} Logo`}
+      className="object-contain"
+      style={{
+        height: brandingConfig.logo.logoHeight || currentSize.height,
+        width: brandingConfig.logo.logoWidth || currentSize.width,
+      }}
+      onError={(e) => {
+        // Fallback to default if custom logo fails to load
+        console.warn('Custom logo failed to load, using fallback');
+        setBrandingConfig(prev => ({ 
+          ...prev, 
+          logo: { 
+            ...prev.logo, 
+            primaryLogo: null, 
+            secondaryLogo: null 
+          } 
+        }));
+      }}
+    />
+  ) : (
+    <div 
+      className="rounded-md flex items-center justify-center text-white font-bold"
+      style={{
+        height: currentSize.height,
+        width: currentSize.width,
+        backgroundColor: brandingConfig.colors.primary,
+      }}
+    >
+      <span className="text-sm">
+        {brandingConfig.brand.companyName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)}
+      </span>
+    </div>
+  );
+
+  const textElement = brandingConfig.logo.showText && (
+    <span 
+      className={`font-semibold ${currentSize.text}`}
+      style={{ color: brandingConfig.colors.text }}
+    >
+      {brandingConfig.brand.companyName}
+    </span>
+  );
+
+  const flexDirection = brandingConfig.logo.textPosition === 'bottom' ? 'flex-col' : 'flex-row';
+  const gap = brandingConfig.logo.textPosition === 'bottom' ? 'space-y-1' : 'space-x-2';
+
+  if (brandingConfig.logo.textPosition === 'none') {
+    return (
+      <div className={`flex items-center ${className}`}>
+        {logoElement}
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex items-center space-x-2 ${className}`}>
-      {logoConfig.logoUrl ? (
-        <img
-          src={logoConfig.logoUrl}
-          alt={`${logoConfig.companyName} Logo`}
-          className="object-contain"
-          style={{
-            height: logoConfig.logoHeight || currentSize.height,
-            width: logoConfig.logoWidth || currentSize.width,
-          }}
-          onError={(e) => {
-            // Fallback to default if custom logo fails to load
-            console.warn('Custom logo failed to load, using fallback');
-            setLogoConfig(prev => ({ ...prev, logoUrl: undefined }));
-          }}
-        />
-      ) : (
-        <div 
-          className="bg-legal-blue rounded-md flex items-center justify-center text-white font-bold"
-          style={{
-            height: currentSize.height,
-            width: currentSize.width,
-          }}
-        >
-          <span className="text-sm">LA</span>
-        </div>
-      )}
-      
-      {logoConfig.showText && (
-        <span className={`font-semibold text-gray-900 ${currentSize.text}`}>
-          {logoConfig.companyName}
-        </span>
-      )}
+    <div className={`flex items-center ${flexDirection === 'flex-col' ? 'flex-col' : 'flex-row'} ${gap} ${className}`}>
+      {logoElement}
+      {textElement}
     </div>
   );
 }

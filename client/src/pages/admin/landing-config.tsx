@@ -23,7 +23,15 @@ import {
   CreditCard,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Upload,
+  Palette,
+  Smartphone,
+  Monitor,
+  Globe,
+  Link,
+  Hash,
+  Download
 } from "lucide-react";
 
 interface AdminConfig {
@@ -95,7 +103,143 @@ interface AdminConfig {
   };
 }
 
+interface BrandingConfig {
+  logo: {
+    primaryLogo: string | null;
+    secondaryLogo: string | null;
+    logoHeight: number;
+    logoWidth: number;
+    showText: boolean;
+    textPosition: string;
+  };
+  favicon: {
+    ico: string | null;
+    png16: string | null;
+    png32: string | null;
+    png192: string | null;
+    png512: string | null;
+    appleTouchIcon: string | null;
+  };
+  appIcons: {
+    webAppIcon192: string | null;
+    webAppIcon512: string | null;
+    maskableIcon: string | null;
+  };
+  brand: {
+    companyName: string;
+    tagline: string;
+    description: string;
+    domain: string;
+  };
+  colors: {
+    primary: string;
+    primaryDark: string;
+    primaryLight: string;
+    secondary: string;
+    accent: string;
+    success: string;
+    warning: string;
+    error: string;
+    background: string;
+    backgroundDark: string;
+    text: string;
+    textDark: string;
+    muted: string;
+    border: string;
+  };
+  typography: {
+    fontFamily: string;
+    headingFont: string;
+    bodyFont: string;
+    fontScale: number;
+  };
+  theme: {
+    borderRadius: string;
+    shadowStyle: string;
+    animationSpeed: string;
+  };
+  social: {
+    twitter: string;
+    linkedin: string;
+    facebook: string;
+    instagram: string;
+    youtube: string;
+  };
+  seo: {
+    ogImage: string | null;
+    twitterImage: string | null;
+  };
+}
+
 export default function LandingConfig() {
+  const [brandingConfig, setBrandingConfig] = useState<BrandingConfig>({
+    logo: {
+      primaryLogo: null,
+      secondaryLogo: null,
+      logoHeight: 40,
+      logoWidth: 40,
+      showText: true,
+      textPosition: "right"
+    },
+    favicon: {
+      ico: null,
+      png16: null,
+      png32: null,
+      png192: null,
+      png512: null,
+      appleTouchIcon: null
+    },
+    appIcons: {
+      webAppIcon192: null,
+      webAppIcon512: null,
+      maskableIcon: null
+    },
+    brand: {
+      companyName: "LegalAI Pro",
+      tagline: "AI-Powered Legal Excellence",
+      description: "Empowering lawyers and pro se litigants with intelligent case management, document generation, and strategic legal analysis",
+      domain: "legalai.pro"
+    },
+    colors: {
+      primary: "#3b82f6",
+      primaryDark: "#1d4ed8",
+      primaryLight: "#60a5fa",
+      secondary: "#64748b",
+      accent: "#f59e0b",
+      success: "#10b981",
+      warning: "#f59e0b",
+      error: "#ef4444",
+      background: "#ffffff",
+      backgroundDark: "#0f172a",
+      text: "#1e293b",
+      textDark: "#f8fafc",
+      muted: "#64748b",
+      border: "#e2e8f0"
+    },
+    typography: {
+      fontFamily: "Inter",
+      headingFont: "Inter",
+      bodyFont: "Inter",
+      fontScale: 1.0
+    },
+    theme: {
+      borderRadius: "0.5rem",
+      shadowStyle: "modern",
+      animationSpeed: "normal"
+    },
+    social: {
+      twitter: "",
+      linkedin: "",
+      facebook: "",
+      instagram: "",
+      youtube: ""
+    },
+    seo: {
+      ogImage: null,
+      twitterImage: null
+    }
+  });
+
   const [config, setConfig] = useState<AdminConfig>({
     hero: {
       title: "Revolutionary AI Legal Assistant",
@@ -196,27 +340,528 @@ export default function LandingConfig() {
   const [activeTab, setActiveTab] = useState("hero");
   const [isSaving, setSaving] = useState(false);
 
-  // Load chat widget config on component mount
+  // Load chat widget config and branding config on component mount
   useEffect(() => {
-    const loadChatConfig = async () => {
+    const loadConfigs = async () => {
       try {
-        const response = await fetch('/api/admin/chat-widget-config');
-        const data = await response.json();
-        if (data.success) {
+        // Load chat widget config
+        const chatResponse = await fetch('/api/admin/chat-widget-config');
+        const chatData = await chatResponse.json();
+        if (chatData.success) {
           setConfig(prev => ({
             ...prev,
             htmlCustomizations: {
               ...prev.htmlCustomizations,
-              chatWidget: data.config
+              chatWidget: chatData.config
             }
           }));
         }
+
+        // Load branding config
+        const brandingResponse = await fetch('/api/admin/branding-config');
+        const brandingData = await brandingResponse.json();
+        if (brandingData) {
+          setBrandingConfig(brandingData);
+
+          {/* Branding Section */}
+          <TabsContent value="branding">
+            <div className="space-y-6">
+              {/* Logo Management */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Image className="h-5 w-5" />
+                    Logo Management
+                  </CardTitle>
+                  <CardDescription>Upload and configure your brand logos</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label>Primary Logo</Label>
+                      <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        {brandingConfig.logo.primaryLogo ? (
+                          <div className="space-y-2">
+                            <img src={brandingConfig.logo.primaryLogo} alt="Primary Logo" className="mx-auto h-16 w-auto" />
+                            <Button variant="outline" size="sm" onClick={() => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, primaryLogo: null } }))}>
+                              Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                            <div>
+                              <Button variant="outline" className="mb-2">
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Logo
+                              </Button>
+                              <p className="text-xs text-gray-500">PNG, JPG up to 2MB</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label>Secondary Logo (Optional)</Label>
+                      <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        {brandingConfig.logo.secondaryLogo ? (
+                          <div className="space-y-2">
+                            <img src={brandingConfig.logo.secondaryLogo} alt="Secondary Logo" className="mx-auto h-16 w-auto" />
+                            <Button variant="outline" size="sm" onClick={() => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, secondaryLogo: null } }))}>
+                              Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                            <div>
+                              <Button variant="outline" className="mb-2">
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Logo
+                              </Button>
+                              <p className="text-xs text-gray-500">For dark backgrounds</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="logo-width">Logo Width (px)</Label>
+                      <Input
+                        id="logo-width"
+                        type="number"
+                        value={brandingConfig.logo.logoWidth}
+                        onChange={(e) => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, logoWidth: parseInt(e.target.value) || 40 } }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="logo-height">Logo Height (px)</Label>
+                      <Input
+                        id="logo-height"
+                        type="number"
+                        value={brandingConfig.logo.logoHeight}
+                        onChange={(e) => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, logoHeight: parseInt(e.target.value) || 40 } }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="text-position">Text Position</Label>
+                      <Select
+                        value={brandingConfig.logo.textPosition}
+                        onValueChange={(value) => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, textPosition: value } }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="right">Right of Logo</SelectItem>
+                          <SelectItem value="bottom">Below Logo</SelectItem>
+                          <SelectItem value="none">Logo Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Show Company Name</Label>
+                      <p className="text-xs text-gray-600">Display company name next to logo</p>
+                    </div>
+                    <Switch
+                      checked={brandingConfig.logo.showText}
+                      onCheckedChange={(checked) => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, showText: checked } }))}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Favicon & App Icons */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Smartphone className="h-5 w-5" />
+                    Favicon & App Icons
+                  </CardTitle>
+                  <CardDescription>Configure browser and mobile app icons</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Favicon (16x16)</Label>
+                      <div className="mt-2 border rounded-lg p-4 text-center">
+                        {brandingConfig.favicon.png16 ? (
+                          <div className="space-y-2">
+                            <img src={brandingConfig.favicon.png16} alt="Favicon 16x16" className="mx-auto h-4 w-4" />
+                            <Button variant="outline" size="sm">Replace</Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload 16x16
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label>Favicon (32x32)</Label>
+                      <div className="mt-2 border rounded-lg p-4 text-center">
+                        {brandingConfig.favicon.png32 ? (
+                          <div className="space-y-2">
+                            <img src={brandingConfig.favicon.png32} alt="Favicon 32x32" className="mx-auto h-8 w-8" />
+                            <Button variant="outline" size="sm">Replace</Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload 32x32
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Apple Touch Icon</Label>
+                      <div className="mt-2 border rounded-lg p-4 text-center">
+                        {brandingConfig.favicon.appleTouchIcon ? (
+                          <div className="space-y-2">
+                            <img src={brandingConfig.favicon.appleTouchIcon} alt="Apple Touch Icon" className="mx-auto h-12 w-12 rounded-lg" />
+                            <Button variant="outline" size="sm">Replace</Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload 180x180
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-medium mb-4">Progressive Web App Icons</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>App Icon (192x192)</Label>
+                        <div className="mt-2 border rounded-lg p-4 text-center">
+                          {brandingConfig.appIcons.webAppIcon192 ? (
+                            <div className="space-y-2">
+                              <img src={brandingConfig.appIcons.webAppIcon192} alt="App Icon 192" className="mx-auto h-16 w-16 rounded-lg" />
+                              <Button variant="outline" size="sm">Replace</Button>
+                            </div>
+                          ) : (
+                            <Button variant="outline" size="sm">
+                              <Upload className="mr-2 h-4 w-4" />
+                              Upload 192x192
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label>App Icon (512x512)</Label>
+                        <div className="mt-2 border rounded-lg p-4 text-center">
+                          {brandingConfig.appIcons.webAppIcon512 ? (
+                            <div className="space-y-2">
+                              <img src={brandingConfig.appIcons.webAppIcon512} alt="App Icon 512" className="mx-auto h-16 w-16 rounded-lg" />
+                              <Button variant="outline" size="sm">Replace</Button>
+                            </div>
+                          ) : (
+                            <Button variant="outline" size="sm">
+                              <Upload className="mr-2 h-4 w-4" />
+                              Upload 512x512
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={downloadManifest}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Manifest.json
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Brand Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    Brand Information
+                  </CardTitle>
+                  <CardDescription>Configure your brand identity and messaging</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="company-name">Company Name</Label>
+                      <Input
+                        id="company-name"
+                        value={brandingConfig.brand.companyName}
+                        onChange={(e) => setBrandingConfig(prev => ({ ...prev, brand: { ...prev.brand, companyName: e.target.value } }))}
+                        placeholder="Your Company Name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="domain">Domain</Label>
+                      <Input
+                        id="domain"
+                        value={brandingConfig.brand.domain}
+                        onChange={(e) => setBrandingConfig(prev => ({ ...prev, brand: { ...prev.brand, domain: e.target.value } }))}
+                        placeholder="yourcompany.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="tagline">Tagline</Label>
+                    <Input
+                      id="tagline"
+                      value={brandingConfig.brand.tagline}
+                      onChange={(e) => setBrandingConfig(prev => ({ ...prev, brand: { ...prev.brand, tagline: e.target.value } }))}
+                      placeholder="Your brand tagline"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="description">Brand Description</Label>
+                    <Textarea
+                      id="description"
+                      value={brandingConfig.brand.description}
+                      onChange={(e) => setBrandingConfig(prev => ({ ...prev, brand: { ...prev.brand, description: e.target.value } }))}
+                      placeholder="Describe your brand and what you do"
+                      rows={3}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Color Scheme */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5" />
+                    Color Scheme
+                  </CardTitle>
+                  <CardDescription>Configure your brand colors and theme</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div>
+                      <Label htmlFor="primary-color">Primary Color</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          id="primary-color"
+                          type="color"
+                          value={brandingConfig.colors.primary}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, primary: e.target.value } }))}
+                          className="w-12 h-10 p-1 border rounded"
+                        />
+                        <Input
+                          value={brandingConfig.colors.primary}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, primary: e.target.value } }))}
+                          placeholder="#3b82f6"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="secondary-color">Secondary Color</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          id="secondary-color"
+                          type="color"
+                          value={brandingConfig.colors.secondary}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, secondary: e.target.value } }))}
+                          className="w-12 h-10 p-1 border rounded"
+                        />
+                        <Input
+                          value={brandingConfig.colors.secondary}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, secondary: e.target.value } }))}
+                          placeholder="#64748b"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="accent-color">Accent Color</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          id="accent-color"
+                          type="color"
+                          value={brandingConfig.colors.accent}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, accent: e.target.value } }))}
+                          className="w-12 h-10 p-1 border rounded"
+                        />
+                        <Input
+                          value={brandingConfig.colors.accent}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, accent: e.target.value } }))}
+                          placeholder="#f59e0b"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="success-color">Success Color</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          id="success-color"
+                          type="color"
+                          value={brandingConfig.colors.success}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, success: e.target.value } }))}
+                          className="w-12 h-10 p-1 border rounded"
+                        />
+                        <Input
+                          value={brandingConfig.colors.success}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, success: e.target.value } }))}
+                          placeholder="#10b981"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-medium mb-4">Typography</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="font-family">Primary Font</Label>
+                        <Select
+                          value={brandingConfig.typography.fontFamily}
+                          onValueChange={(value) => setBrandingConfig(prev => ({ ...prev, typography: { ...prev.typography, fontFamily: value } }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Inter">Inter</SelectItem>
+                            <SelectItem value="Roboto">Roboto</SelectItem>
+                            <SelectItem value="Open Sans">Open Sans</SelectItem>
+                            <SelectItem value="Lato">Lato</SelectItem>
+                            <SelectItem value="Poppins">Poppins</SelectItem>
+                            <SelectItem value="Nunito">Nunito</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="heading-font">Heading Font</Label>
+                        <Select
+                          value={brandingConfig.typography.headingFont}
+                          onValueChange={(value) => setBrandingConfig(prev => ({ ...prev, typography: { ...prev.typography, headingFont: value } }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Inter">Inter</SelectItem>
+                            <SelectItem value="Roboto">Roboto</SelectItem>
+                            <SelectItem value="Playfair Display">Playfair Display</SelectItem>
+                            <SelectItem value="Merriweather">Merriweather</SelectItem>
+                            <SelectItem value="Source Serif Pro">Source Serif Pro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="font-scale">Font Scale</Label>
+                        <Input
+                          id="font-scale"
+                          type="number"
+                          step="0.1"
+                          min="0.8"
+                          max="1.5"
+                          value={brandingConfig.typography.fontScale}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, typography: { ...prev.typography, fontScale: parseFloat(e.target.value) || 1.0 } }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-medium mb-4">Social Media Links</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="twitter">Twitter/X</Label>
+                        <Input
+                          id="twitter"
+                          value={brandingConfig.social.twitter}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, twitter: e.target.value } }))}
+                          placeholder="https://twitter.com/yourcompany"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="linkedin">LinkedIn</Label>
+                        <Input
+                          id="linkedin"
+                          value={brandingConfig.social.linkedin}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, linkedin: e.target.value } }))}
+                          placeholder="https://linkedin.com/company/yourcompany"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="facebook">Facebook</Label>
+                        <Input
+                          id="facebook"
+                          value={brandingConfig.social.facebook}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, facebook: e.target.value } }))}
+                          placeholder="https://facebook.com/yourcompany"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="instagram">Instagram</Label>
+                        <Input
+                          id="instagram"
+                          value={brandingConfig.social.instagram}
+                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, instagram: e.target.value } }))}
+                          placeholder="https://instagram.com/yourcompany"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => generateCSSVariables().then(css => {
+                      const blob = new Blob([css], { type: 'text/css' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'brand-variables.css';
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    })}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download CSS Variables
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+        }
       } catch (error) {
-        console.error('Failed to load chat widget config:', error);
+        console.error('Failed to load configs:', error);
       }
     };
 
-    loadChatConfig();
+    loadConfigs();
   }, []);
 
   const handleSave = async () => {
@@ -238,10 +883,33 @@ export default function LandingConfig() {
         throw new Error('Failed to save chat widget config');
       }
 
-      // Save other config (simulate for now)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save branding config
+      const brandingResponse = await fetch('/api/admin/branding-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(brandingConfig),
+      });
+
+      if (!brandingResponse.ok) {
+        throw new Error('Failed to save branding config');
+      }
+
+      // Save landing page config
+      const landingResponse = await fetch('/api/admin/landing-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+
+      if (!landingResponse.ok) {
+        throw new Error('Failed to save landing config');
+      }
       
-      console.log("Saving config:", config);
+      console.log("Saving configs:", { config, brandingConfig });
       alert("Configuration saved successfully!");
     } catch (error) {
       console.error('Save failed:', error);
@@ -249,6 +917,41 @@ export default function LandingConfig() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleImageUpload = async (type: string, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+      
+      // Simulate file upload - in production, implement actual upload
+      const mockUrl = `/uploads/branding/${type}/${Date.now()}-${file.name}`;
+      
+      return mockUrl;
+    } catch (error) {
+      console.error('Upload failed:', error);
+      throw new Error('Failed to upload image');
+    }
+  };
+
+  const generateCSSVariables = () => {
+    return fetch('/api/admin/branding/css-variables')
+      .then(response => response.text());
+  };
+
+  const downloadManifest = () => {
+    fetch('/api/admin/branding/manifest')
+      .then(response => response.json())
+      .then(manifest => {
+        const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'manifest.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
   };
 
   const addFeature = () => {
@@ -340,10 +1043,14 @@ export default function LandingConfig() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="hero" className="flex items-center gap-2">
               <Type className="h-4 w-4" />
               Hero
+            </TabsTrigger>
+            <TabsTrigger value="branding" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Branding
             </TabsTrigger>
             <TabsTrigger value="features" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
