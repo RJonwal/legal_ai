@@ -1201,7 +1201,7 @@ export default function LiveChatManagement() {
                     <SelectValue placeholder="Select a chat provider" />
                   </SelectTrigger>
                   <SelectContent>
-                    {chatProviders.map((provider) => (
+                    {chatProviders.filter(provider => provider.value && provider.value.trim() !== '').map((provider) => (
                       <SelectItem key={provider.value} value={provider.value}>
                         <div>
                           <div className="font-medium">{provider.label}</div>

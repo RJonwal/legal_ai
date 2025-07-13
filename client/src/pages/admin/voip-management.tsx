@@ -982,7 +982,7 @@ export default function VoipManagement() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {voipProviders.map((provider) => (
+                    {voipProviders.filter(provider => provider.value && provider.value.trim() !== '').map((provider) => (
                       <SelectItem key={provider.value} value={provider.value}>
                         <div className="py-2">
                           <div className="font-medium">{provider.label}</div>
@@ -1747,7 +1747,7 @@ export default function VoipManagement() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {voices.map((voice) => (
+                        {voices.filter(voice => voice.value && voice.value.trim() !== '').map((voice) => (
                           <SelectItem key={voice.value} value={voice.value}>
                             {voice.label}
                           </SelectItem>

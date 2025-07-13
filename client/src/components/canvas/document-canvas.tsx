@@ -532,7 +532,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
                 <SelectValue placeholder="Font" />
               </SelectTrigger>
               <SelectContent>
-                {courtFonts.map((font) => (
+                {courtFonts.filter(font => font && font.trim() !== '').map((font) => (
                   <SelectItem key={font} value={font}>
                     <span style={{ fontFamily: font }} className="text-xs">{font}</span>
                   </SelectItem>

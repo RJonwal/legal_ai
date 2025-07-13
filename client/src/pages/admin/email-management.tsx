@@ -1065,7 +1065,7 @@ export default function EmailManagement() {
                       <SelectValue placeholder="Select signature" />
                     </SelectTrigger>
                     <SelectContent>
-                      {currentConfig.signatures?.map((signature) => (
+                      {currentConfig.signatures?.filter(signature => signature.id && signature.id.trim() !== '').map((signature) => (
                         <SelectItem key={signature.id} value={signature.id}>
                           {signature.name}
                         </SelectItem>

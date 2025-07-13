@@ -583,7 +583,7 @@ export default function APIManagement() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {availableModels['openai']?.map((model) => (
+                              {availableModels['openai']?.filter(model => model.id && model.id.trim() !== '').map((model) => (
                                 <SelectItem key={model.id} value={model.id}>
                                   <div className="flex flex-col">
                                     <span>{model.name}</span>

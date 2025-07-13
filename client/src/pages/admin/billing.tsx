@@ -812,7 +812,7 @@ export default function AdminBilling() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Plans</SelectItem>
-                {plans.map((plan: SubscriptionPlan) => (
+                {plans.filter(plan => plan.name && plan.name.trim() !== '').map((plan: SubscriptionPlan) => (
                   <SelectItem key={plan.id} value={plan.name}>{plan.name}</SelectItem>
                 ))}
               </SelectContent>
