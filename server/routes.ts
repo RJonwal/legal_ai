@@ -2641,30 +2641,6 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       aiResolutionRate: '92%'
     });
   });
-          accountSupport: true,
-          integrationHelp: true,
-          transferToAttorney: true,
-          transferToSpecialist: true,
-          takeDetailedMessages: true,
-          scheduleCallbacks: true,
-          escalateUrgent: true,
-          recordCalls: true,
-          urgentLegalMatters: true,
-          emergencyEscalation: true,
-          afterHoursSupport: true,
-          crisisManagement: true
-        }
-      },
-      analytics: {
-        trackCalls: true,
-        recordMetrics: true,
-        generateReports: true,
-        enableRealTimeMonitoring: true
-      }
-    };
-    
-    res.json(defaultVoipConfig);
-  });
 
   app.put("/api/admin/voip/config", (req, res) => {
     console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/voip/config 200');
