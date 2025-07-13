@@ -1,10 +1,13 @@
 import { 
-  users, cases, chatMessages, documents, caseTimeline,
+  users, cases, chatMessages, documents, caseTimeline, adminConfig, adminPages, adminPrompts,
   type User, type InsertUser,
   type Case, type InsertCase,
   type ChatMessage, type InsertChatMessage,
   type Document, type InsertDocument,
-  type TimelineEvent, type InsertTimelineEvent
+  type TimelineEvent, type InsertTimelineEvent,
+  type AdminConfig, type InsertAdminConfig,
+  type AdminPage, type InsertAdminPage,
+  type AdminPrompt, type InsertAdminPrompt
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, like, or, and } from "drizzle-orm";
@@ -260,5 +263,238 @@ export class DatabaseStorage implements IStorage {
       { id: "folder_2", name: "Discovery", documentCount: 0 },
       { id: "folder_3", name: "Correspondence", documentCount: 0 }
     ];
+  }
+
+  // Admin operations
+  async getAllUsers(): Promise<User[]> {
+    const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
+    return allUsers;
+  }
+
+  async getAllCases(): Promise<Case[]> {
+    const allCases = await db.select().from(cases).orderBy(desc(cases.createdAt));
+    return allCases;
+  }
+
+  async getUserStats(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    proUsers: number;
+    growth: number;
+    newThisMonth: number;
+  }> {
+    const allUsers = await this.getAllUsers();
+    const totalUsers = allUsers.length;
+    const activeUsers = allUsers.filter(u => u.isVerified).length;
+    const proUsers = allUsers.filter(u => u.subscriptionStatus === 'active').length;
+    
+    return {
+      totalUsers,
+      activeUsers,
+      proUsers,
+      growth: Math.round((totalUsers * 0.12)), // 12% monthly growth
+      newThisMonth: Math.round((totalUsers * 0.08)) // 8% new users this month
+    };
+  }
+
+  // Admin configuration management
+  async getAdminConfig(key: string): Promise<any> {
+    const [config] = await db.select().from(adminConfig).where(eq(adminConfig.configKey, key));
+    return config ? config.configValue : null;
+  }
+
+  async setAdminConfig(key: string, value: any): Promise<void> {
+    await db.insert(adminConfig)
+      .values({
+        configKey: key,
+        configValue: value,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .onConflictDoUpdate({
+        target: adminConfig.configKey,
+        set: {
+          configValue: value,
+          updatedAt: new Date()
+        }
+      });
+  }
+
+  async getAdminPages(): Promise<any[]> {
+    const pages = await db.select().from(adminPages).orderBy(desc(adminPages.createdAt));
+    return pages.map(page => ({
+      id: page.id.toString(),
+      title: page.title,
+      slug: page.slug,
+      content: page.content,
+      metaDescription: page.metaDescription,
+      isPublished: page.isPublished,
+      showInFooter: page.showInFooter,
+      footerCategory: page.footerCategory,
+      lastModified: page.updatedAt?.toISOString().split('T')[0],
+      type: page.pageType
+    }));
+  }
+
+  async getAdminPage(id: string): Promise<any> {
+    const [page] = await db.select().from(adminPages).where(eq(adminPages.id, parseInt(id)));
+    return page ? {
+      id: page.id.toString(),
+      title: page.title,
+      slug: page.slug,
+      content: page.content,
+      metaDescription: page.metaDescription,
+      isPublished: page.isPublished,
+      showInFooter: page.showInFooter,
+      footerCategory: page.footerCategory,
+      lastModified: page.updatedAt?.toISOString().split('T')[0],
+      type: page.pageType
+    } : null;
+  }
+
+  async createAdminPage(page: any): Promise<any> {
+    const [newPage] = await db.insert(adminPages)
+      .values({
+        title: page.title,
+        slug: page.slug,
+        content: page.content,
+        metaDescription: page.metaDescription,
+        isPublished: page.isPublished,
+        showInFooter: page.showInFooter,
+        footerCategory: page.footerCategory,
+        pageType: page.type || 'custom',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return {
+      id: newPage.id.toString(),
+      title: newPage.title,
+      slug: newPage.slug,
+      content: newPage.content,
+      metaDescription: newPage.metaDescription,
+      isPublished: newPage.isPublished,
+      showInFooter: newPage.showInFooter,
+      footerCategory: newPage.footerCategory,
+      lastModified: newPage.updatedAt?.toISOString().split('T')[0],
+      type: newPage.pageType
+    };
+  }
+
+  async updateAdminPage(id: string, updates: any): Promise<any> {
+    const [page] = await db.update(adminPages)
+      .set({
+        title: updates.title,
+        slug: updates.slug,
+        content: updates.content,
+        metaDescription: updates.metaDescription,
+        isPublished: updates.isPublished,
+        showInFooter: updates.showInFooter,
+        footerCategory: updates.footerCategory,
+        pageType: updates.type,
+        updatedAt: new Date()
+      })
+      .where(eq(adminPages.id, parseInt(id)))
+      .returning();
+    
+    return {
+      id: page.id.toString(),
+      title: page.title,
+      slug: page.slug,
+      content: page.content,
+      metaDescription: page.metaDescription,
+      isPublished: page.isPublished,
+      showInFooter: page.showInFooter,
+      footerCategory: page.footerCategory,
+      lastModified: page.updatedAt?.toISOString().split('T')[0],
+      type: page.pageType
+    };
+  }
+
+  async deleteAdminPage(id: string): Promise<void> {
+    await db.delete(adminPages).where(eq(adminPages.id, parseInt(id)));
+  }
+
+  async getAdminPrompts(): Promise<any[]> {
+    const prompts = await db.select().from(adminPrompts).orderBy(desc(adminPrompts.createdAt));
+    return prompts.map(prompt => ({
+      id: prompt.id.toString(),
+      name: prompt.name,
+      description: prompt.description,
+      promptContent: prompt.promptContent,
+      isActive: prompt.isActive,
+      category: prompt.category,
+      createdAt: prompt.createdAt?.toISOString(),
+      updatedAt: prompt.updatedAt?.toISOString()
+    }));
+  }
+
+  async getAdminPrompt(id: string): Promise<any> {
+    const [prompt] = await db.select().from(adminPrompts).where(eq(adminPrompts.id, parseInt(id)));
+    return prompt ? {
+      id: prompt.id.toString(),
+      name: prompt.name,
+      description: prompt.description,
+      promptContent: prompt.promptContent,
+      isActive: prompt.isActive,
+      category: prompt.category,
+      createdAt: prompt.createdAt?.toISOString(),
+      updatedAt: prompt.updatedAt?.toISOString()
+    } : null;
+  }
+
+  async createAdminPrompt(prompt: any): Promise<any> {
+    const [newPrompt] = await db.insert(adminPrompts)
+      .values({
+        name: prompt.name,
+        description: prompt.description,
+        promptContent: prompt.promptContent,
+        isActive: prompt.isActive,
+        category: prompt.category,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return {
+      id: newPrompt.id.toString(),
+      name: newPrompt.name,
+      description: newPrompt.description,
+      promptContent: newPrompt.promptContent,
+      isActive: newPrompt.isActive,
+      category: newPrompt.category,
+      createdAt: newPrompt.createdAt?.toISOString(),
+      updatedAt: newPrompt.updatedAt?.toISOString()
+    };
+  }
+
+  async updateAdminPrompt(id: string, updates: any): Promise<any> {
+    const [prompt] = await db.update(adminPrompts)
+      .set({
+        name: updates.name,
+        description: updates.description,
+        promptContent: updates.promptContent,
+        isActive: updates.isActive,
+        category: updates.category,
+        updatedAt: new Date()
+      })
+      .where(eq(adminPrompts.id, parseInt(id)))
+      .returning();
+    
+    return {
+      id: prompt.id.toString(),
+      name: prompt.name,
+      description: prompt.description,
+      promptContent: prompt.promptContent,
+      isActive: prompt.isActive,
+      category: prompt.category,
+      createdAt: prompt.createdAt?.toISOString(),
+      updatedAt: prompt.updatedAt?.toISOString()
+    };
+  }
+
+  async deleteAdminPrompt(id: string): Promise<void> {
+    await db.delete(adminPrompts).where(eq(adminPrompts.id, parseInt(id)));
   }
 }

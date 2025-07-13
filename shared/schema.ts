@@ -192,3 +192,64 @@ export type AttorneyConnection = typeof attorneyConnections.$inferSelect;
 export type InsertAttorneyConnection = z.infer<typeof insertAttorneyConnectionSchema>;
 export type AttorneyReview = typeof attorneyReviews.$inferSelect;
 export type InsertAttorneyReview = z.infer<typeof insertAttorneyReviewSchema>;
+
+// Admin configuration tables
+export const adminConfig = pgTable("admin_config", {
+  id: serial("id").primaryKey(),
+  configKey: text("config_key").notNull().unique(),
+  configValue: jsonb("config_value").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const adminPages = pgTable("admin_pages", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  content: text("content").notNull(),
+  metaDescription: text("meta_description"),
+  isPublished: boolean("is_published").default(true),
+  showInFooter: boolean("show_in_footer").default(false),
+  footerCategory: text("footer_category"),
+  pageType: text("page_type").notNull().default("custom"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const adminPrompts = pgTable("admin_prompts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  promptContent: text("prompt_content").notNull(),
+  isActive: boolean("is_active").default(true),
+  category: text("category").notNull().default("general"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAdminConfigSchema = createInsertSchema(adminConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAdminPageSchema = createInsertSchema(adminPages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAdminPromptSchema = createInsertSchema(adminPrompts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type AdminConfig = typeof adminConfig.$inferSelect;
+export type InsertAdminConfig = z.infer<typeof insertAdminConfigSchema>;
+
+export type AdminPage = typeof adminPages.$inferSelect;
+export type InsertAdminPage = z.infer<typeof insertAdminPageSchema>;
+
+export type AdminPrompt = typeof adminPrompts.$inferSelect;
+export type InsertAdminPrompt = z.infer<typeof insertAdminPromptSchema>;

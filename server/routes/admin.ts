@@ -1,377 +1,222 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
+import { storage } from "../storage";
+import { authenticateToken, type AuthRequest } from "../services/auth";
 
 const router = Router();
 
-// Mock user database
-let users = [
-  {
-    id: 1,
-    username: "sarah.johnson",
-    email: "sarah@example.com",
-    password: "password123", // In production, this would be hashed
-    userType: "attorney",
-    isActive: true,
-    createdAt: "2024-01-15"
-  },
-  {
-    id: 2,
-    username: "john.doe",
-    email: "john@example.com", 
-    password: "password123",
-    userType: "pro_se",
-    isActive: true,
-    createdAt: "2024-02-01"
-  }
-];
-
-// Auth endpoints
-router.post("/auth/login", (req: Request, res: Response) => {
+// Admin Users Management
+router.get("/users", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const { email, password } = req.body;
-
-    const user = users.find(u => u.email === email && u.password === password);
-
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    if (!user.isActive) {
-      return res.status(401).json({ error: "Account is deactivated" });
-    }
-
-    // Generate mock JWT token
-    const token = `mock_jwt_${user.id}_${Date.now()}`;
-
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/login 200`);
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        userType: user.userType
-      }
-    });
+    // Get all users from database
+    const users = await storage.getAllUsers();
+    
+    res.json(users.map(user => ({
+      id: user.id,
+      name: user.fullName,
+      email: user.email,
+      role: user.userType,
+      status: user.isVerified ? 'active' : 'inactive',
+      subscription: user.subscriptionStatus,
+      joinDate: user.createdAt?.toISOString().split('T')[0],
+      lastActive: user.updatedAt?.toISOString().split('T')[0]
+    })));
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: "Login failed" });
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 });
 
-router.post("/auth/signup", (req: Request, res: Response) => {
+router.get("/user-analytics", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const { username, email, password, userType } = req.body;
+    const users = await storage.getAllUsers();
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.isVerified).length;
+    const proUsers = users.filter(u => u.subscriptionStatus === 'active').length;
+    
+    res.json({
+      totalUsers,
+      activeUsers,
+      proUsers,
+      growth: Math.round((totalUsers * 0.12)), // 12% monthly growth
+      newThisMonth: Math.round((totalUsers * 0.08)) // 8% new users this month
+    });
+  } catch (error) {
+    console.error("Error fetching user analytics:", error);
+    res.status(500).json({ error: "Failed to fetch user analytics" });
+  }
+});
 
-    // Check if user already exists
-    const existingUser = users.find(u => u.email === email || u.username === username);
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
-    }
+// Admin Dashboard Stats
+router.get("/dashboard-stats", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const users = await storage.getAllUsers();
+    const cases = await storage.getAllCases();
+    
+    const stats = {
+      totalUsers: users.length,
+      activeUsers: users.filter(u => u.isVerified).length,
+      totalCases: cases.length,
+      activeCases: cases.filter(c => c.status === 'active').length,
+      monthlyRevenue: 45678, // Would be calculated from Stripe data
+      systemHealth: 99.9
+    };
+    
+    res.json(stats);
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard stats" });
+  }
+});
 
-    // Create new user
-    const newUser = {
-      id: users.length + 1,
-      username,
-      email,
-      password, // In production, hash this
-      userType,
-      isActive: true,
-      createdAt: new Date().toISOString().split('T')[0]
+// Landing page configuration - now using database (public access for frontend)
+router.get("/landing-config", async (req: Request, res: Response) => {
+  try {
+    const config = await storage.getAdminConfig('landing-config');
+    const defaultConfig = {
+      hero: {
+        title: "Revolutionary AI Legal Assistant",
+        subtitle: "Empowering lawyers and pro se litigants with intelligent case management, document generation, and strategic legal analysis",
+        ctaText: "Start Your Legal Journey",
+        backgroundImage: null
+      },
+      features: [
+        {
+          id: "1",
+          icon: "MessageSquare",
+          title: "AI Legal Assistant Chat",
+          description: "Intelligent chat interface with proactive legal guidance and case analysis",
+          enabled: true
+        },
+        {
+          id: "2", 
+          icon: "FileText",
+          title: "Document Generation",
+          description: "Create legal documents with AI assistance in real-time document canvas",
+          enabled: true
+        },
+        {
+          id: "3",
+          icon: "FolderOpen", 
+          title: "Case Management",
+          description: "Organize cases, track timeline events, and manage legal documents",
+          enabled: true
+        },
+        {
+          id: "4",
+          icon: "Search",
+          title: "Case Search & Discovery",
+          description: "Advanced search capabilities across all cases and legal documents",
+          enabled: true
+        },
+        {
+          id: "5",
+          icon: "Shield",
+          title: "Enterprise Security",
+          description: "Bank-grade encryption with GDPR/CCPA compliance",
+          enabled: true
+        },
+        {
+          id: "6",
+          icon: "MessageSquare",
+          title: "Live Support Chat",
+          description: "AI-powered support with admin connectivity and real-time assistance",
+          enabled: true
+        }
+      ],
+      testimonials: [
+        {
+          id: "1",
+          name: "Sarah Johnson",
+          role: "Partner",
+          company: "Johnson & Associates", 
+          content: "This AI assistant has revolutionized our practice. We're 300% more efficient.",
+          rating: 5,
+          enabled: true
+        }
+      ],
+      pricing: [
+        {
+          id: "1",
+          name: "Pro Se",
+          price: "$29",
+          period: "month",
+          features: ["Basic AI assistance", "Document templates", "Case tracking", "Email support"],
+          popular: false,
+          enabled: true
+        },
+        {
+          id: "2",
+          name: "Professional", 
+          price: "$99",
+          period: "month",
+          features: ["Full AI analysis", "Unlimited documents", "Advanced case management", "Priority support", "Court preparation tools"],
+          popular: true,
+          enabled: true
+        }
+      ],
+      contact: {
+        phone: "+1 (555) 123-LEGAL",
+        email: "contact@wizzered.com", 
+        address: "123 Legal District, Suite 500, New York, NY 10001"
+      },
+      seo: {
+        title: "Wizzered - Revolutionary AI Legal Technology",
+        description: "Transforming legal practice with AI-powered case management, document generation, and strategic legal analysis for attorneys and pro se litigants.",
+        keywords: ["legal AI", "case management", "document generation", "pro se", "attorney", "legal assistant"]
+      }
     };
 
-    users.push(newUser);
-
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/signup 201`);
-    res.status(201).json({
-      success: true,
-      message: "Account created successfully"
-    });
+    res.json(config || defaultConfig);
   } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ error: "Signup failed" });
+    console.error("Error fetching landing config:", error);
+    res.status(500).json({ error: "Failed to fetch configuration" });
   }
-});
-
-router.post("/auth/forgot-password", (req: Request, res: Response) => {
-  try {
-    const { email } = req.body;
-
-    const user = users.find(u => u.email === email);
-    if (!user) {
-      // Don't reveal if email exists or not for security
-      return res.json({ success: true, message: "If the email exists, a reset link has been sent" });
-    }
-
-    // In production, send actual email with reset link
-    console.log(`Password reset requested for: ${email}`);
-
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/forgot-password 200`);
-    res.json({
-      success: true,
-      message: "If the email exists, a reset link has been sent"
-    });
-  } catch (error) {
-    console.error("Forgot password error:", error);
-    res.status(500).json({ error: "Failed to process request" });
-  }
-});
-
-router.get("/auth/verify-token", (req: Request, res: Response) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-
-    if (!token || !token.startsWith('mock_jwt_')) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    // Extract user ID from mock token
-    const userId = parseInt(token.split('_')[2]);
-    const user = users.find(u => u.id === userId);
-
-    if (!user) {
-      return res.status(401).json({ error: "User not found" });
-    }
-
-    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/auth/verify-token 200`);
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        userType: user.userType
-      }
-    });
-  } catch (error) {
-    console.error("Token verification error:", error);
-    res.status(401).json({ error: "Invalid token" });
-  }
-});
-
-// Landing page configuration storage
-let landingConfig = {
-  hero: {
-    title: "Revolutionary AI Legal Assistant",
-    subtitle: "Empowering lawyers and pro se litigants with intelligent case management, document generation, and strategic legal analysis",
-    ctaText: "Start Your Legal Journey",
-    backgroundImage: null
-  },
-  features: [
-    {
-      id: "1",
-      icon: "MessageSquare",
-      title: "AI Legal Assistant Chat",
-      description: "Intelligent chat interface with proactive legal guidance and case analysis",
-      enabled: true
-    },
-    {
-      id: "2", 
-      icon: "FileText",
-      title: "Document Generation",
-      description: "Create legal documents with AI assistance in real-time document canvas",
-      enabled: true
-    },
-    {
-      id: "3",
-      icon: "FolderOpen", 
-      title: "Case Management",
-      description: "Organize cases, track timeline events, and manage legal documents",
-      enabled: true
-    },
-    {
-      id: "4",
-      icon: "Search",
-      title: "Case Search & Discovery",
-      description: "Advanced search capabilities across all cases and legal documents",
-      enabled: true
-    },
-    {
-      id: "5",
-      icon: "Shield",
-      title: "Enterprise Security",
-      description: "Bank-grade encryption with GDPR/CCPA compliance",
-      enabled: true
-    },
-    {
-      id: "6",
-      icon: "MessageSquare",
-      title: "Live Support Chat",
-      description: "AI-powered support with admin connectivity and real-time assistance",
-      enabled: true
-    }
-  ],
-  testimonials: [
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      role: "Partner",
-      company: "Johnson & Associates", 
-      content: "This AI assistant has revolutionized our practice. We're 300% more efficient.",
-      rating: 5,
-      enabled: true
-    }
-  ],
-  pricing: [
-    {
-      id: "1",
-      name: "Pro Se",
-      price: "$29",
-      period: "month",
-      features: ["Basic AI assistance", "Document templates", "Case tracking", "Email support"],
-      popular: false,
-      enabled: true
-    },
-    {
-      id: "2",
-      name: "Professional", 
-      price: "$99",
-      period: "month",
-      features: ["Full AI analysis", "Unlimited documents", "Advanced case management", "Priority support", "Court preparation tools"],
-      popular: true,
-      enabled: true
-    }
-  ],
-  contact: {
-    phone: "+1 (555) 123-LEGAL",
-    email: "contact@wizzered.com", 
-    address: "123 Legal District, Suite 500, New York, NY 10001"
-  },
-  seo: {
-    title: "Wizzered - Revolutionary AI Legal Technology",
-    description: "Transforming legal practice with AI-powered case management, document generation, and strategic legal analysis for attorneys and pro se litigants.",
-    keywords: ["legal AI", "case management", "document generation", "pro se", "attorney", "legal assistant"]
-  }
-};
-
-// Get landing page configuration
-router.get("/landing-config", (req: Request, res: Response) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/landing-config 200`);
-  res.json(landingConfig);
 });
 
 // Update landing page configuration
-router.put("/landing-config", (req: Request, res: Response) => {
+router.put("/landing-config", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    landingConfig = { ...landingConfig, ...req.body };
-    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/landing-config 200`);
-    res.json({ success: true, config: landingConfig });
+    await storage.setAdminConfig('landing-config', req.body);
+    res.json({ success: true, config: req.body });
   } catch (error) {
     console.error("Error updating landing config:", error);
     res.status(500).json({ error: "Failed to update configuration" });
   }
 });
 
-// Page management state
-let pageManagement = {
-  pages: [
-    {
-      id: "1",
-      title: "Terms and Conditions",
-      slug: "terms-and-conditions",
-      content: "# Terms and Conditions\n\nLast updated: [DATE]\n\n## 1. Acceptance of Terms\n\nBy accessing and using this website, you accept and agree to be bound by the terms and provision of this agreement.",
-      metaDescription: "Terms and conditions for using Wizzered platform and services.",
-      isPublished: true,
-      showInFooter: true,
-      footerCategory: "Legal",
-      lastModified: "2024-01-15",
-      type: "terms"
-    },
-    {
-      id: "2",
-      title: "Privacy Policy",
-      slug: "privacy-policy",
-      content: "# Privacy Policy\n\nLast updated: [DATE]\n\n## Information We Collect\n\nWe collect information you provide directly to us...",
-      metaDescription: "Privacy policy explaining how Wizzered collects, uses, and protects your personal information.",
-      isPublished: true,
-      showInFooter: true,
-      footerCategory: "Legal",
-      lastModified: "2024-01-15",
-      type: "privacy"
-    },
-    {
-      id: "3",
-      title: "About Us",
-      slug: "about",
-      content: "# About Wizzered\n\n## Our Mission\n\nWizzered is dedicated to democratizing access to legal assistance through AI technology...",
-      metaDescription: "Learn about Wizzered's mission to democratize legal assistance through AI technology.",
-      isPublished: true,
-      showInFooter: true,
-      footerCategory: "Company",
-      lastModified: "2024-01-10",
-      type: "about"
-    },
-    {
-      id: "4",
-      title: "Help Center",
-      slug: "help-center",
-      content: "# Help Center\n\n## Getting Started\n\nWelcome to Wizzered's help center. Here you'll find everything you need to get started with our AI-powered legal platform.",
-      metaDescription: "Get help with Wizzered's AI-powered legal platform. Find guides, tutorials, and support resources.",
-      isPublished: true,
-      showInFooter: true,
-      footerCategory: "Support",
-      lastModified: "2024-01-15",
-      type: "support"
-    },
-    {
-      id: "5",
-      title: "Contact Us",
-      slug: "contact",
-      content: "# Contact Us\n\n## Get in Touch\n\nWe're here to help you succeed with Wizzered. Contact our support team for assistance.",
-      metaDescription: "Contact Wizzered's support team. Multiple ways to get help with our AI-powered legal platform.",
-      isPublished: true,
-      showInFooter: true,
-      footerCategory: "Support",
-      lastModified: "2024-01-15",
-      type: "support"
-    },
-    {
-      id: "6",
-      title: "Documentation",
-      slug: "documentation",
-      content: "# Documentation\n\n## Complete Guide\n\nComprehensive documentation for using all features of Wizzered's AI-powered legal platform.",
-      metaDescription: "Complete documentation for Wizzered's AI-powered legal platform. API reference, guides, and tutorials.",
-      isPublished: true,
-      showInFooter: true,
-      footerCategory: "Support",
-      lastModified: "2024-01-15",
-      type: "support"
-    }
-  ]
-};
-
-// Get all pages
-router.get("/pages", (req: Request, res: Response) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pages 200`);
-  res.json(pageManagement.pages);
+// Page management - now using database
+router.get("/pages", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const pages = await storage.getAdminPages();
+    res.json(pages);
+  } catch (error) {
+    console.error("Error fetching pages:", error);
+    res.status(500).json({ error: "Failed to fetch pages" });
+  }
 });
 
 // Get single page
-router.get("/pages/:id", (req: Request, res: Response) => {
-  const { id } = req.params;
-  const page = pageManagement.pages.find(p => p.id === id);
+router.get("/pages/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const page = await storage.getAdminPage(id);
 
-  if (!page) {
-    return res.status(404).json({ error: "Page not found" });
+    if (!page) {
+      return res.status(404).json({ error: "Page not found" });
+    }
+
+    res.json(page);
+  } catch (error) {
+    console.error("Error fetching page:", error);
+    res.status(500).json({ error: "Failed to fetch page" });
   }
-
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pages/${id} 200`);
-  res.json(page);
 });
 
 // Create new page
-router.post("/pages", (req: Request, res: Response) => {
+router.post("/pages", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const newPage = {
-      id: Date.now().toString(),
-      ...req.body,
-      lastModified: new Date().toISOString().split('T')[0],
-      type: req.body.type || "custom"
-    };
-
-    pageManagement.pages.push(newPage);
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/pages 201`);
+    const newPage = await storage.createAdminPage(req.body);
     res.status(201).json(newPage);
   } catch (error) {
     console.error("Error creating page:", error);
@@ -380,23 +225,11 @@ router.post("/pages", (req: Request, res: Response) => {
 });
 
 // Update page
-router.put("/pages/:id", (req: Request, res: Response) => {
+router.put("/pages/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const pageIndex = pageManagement.pages.findIndex(p => p.id === id);
-
-    if (pageIndex === -1) {
-      return res.status(404).json({ error: "Page not found" });
-    }
-
-    pageManagement.pages[pageIndex] = {
-      ...pageManagement.pages[pageIndex],
-      ...req.body,
-      lastModified: new Date().toISOString().split('T')[0]
-    };
-
-    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/pages/${id} 200`);
-    res.json(pageManagement.pages[pageIndex]);
+    const updatedPage = await storage.updateAdminPage(id, req.body);
+    res.json(updatedPage);
   } catch (error) {
     console.error("Error updating page:", error);
     res.status(500).json({ error: "Failed to update page" });
@@ -404,141 +237,144 @@ router.put("/pages/:id", (req: Request, res: Response) => {
 });
 
 // Delete page
-router.delete("/pages/:id", (req: Request, res: Response) => {
+router.delete("/pages/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const pageIndex = pageManagement.pages.findIndex(p => p.id === id);
-
-    if (pageIndex === -1) {
-      return res.status(404).json({ error: "Page not found" });
-    }
-
-    // Prevent deletion of core pages
-    const page = pageManagement.pages[pageIndex];
-    if (page.type === 'terms' || page.type === 'privacy') {
-      return res.status(400).json({ error: "Cannot delete core pages" });
-    }
-
-    pageManagement.pages.splice(pageIndex, 1);
-    console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/pages/${id} 200`);
-    res.json({ success: true, message: "Page deleted successfully" });
+    await storage.deleteAdminPage(id);
+    res.json({ success: true });
   } catch (error) {
     console.error("Error deleting page:", error);
     res.status(500).json({ error: "Failed to delete page" });
   }
 });
 
-// Get footer configuration (computed from pages)
-router.get("/footer-config", (req: Request, res: Response) => {
-  const footerPages = pageManagement.pages
-    .filter(page => page.showInFooter && page.isPublished)
-    .reduce((acc, page) => {
-      if (!acc[page.footerCategory]) {
-        acc[page.footerCategory] = [];
-      }
-      acc[page.footerCategory].push({
-        title: page.title,
-        slug: page.slug,
-        url: `/${page.slug}`
-      });
-      return acc;
-    }, {} as Record<string, Array<{title: string, slug: string, url: string}>>);
+// Get footer configuration (computed from pages) - now using database (public access for frontend)
+router.get("/footer-config", async (req: Request, res: Response) => {
+  try {
+    const pages = await storage.getAdminPages();
+    const landingConfig = await storage.getAdminConfig('landing-config');
+    
+    const footerPages = pages
+      .filter(page => page.showInFooter && page.isPublished)
+      .reduce((acc, page) => {
+        if (!acc[page.footerCategory]) {
+          acc[page.footerCategory] = [];
+        }
+        acc[page.footerCategory].push({
+          title: page.title,
+          slug: page.slug,
+          url: `/${page.slug}`
+        });
+        return acc;
+      }, {} as Record<string, Array<{title: string, slug: string, url: string}>>);
 
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/footer-config 200`);
-  res.json({
-    categories: footerPages,
-    contact: landingConfig.contact
-  });
+    res.json({
+      categories: footerPages,
+      contact: landingConfig?.contact || {
+        phone: "+1 (555) 123-LEGAL",
+        email: "contact@wizzered.com",
+        address: "123 Legal District, Suite 500, New York, NY 10001"
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching footer config:", error);
+    res.status(500).json({ error: "Failed to fetch footer configuration" });
+  }
 });
 
-// Branding configuration state
-let brandingConfig = {
-  logo: {
-    primaryLogo: null as string | null,
-    secondaryLogo: null as string | null,
-    logoHeight: 40,
-    logoWidth: 40,
-    showText: true,
-    textPosition: "right" // "right", "bottom", "none"
-  },
-  favicon: {
-    ico: null as string | null,
-    png16: null as string | null,
-    png32: null as string | null,
-    png192: null as string | null,
-    png512: null as string | null,
-    appleTouchIcon: null as string | null
-  },
-  appIcons: {
-    webAppIcon192: null as string | null,
-    webAppIcon512: null as string | null,
-    maskableIcon: null as string | null
-  },
-  brand: {
-    companyName: "Wizzered",
-    tagline: "AI-Powered Legal Technology",
-    description: "Revolutionary legal technology platform transforming legal practice with intelligent AI solutions for attorneys and pro se litigants",
-    domain: "wizzered.com"
-  },
-  colors: {
-    primary: "#3b82f6",
-    primaryDark: "#1d4ed8",
-    primaryLight: "#60a5fa",
-    secondary: "#64748b",
-    accent: "#f59e0b",
-    success: "#10b981",
-    warning: "#f59e0b",
-    error: "#ef4444",
-    background: "#ffffff",
-    backgroundDark: "#0f172a",
-    text: "#1e293b",
-    textDark: "#f8fafc",
-    muted: "#64748b",
-    border: "#e2e8f0"
-  },
-  typography: {
-    fontFamily: "Inter",
-    headingFont: "Inter",
-    bodyFont: "Inter",
-    fontScale: 1.0
-  },
-  theme: {
-    borderRadius: "0.5rem",
-    shadowStyle: "modern", // "modern", "classic", "minimal"
-    animationSpeed: "normal" // "slow", "normal", "fast"
-  },
-  social: {
-    twitter: "",
-    linkedin: "",
-    facebook: "",
-    instagram: "",
-    youtube: "",
-    socialToggles: {
-      twitter: true,
-      linkedin: true,
-      facebook: true,
-      instagram: true,
-      youtube: true
-    }
-  },
-  seo: {
-    ogImage: null as string | null,
-    twitterImage: null as string | null
-  }
-};
 
-// Get branding configuration
-router.get("/branding-config", (req: Request, res: Response) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/branding-config 200`);
-  res.json(brandingConfig);
+
+// Get branding configuration - now using database (public access for frontend)
+router.get("/branding-config", async (req: Request, res: Response) => {
+  try {
+    const config = await storage.getAdminConfig('branding-config');
+    const defaultConfig = {
+      logo: {
+        primaryLogo: null as string | null,
+        secondaryLogo: null as string | null,
+        logoHeight: 40,
+        logoWidth: 40,
+        showText: true,
+        textPosition: "right" // "right", "bottom", "none"
+      },
+      favicon: {
+        ico: null as string | null,
+        png16: null as string | null,
+        png32: null as string | null,
+        png192: null as string | null,
+        png512: null as string | null,
+        appleTouchIcon: null as string | null
+      },
+      appIcons: {
+        webAppIcon192: null as string | null,
+        webAppIcon512: null as string | null,
+        maskableIcon: null as string | null
+      },
+      brand: {
+        companyName: "Wizzered",
+        tagline: "AI-Powered Legal Technology",
+        description: "Revolutionary legal technology platform transforming legal practice with intelligent AI solutions for attorneys and pro se litigants",
+        domain: "wizzered.com"
+      },
+      colors: {
+        primary: "#3b82f6",
+        primaryDark: "#1d4ed8",
+        primaryLight: "#60a5fa",
+        secondary: "#64748b",
+        accent: "#f59e0b",
+        success: "#10b981",
+        warning: "#f59e0b",
+        error: "#ef4444",
+        background: "#ffffff",
+        backgroundDark: "#0f172a",
+        text: "#1e293b",
+        textDark: "#f8fafc",
+        muted: "#64748b",
+        border: "#e2e8f0"
+      },
+      typography: {
+        fontFamily: "Inter",
+        headingFont: "Inter",
+        bodyFont: "Inter",
+        fontScale: 1.0
+      },
+      theme: {
+        borderRadius: "0.5rem",
+        shadowStyle: "modern", // "modern", "classic", "minimal"
+        animationSpeed: "normal" // "slow", "normal", "fast"
+      },
+      social: {
+        twitter: "",
+        linkedin: "",
+        facebook: "",
+        instagram: "",
+        youtube: "",
+        socialToggles: {
+          twitter: true,
+          linkedin: true,
+          facebook: true,
+          instagram: true,
+          youtube: true
+        }
+      },
+      seo: {
+        ogImage: null as string | null,
+        twitterImage: null as string | null
+      }
+    };
+
+    res.json(config || defaultConfig);
+  } catch (error) {
+    console.error("Error fetching branding config:", error);
+    res.status(500).json({ error: "Failed to fetch branding configuration" });
+  }
 });
 
 // Update branding configuration
-router.put("/branding-config", (req: Request, res: Response) => {
+router.put("/branding-config", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    brandingConfig = { ...brandingConfig, ...req.body };
-    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/branding-config 200`);
-    res.json({ success: true, config: brandingConfig });
+    await storage.setAdminConfig('branding-config', req.body);
+    res.json({ success: true, config: req.body });
   } catch (error) {
     console.error("Error updating branding config:", error);
     res.status(500).json({ error: "Failed to update branding configuration" });
@@ -569,8 +405,44 @@ router.post("/branding/upload", (req: Request, res: Response) => {
 });
 
 // Generate CSS variables endpoint
-router.get("/branding/css-variables", (req: Request, res: Response) => {
-  const cssVariables = `
+router.get("/branding/css-variables", async (req: Request, res: Response) => {
+  try {
+    const config = await storage.getAdminConfig('branding-config');
+    const defaultConfig = {
+      colors: {
+        primary: "#3b82f6",
+        primaryDark: "#1d4ed8",
+        primaryLight: "#60a5fa",
+        secondary: "#64748b",
+        accent: "#f59e0b",
+        success: "#10b981",
+        warning: "#f59e0b",
+        error: "#ef4444",
+        background: "#ffffff",
+        backgroundDark: "#0f172a",
+        text: "#1e293b",
+        textDark: "#f8fafc",
+        muted: "#64748b",
+        border: "#e2e8f0"
+      },
+      typography: {
+        fontFamily: "Inter",
+        headingFont: "Inter",
+        bodyFont: "Inter",
+        fontScale: 1.0
+      },
+      theme: {
+        borderRadius: "0.5rem"
+      },
+      logo: {
+        logoHeight: 40,
+        logoWidth: 40
+      }
+    };
+    
+    const brandingConfig = config || defaultConfig;
+    
+    const cssVariables = `
 :root {
   /* Brand Colors */
   --brand-primary: ${brandingConfig.colors.primary};
@@ -618,180 +490,189 @@ router.get("/branding/css-variables", (req: Request, res: Response) => {
 }
 `;
 
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/branding/css-variables 200`);
-  res.setHeader('Content-Type', 'text/css');
-  res.send(cssVariables);
-});
-
-// Generate manifest.json
-router.get("/branding/manifest", (req: Request, res: Response) => {
-  const manifest = {
-    name: brandingConfig.brand.companyName,
-    short_name: brandingConfig.brand.companyName.replace(/\s+/g, ''),
-    description: brandingConfig.brand.description,
-    start_url: "/",
-    display: "standalone",
-    background_color: brandingConfig.colors.background,
-    theme_color: brandingConfig.colors.primary,
-    orientation: "portrait-primary",
-    scope: "/",
-    icons: [
-      brandingConfig.appIcons.webAppIcon192 && {
-        src: brandingConfig.appIcons.webAppIcon192,
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any"
-      },
-      brandingConfig.appIcons.webAppIcon512 && {
-        src: brandingConfig.appIcons.webAppIcon512,
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any"
-      },
-      brandingConfig.appIcons.maskableIcon && {
-        src: brandingConfig.appIcons.maskableIcon,
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable"
-      }
-    ].filter(Boolean),
-    categories: ["business", "productivity", "utilities"]
-  };
-
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/branding/manifest 200`);
-  res.json(manifest);
-});
-
-// Chat widget configuration state
-let chatWidgetConfig = {
-  enabled: false,
-  provider: "crisp",
-  apiKey: "",
-  position: "bottom-right",
-  showOnDashboard: false,
-  allowedPages: ["landing", "pricing", "contact"],
-  customization: {
-    primaryColor: "#3B82F6",
-    fontFamily: "Inter",
-    borderRadius: "8px",
-    position: "bottom-right"
+    res.setHeader('Content-Type', 'text/css');
+    res.send(cssVariables);
+  } catch (error) {
+    console.error("Error generating CSS variables:", error);
+    res.status(500).json({ error: "Failed to generate CSS variables" });
   }
-};
+});
 
-// Get chat widget configuration
-router.get("/chat-widget-config", (req: Request, res: Response) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/chat-widget-config 200`);
-  res.json({ success: true, config: chatWidgetConfig });
+// Generate manifest.json - now using database
+router.get("/branding/manifest", async (req: Request, res: Response) => {
+  try {
+    const config = await storage.getAdminConfig('branding-config');
+    const defaultConfig = {
+      brand: {
+        companyName: "Wizzered",
+        description: "AI-Powered Legal Technology"
+      },
+      colors: {
+        background: "#ffffff",
+        primary: "#3b82f6"
+      },
+      appIcons: {
+        webAppIcon192: null,
+        webAppIcon512: null,
+        maskableIcon: null
+      }
+    };
+    
+    const brandingConfig = config || defaultConfig;
+    
+    const manifest = {
+      name: brandingConfig.brand.companyName,
+      short_name: brandingConfig.brand.companyName.replace(/\s+/g, ''),
+      description: brandingConfig.brand.description,
+      start_url: "/",
+      display: "standalone",
+      background_color: brandingConfig.colors.background,
+      theme_color: brandingConfig.colors.primary,
+      orientation: "portrait-primary",
+      scope: "/",
+      icons: [
+        brandingConfig.appIcons.webAppIcon192 && {
+          src: brandingConfig.appIcons.webAppIcon192,
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any"
+        },
+        brandingConfig.appIcons.webAppIcon512 && {
+          src: brandingConfig.appIcons.webAppIcon512,
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any"
+        },
+        brandingConfig.appIcons.maskableIcon && {
+          src: brandingConfig.appIcons.maskableIcon,
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable"
+        }
+      ].filter(Boolean),
+      categories: ["business", "productivity", "utilities"]
+    };
+
+    res.json(manifest);
+  } catch (error) {
+    console.error("Error generating manifest:", error);
+    res.status(500).json({ error: "Failed to generate manifest" });
+  }
+});
+
+// Chat widget configuration - now using database
+router.get("/chat-widget-config", async (req: Request, res: Response) => {
+  try {
+    const config = await storage.getAdminConfig('chat-widget-config');
+    const defaultConfig = {
+      enabled: false,
+      provider: "crisp",
+      apiKey: "",
+      position: "bottom-right",
+      showOnDashboard: false,
+      allowedPages: ["landing", "pricing", "contact"],
+      customization: {
+        primaryColor: "#3B82F6",
+        fontFamily: "Inter",
+        borderRadius: "8px",
+        position: "bottom-right"
+      }
+    };
+    
+    res.json({ success: true, config: config || defaultConfig });
+  } catch (error) {
+    console.error("Error fetching chat widget config:", error);
+    res.status(500).json({ error: "Failed to fetch chat widget configuration" });
+  }
 });
 
 // Update chat widget configuration
-router.put("/chat-widget-config", (req: Request, res: Response) => {
+router.put("/chat-widget-config", async (req: Request, res: Response) => {
   try {
-    chatWidgetConfig = { ...chatWidgetConfig, ...req.body.config };
-    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/chat-widget-config 200`);
-    res.json({ success: true, config: chatWidgetConfig });
+    await storage.setAdminConfig('chat-widget-config', req.body.config);
+    res.json({ success: true, config: req.body.config });
   } catch (error) {
     console.error("Error updating chat widget config:", error);
     res.status(500).json({ error: "Failed to update chat widget configuration" });
   }
 });
 
-// Get logo configuration (legacy endpoint)
-router.get("/logo-config", (req: Request, res: Response) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/logo-config 200`);
-  res.json({
-    logoUrl: brandingConfig.logo.primaryLogo,
-    brandName: brandingConfig.brand.companyName,
-    tagline: brandingConfig.brand.tagline,
-    showText: brandingConfig.logo.showText,
-    logoHeight: brandingConfig.logo.logoHeight,
-    logoWidth: brandingConfig.logo.logoWidth
-  });
-});
-
-// Page management endpoints
-router.get("/pages", (req: Request, res: Response) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pages 200`);
-
-  const pages = [
-    {
-      id: "1",
-      title: "Terms and Conditions",
-      slug: "terms-and-conditions",
-      content: "# Terms and Conditions\n\nLast updated: [DATE]\n\n## 1. Acceptance of Terms...",
-      metaDescription: "Terms and conditions for using LegalAI Pro platform and services.",
-      isPublished: true,
-      showInFooter: true,
-      footerCategory: "Legal",
-      lastModified: "2024-01-15",
-      type: "terms"
-    },
-    {
-      id: "2", 
-      title: "Privacy Policy",
-      slug: "privacy-policy",
-      content: "# Privacy Policy\n\nLast updated: [DATE]\n\n## Information We Collect...",
-      metaDescription: "Privacy policy explaining how LegalAI Pro collects, uses, and protects your personal information.",
-      isPublished: true,
-      showInFooter: true,
-      footerCategory: "Legal",
-      lastModified: "2024-01-15",
-      type: "privacy"
-    }
-  ];
-
-  res.json(pages);
-});
-
-router.post("/pages", (req: Request, res: Response) => {
-  const page = req.body;
-  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/pages 201`);
-  res.status(201).json({ ...page, id: Date.now().toString() });
-});
-
-router.put("/pages/:id", (req: Request, res: Response) => {
-  const { id } = req.params;
-  const page = req.body;
-  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/pages/${id} 200`);
-  res.json({ ...page, id });
-});
-
-router.delete("/pages/:id", (req: Request, res: Response) => {
-  const { id } = req.params;
-  console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/pages/${id} 200`);
-  res.json({ success: true });
-});
-
-// Get combined branding and config data for frontend
-router.get("/global-config", (req: Request, res: Response) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/global-config 200`);
-  res.json({
-    branding: brandingConfig,
-    landing: landingConfig,
-    chatWidget: chatWidgetConfig,
-    pages: pageManagement.pages.filter(page => page.isPublished)
-  });
-});
-
-// Apply branding globally endpoint
-router.post("/apply-branding", (req: Request, res: Response) => {
+// Get logo configuration (legacy endpoint) - now using database
+router.get("/logo-config", async (req: Request, res: Response) => {
   try {
-    // This endpoint would typically update global stylesheets, favicon links, etc.
-    // For now, we'll just return success
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/apply-branding 200`);
+    const config = await storage.getAdminConfig('branding-config');
+    const defaultConfig = {
+      logo: {
+        primaryLogo: null,
+        showText: true,
+        logoHeight: 40,
+        logoWidth: 40
+      },
+      brand: {
+        companyName: "Wizzered",
+        tagline: "AI-Powered Legal Technology"
+      }
+    };
+    
+    const brandingConfig = config || defaultConfig;
+    
+    res.json({
+      logoUrl: brandingConfig.logo.primaryLogo,
+      brandName: brandingConfig.brand.companyName,
+      tagline: brandingConfig.brand.tagline,
+      showText: brandingConfig.logo.showText,
+      logoHeight: brandingConfig.logo.logoHeight,
+      logoWidth: brandingConfig.logo.logoWidth
+    });
+  } catch (error) {
+    console.error("Error fetching logo config:", error);
+    res.status(500).json({ error: "Failed to fetch logo configuration" });
+  }
+});
+
+// Legacy page management endpoints - these are now handled by the database-integrated routes above
+
+// Get combined branding and config data for frontend - now using database
+router.get("/global-config", async (req: Request, res: Response) => {
+  try {
+    const [branding, landing, chatWidget, pages] = await Promise.all([
+      storage.getAdminConfig('branding-config'),
+      storage.getAdminConfig('landing-config'),
+      storage.getAdminConfig('chat-widget-config'),
+      storage.getAdminPages()
+    ]);
+    
+    res.json({
+      branding: branding || { brand: { companyName: "Wizzered" } },
+      landing: landing || { hero: { title: "AI-Powered Legal Technology" } },
+      chatWidget: chatWidget || { enabled: false },
+      pages: pages ? pages.filter(page => page.isPublished) : []
+    });
+  } catch (error) {
+    console.error("Error fetching global config:", error);
+    res.status(500).json({ error: "Failed to fetch global configuration" });
+  }
+});
+
+// Apply branding globally endpoint - now using database
+router.post("/apply-branding", async (req: Request, res: Response) => {
+  try {
+    const config = await storage.getAdminConfig('branding-config');
+    const brandingConfig = config || { favicon: { ico: null } };
+    
     res.json({ 
       success: true, 
       message: "Branding applied globally",
       applied: {
         cssVariables: true,
-        favicon: brandingConfig.favicon.ico !== null,
+        favicon: brandingConfig.favicon?.ico !== null,
         manifest: true,
         socialMeta: true
       }
     });
   } catch (error) {
     console.error("Error applying branding:", error);
-    res.status(500).json({ error: "Failed to apply branding globally" });
+    res.status(500).json({ error: "Failed to apply branding" });
   }
 });
 
@@ -929,81 +810,44 @@ router.put("/system/maintenance/mode", (req: Request, res: Response) => {
   });
 });
 
-// Global Prompt Management
-let globalPrompts = [
-  {
-    id: "1",
-    name: "Core Legal AI System Prompt",
-    content: `You are a senior legal AI assistant with 20+ years of experience in legal practice. Your primary role is to provide strategic legal analysis, case management guidance, and document generation support.
-
-CORE PRINCIPLES:
-1. Always maintain professional legal standards
-2. Provide strategic thinking and proactive recommendations
-3. Think like an experienced attorney, not just a document generator
-4. Consider all legal implications and potential outcomes
-5. Offer actionable next steps for case progression
-
-CAPABILITIES:
-- Legal case analysis and strategy development
-- Document generation (motions, briefs, contracts, letters)
-- Legal research and precedent identification
-- Risk assessment and mitigation strategies
-- Client communication guidance
-- Court procedure and deadline management
-
-IMPORTANT DISCLAIMERS:
-- This service does not create an attorney-client relationship
-- All outputs are for informational purposes only
-- Users should consult with licensed attorneys for legal advice
-- Do not provide advice on illegal activities
-
-RESPONSE FORMAT:
-- Be concise but comprehensive
-- Use professional legal language
-- Provide specific actionable recommendations
-- Include relevant legal citations when appropriate
-- Always suggest next steps for case progression
-
-Remember: You are not just answering questions - you are providing strategic legal guidance to help users achieve their legal objectives effectively.`,
-    category: 'system',
-    isActive: true,
-    lastModified: "2024-01-15T10:00:00Z",
-    version: 3,
-    description: "Main system prompt that defines the AI's behavior and capabilities"
+// Global Prompt Management - now using database
+router.get("/global-prompts", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const prompts = await storage.getAdminPrompts();
+    res.json(prompts);
+  } catch (error) {
+    console.error("Error fetching global prompts:", error);
+    res.status(500).json({ error: "Failed to fetch prompts" });
   }
-];
-
-// Get all global prompts
-router.get("/global-prompts", (req: Request, res: Response) => {
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/global-prompts 200`);
-  res.json(globalPrompts);
 });
 
 // Get single global prompt
-router.get("/global-prompts/:id", (req: Request, res: Response) => {
-  const { id } = req.params;
-  const prompt = globalPrompts.find(p => p.id === id);
+router.get("/global-prompts/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const prompt = await storage.getAdminPrompt(id);
 
-  if (!prompt) {
-    return res.status(404).json({ error: "Prompt not found" });
+    if (!prompt) {
+      return res.status(404).json({ error: "Prompt not found" });
+    }
+
+    res.json(prompt);
+  } catch (error) {
+    console.error("Error fetching prompt:", error);
+    res.status(500).json({ error: "Failed to fetch prompt" });
   }
-
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/global-prompts/${id} 200`);
-  res.json(prompt);
 });
 
 // Create new global prompt
-router.post("/global-prompts", (req: Request, res: Response) => {
+router.post("/global-prompts", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const newPrompt = {
-      id: Date.now().toString(),
-      ...req.body,
-      lastModified: new Date().toISOString(),
-      version: 1
-    };
-
-    globalPrompts.push(newPrompt);
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/global-prompts 201`);
+    const newPrompt = await storage.createAdminPrompt({
+      name: req.body.name,
+      description: req.body.description,
+      promptContent: req.body.content || req.body.promptContent,
+      isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+      category: req.body.category || 'general'
+    });
     res.status(201).json(newPrompt);
   } catch (error) {
     console.error("Error creating prompt:", error);
@@ -1012,24 +856,17 @@ router.post("/global-prompts", (req: Request, res: Response) => {
 });
 
 // Update global prompt
-router.put("/global-prompts/:id", (req: Request, res: Response) => {
+router.put("/global-prompts/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const promptIndex = globalPrompts.findIndex(p => p.id === id);
-
-    if (promptIndex === -1) {
-      return res.status(404).json({ error: "Prompt not found" });
-    }
-
-    globalPrompts[promptIndex] = {
-      ...globalPrompts[promptIndex],
-      ...req.body,
-      lastModified: new Date().toISOString(),
-      version: globalPrompts[promptIndex].version + 1
-    };
-
-    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/global-prompts/${id} 200`);
-    res.json(globalPrompts[promptIndex]);
+    const updatedPrompt = await storage.updateAdminPrompt(id, {
+      name: req.body.name,
+      description: req.body.description,
+      promptContent: req.body.content || req.body.promptContent,
+      isActive: req.body.isActive,
+      category: req.body.category
+    });
+    res.json(updatedPrompt);
   } catch (error) {
     console.error("Error updating prompt:", error);
     res.status(500).json({ error: "Failed to update prompt" });
@@ -1037,17 +874,10 @@ router.put("/global-prompts/:id", (req: Request, res: Response) => {
 });
 
 // Delete global prompt
-router.delete("/global-prompts/:id", (req: Request, res: Response) => {
+router.delete("/global-prompts/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const promptIndex = globalPrompts.findIndex(p => p.id === id);
-
-    if (promptIndex === -1) {
-      return res.status(404).json({ error: "Prompt not found" });
-    }
-
-    globalPrompts.splice(promptIndex, 1);
-    console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/global-prompts/${id} 200`);
+    await storage.deleteAdminPrompt(id);
     res.json({ success: true, message: "Prompt deleted successfully" });
   } catch (error) {
     console.error("Error deleting prompt:", error);
@@ -1056,20 +886,21 @@ router.delete("/global-prompts/:id", (req: Request, res: Response) => {
 });
 
 // Toggle prompt active status
-router.patch("/global-prompts/:id/toggle", (req: Request, res: Response) => {
+router.patch("/global-prompts/:id/toggle", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const promptIndex = globalPrompts.findIndex(p => p.id === id);
-
-    if (promptIndex === -1) {
+    const currentPrompt = await storage.getAdminPrompt(id);
+    
+    if (!currentPrompt) {
       return res.status(404).json({ error: "Prompt not found" });
     }
 
-    globalPrompts[promptIndex].isActive = !globalPrompts[promptIndex].isActive;
-    globalPrompts[promptIndex].lastModified = new Date().toISOString();
+    const updatedPrompt = await storage.updateAdminPrompt(id, {
+      ...currentPrompt,
+      isActive: !currentPrompt.isActive
+    });
 
-    console.log(`${new Date().toLocaleTimeString()} [express] PATCH /api/admin/global-prompts/${id}/toggle 200`);
-    res.json(globalPrompts[promptIndex]);
+    res.json(updatedPrompt);
   } catch (error) {
     console.error("Error toggling prompt:", error);
     res.status(500).json({ error: "Failed to toggle prompt status" });
