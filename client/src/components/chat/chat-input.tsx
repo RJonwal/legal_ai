@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -25,6 +25,8 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage, onFunctionClick, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
+  const [showCaseActions, setShowCaseActions] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,18 @@ export function ChatInput({ onSendMessage, onFunctionClick, disabled }: ChatInpu
       handleSubmit(e);
     }
   };
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCaseActions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const caseActions = [
     { id: 'case-strategy', label: 'Case Strategy', icon: Brain },
@@ -82,15 +96,38 @@ export function ChatInput({ onSendMessage, onFunctionClick, disabled }: ChatInpu
             Press Enter to send, Shift+Enter for new line
           </div>
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            disabled={disabled}
-            onClick={() => onFunctionClick?.(caseActions[0].id)}
-            className="text-legal-blue border-legal-blue hover:bg-legal-blue hover:text-white"
-          >
-            Case Actions
-          </Button>
+          <div className="relative" ref={dropdownRef}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={disabled}
+              onClick={() => setShowCaseActions(!showCaseActions)}
+              className="text-legal-blue border-legal-blue hover:bg-legal-blue hover:text-white"
+            >
+              Case Actions
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+            {showCaseActions && (
+              <div className="absolute right-0 top-full mt-1 w-56 bg-white border rounded-md shadow-lg z-50">
+                {caseActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={() => {
+                        onFunctionClick?.(action.id);
+                        setShowCaseActions(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-gray-50 cursor-pointer"
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{action.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </form>
     </div>

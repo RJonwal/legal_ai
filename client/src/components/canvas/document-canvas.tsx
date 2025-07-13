@@ -43,10 +43,12 @@ export function DocumentCanvas({ caseId, document: documentProp, onDocumentUpdat
   const [selectedFont, setSelectedFont] = useState("Times New Roman");
   const [fontSize, setFontSize] = useState(12);
   const [textColor, setTextColor] = useState("#000000");
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const documentRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const downloadRef = useRef<HTMLDivElement>(null);
 
   // Court-compatible fonts
   const courtFonts = [
@@ -74,6 +76,18 @@ export function DocumentCanvas({ caseId, document: documentProp, onDocumentUpdat
       setContent(documentProp.content);
     }
   }, [documentProp]);
+
+  // Handle click outside to close download dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (downloadRef.current && !downloadRef.current.contains(event.target as Node)) {
+        setShowDownloadMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const updateDocumentMutation = useMutation({
     mutationFn: async (updates: any) => {
@@ -593,34 +607,48 @@ export function DocumentCanvas({ caseId, document: documentProp, onDocumentUpdat
               </SelectContent>
             </Select>
 
-            {/* Download Buttons - Temporarily disabled dropdown */}
-            <div className="flex space-x-1">
+            {/* Download Dropdown */}
+            <div className="relative" ref={downloadRef}>
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="h-8 px-2" 
                 disabled={isDownloading}
-                onClick={handleDownloadPDF}
+                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
               >
                 {isDownloading ? (
                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-legal-blue"></div>
                 ) : (
                   <>
-                    <FileText className="h-3 w-3 mr-1" />
-                    <span className="text-xs">PDF</span>
+                    <Download className="h-3 w-3" />
+                    <ChevronDown className="h-3 w-3 ml-1" />
                   </>
                 )}
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 px-2" 
-                disabled={isDownloading}
-                onClick={handleDownloadEditable}
-              >
-                <Edit3 className="h-3 w-3 mr-1" />
-                <span className="text-xs">TXT</span>
-              </Button>
+              {showDownloadMenu && !isDownloading && (
+                <div className="absolute right-0 top-full mt-1 w-32 bg-white border rounded-md shadow-lg z-50">
+                  <button
+                    onClick={() => {
+                      handleDownloadPDF();
+                      setShowDownloadMenu(false);
+                    }}
+                    className="w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-gray-50 cursor-pointer"
+                  >
+                    <FileText className="h-3 w-3" />
+                    <span className="text-xs">PDF</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDownloadEditable();
+                      setShowDownloadMenu(false);
+                    }}
+                    className="w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-gray-50 cursor-pointer"
+                  >
+                    <Edit3 className="h-3 w-3" />
+                    <span className="text-xs">Editable</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
