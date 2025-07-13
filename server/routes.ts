@@ -51,6 +51,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes - temporarily disabled due to duplicate routes
   // app.use("/api/admin", adminRoutes);
 
+  // Admin branding config endpoint (required for UI)
+  app.get("/api/admin/branding-config", async (req, res) => {
+    try {
+      const config = await storage.getAdminConfig('branding-config');
+      if (!config) {
+        // Return default branding config
+        const defaultConfig = {
+          companyName: "Wizzered",
+          tagline: "AI-Powered Legal Technology",
+          primaryColor: "#1f2937",
+          secondaryColor: "#3b82f6",
+          logoUrl: null,
+          faviconUrl: null,
+          footerText: "© 2025 Wizzered. All rights reserved.",
+          supportEmail: "support@wizzered.com",
+          supportPhone: "+1 (555) 123-4567",
+          termsUrl: "/terms",
+          privacyUrl: "/privacy",
+          cookiePolicyUrl: "/cookie-policy"
+        };
+        res.json(defaultConfig);
+        return;
+      }
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching branding config:", error);
+      // Return default config on error
+      const defaultConfig = {
+        companyName: "Wizzered",
+        tagline: "AI-Powered Legal Technology",
+        primaryColor: "#1f2937",
+        secondaryColor: "#3b82f6",
+        logoUrl: null,
+        faviconUrl: null,
+        footerText: "© 2025 Wizzered. All rights reserved.",
+        supportEmail: "support@wizzered.com",
+        supportPhone: "+1 (555) 123-4567",
+        termsUrl: "/terms",
+        privacyUrl: "/privacy",
+        cookiePolicyUrl: "/cookie-policy"
+      };
+      res.json(defaultConfig);
+    }
+  });
+
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ 
