@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,7 +35,7 @@ interface GlobalPrompt {
 
 export default function GlobalPromptManagement() {
   const { toast } = useToast();
-  
+
   // Load prompts from API
   const { data: prompts = [], refetch } = useQuery({
     queryKey: ['global-prompts'],
@@ -484,7 +485,7 @@ Each action should provide immediate, practical assistance tailored to the speci
         await refetch();
         setActivePrompt(null);
         setEditingPrompt('');
-        
+
         toast({
           title: "Prompt Updated",
           description: "The global prompt has been successfully updated.",
@@ -527,7 +528,7 @@ Each action should provide immediate, practical assistance tailored to the speci
         setNewPromptName('');
         setNewPromptDescription('');
         setEditingPrompt('');
-        
+
         toast({
           title: "Prompt Created",
           description: "New global prompt has been successfully created.",
@@ -556,7 +557,7 @@ Each action should provide immediate, practical assistance tailored to the speci
       }
 
       await refetch();
-      
+
       toast({
         title: "Prompt Status Updated",
         description: "Prompt activation status has been changed.",
@@ -650,7 +651,7 @@ Each action should provide immediate, practical assistance tailored to the speci
                         <p className="text-sm text-gray-600 mb-2">Current Prompt (Version {prompt.version})</p>
                         <p className="text-sm text-gray-800 line-clamp-3">{prompt.content}</p>
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-sm text-gray-500">
                         <span>Last modified: {new Date(prompt.lastModified).toLocaleString()}</span>
                         <div className="flex gap-2">
@@ -707,7 +708,7 @@ Each action should provide immediate, practical assistance tailored to the speci
                       <span className="font-medium">{activePrompt.name}</span>
                       <Badge variant="outline">Version {activePrompt.version}</Badge>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="prompt-content">Prompt Content</Label>
                       <Textarea
@@ -718,7 +719,7 @@ Each action should provide immediate, practical assistance tailored to the speci
                         placeholder="Enter your prompt content here..."
                       />
                     </div>
-                    
+
                     <div className="flex gap-2">
                       <Button onClick={handleSavePrompt} disabled={!editingPrompt.trim()}>
                         <Save className="mr-2 h-4 w-4" />
