@@ -1297,7 +1297,7 @@ export default function EmailManagement() {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="sent">Sent</SelectItem>
                   <SelectItem value="received">Received</SelectItem>
-                  <SelectItem value="forwarded">Forwarded</SelectItem>
+                  <SelectItem value="forwarded">Forwarded</SelectItem>SelectItem>
                 </SelectContent>
               </Select>
               <Select value={emailFilters.status} onValueChange={(value) => setEmailFilters({ ...emailFilters, status: value })}>
