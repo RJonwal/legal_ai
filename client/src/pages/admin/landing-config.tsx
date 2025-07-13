@@ -164,6 +164,13 @@ interface BrandingConfig {
     facebook: string;
     instagram: string;
     youtube: string;
+    socialToggles?: {
+      twitter?: boolean;
+      linkedin?: boolean;
+      facebook?: boolean;
+      instagram?: boolean;
+      youtube?: boolean;
+    };
   };
   seo: {
     ogImage: string | null;
@@ -232,7 +239,14 @@ export default function LandingConfig() {
       linkedin: "",
       facebook: "",
       instagram: "",
-      youtube: ""
+      youtube: "",
+      socialToggles: {
+        twitter: true,
+        linkedin: true,
+        facebook: true,
+        instagram: true,
+        youtube: true
+      }
     },
     seo: {
       ogImage: null,
@@ -1162,42 +1176,128 @@ export default function LandingConfig() {
 
                   <div>
                     <h4 className="font-medium mb-4">Social Media Links</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="twitter">Twitter/X</Label>
-                        <Input
-                          id="twitter"
-                          value={brandingConfig.social.twitter}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, twitter: e.target.value } }))}
-                          placeholder="https://twitter.com/yourcompany"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="linkedin">LinkedIn</Label>
-                        <Input
-                          id="linkedin"
-                          value={brandingConfig.social.linkedin}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, linkedin: e.target.value } }))}
-                          placeholder="https://linkedin.com/company/yourcompany"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="facebook">Facebook</Label>
-                        <Input
-                          id="facebook"
-                          value={brandingConfig.social.facebook}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, facebook: e.target.value } }))}
-                          placeholder="https://facebook.com/yourcompany"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="instagram">Instagram</Label>
-                        <Input
-                          id="instagram"
-                          value={brandingConfig.social.instagram}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, instagram: e.target.value } }))}
-                          placeholder="https://instagram.com/yourcompany"
-                        />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="twitter">Twitter/X</Label>
+                            <Switch
+                              checked={brandingConfig.social.socialToggles?.twitter !== false}
+                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
+                                ...prev, 
+                                social: { 
+                                  ...prev.social, 
+                                  socialToggles: { 
+                                    ...prev.social.socialToggles, 
+                                    twitter: checked 
+                                  } 
+                                } 
+                              }))}
+                            />
+                          </div>
+                          <Input
+                            id="twitter"
+                            value={brandingConfig.social.twitter}
+                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, twitter: e.target.value } }))}
+                            placeholder="https://twitter.com/yourcompany"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="linkedin">LinkedIn</Label>
+                            <Switch
+                              checked={brandingConfig.social.socialToggles?.linkedin !== false}
+                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
+                                ...prev, 
+                                social: { 
+                                  ...prev.social, 
+                                  socialToggles: { 
+                                    ...prev.social.socialToggles, 
+                                    linkedin: checked 
+                                  } 
+                                } 
+                              }))}
+                            />
+                          </div>
+                          <Input
+                            id="linkedin"
+                            value={brandingConfig.social.linkedin}
+                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, linkedin: e.target.value } }))}
+                            placeholder="https://linkedin.com/company/yourcompany"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="facebook">Facebook</Label>
+                            <Switch
+                              checked={brandingConfig.social.socialToggles?.facebook !== false}
+                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
+                                ...prev, 
+                                social: { 
+                                  ...prev.social, 
+                                  socialToggles: { 
+                                    ...prev.social.socialToggles, 
+                                    facebook: checked 
+                                  } 
+                                } 
+                              }))}
+                            />
+                          </div>
+                          <Input
+                            id="facebook"
+                            value={brandingConfig.social.facebook}
+                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, facebook: e.target.value } }))}
+                            placeholder="https://facebook.com/yourcompany"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="instagram">Instagram</Label>
+                            <Switch
+                              checked={brandingConfig.social.socialToggles?.instagram !== false}
+                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
+                                ...prev, 
+                                social: { 
+                                  ...prev.social, 
+                                  socialToggles: { 
+                                    ...prev.social.socialToggles, 
+                                    instagram: checked 
+                                  } 
+                                } 
+                              }))}
+                            />
+                          </div>
+                          <Input
+                            id="instagram"
+                            value={brandingConfig.social.instagram}
+                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, instagram: e.target.value } }))}
+                            placeholder="https://instagram.com/yourcompany"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="youtube">YouTube</Label>
+                            <Switch
+                              checked={brandingConfig.social.socialToggles?.youtube !== false}
+                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
+                                ...prev, 
+                                social: { 
+                                  ...prev.social, 
+                                  socialToggles: { 
+                                    ...prev.social.socialToggles, 
+                                    youtube: checked 
+                                  } 
+                                } 
+                              }))}
+                            />
+                          </div>
+                          <Input
+                            id="youtube"
+                            value={brandingConfig.social.youtube}
+                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, youtube: e.target.value } }))}
+                            placeholder="https://youtube.com/@yourcompany"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

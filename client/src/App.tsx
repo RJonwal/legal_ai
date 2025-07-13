@@ -15,6 +15,9 @@ import SearchCases from "@/pages/search-cases";
 import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
+import TermsPage from "@/pages/terms";
+import PrivacyPage from "@/pages/privacy";
+import AboutPage from "@/pages/about";
 
 // Import auth pages
 import Login from "@/pages/auth/login";
@@ -189,6 +192,11 @@ function App() {
               <Route path="/search-cases" component={SearchCases} />
               <Route path="/profile" component={Profile} />
               <Route path="/settings" component={Settings} />
+              <Route path="/terms" component={TermsPage} />
+              <Route path="/terms-and-conditions" component={TermsPage} />
+              <Route path="/privacy" component={PrivacyPage} />
+              <Route path="/privacy-policy" component={PrivacyPage} />
+              <Route path="/about" component={AboutPage} />
 
               {/* 404 page */}
               <Route component={NotFound} />

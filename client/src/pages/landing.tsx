@@ -33,6 +33,7 @@ import { SiFacebook, SiX, SiLinkedin } from "react-icons/si";
 import { Link, useLocation } from "wouter";
 import { Logo } from "@/components/ui/logo";
 import ChatWidget from "@/components/chat/chat-widget";
+import Footer from "@/components/layout/footer";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -410,78 +411,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-gray-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Scale className="h-8 w-8 text-blue-400" />
-                <span className="text-xl font-bold">LegalAI Pro</span>
-              </div>
-              <p className="text-gray-400 mb-4">
-                The future of legal practice is here. Empower your firm with AI-driven insights and automation.
-              </p>
-              <div className="flex space-x-4">
-                <SiX className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
-                <SiLinkedin className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
-                <SiFacebook className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#features" className="hover:text-white">Features</a></li>
-                <li><a href="#pricing" className="hover:text-white">Pricing</a></li>
-                <li><a href="#" className="hover:text-white">API Documentation</a></li>
-                <li><a href="#" className="hover:text-white">Integrations</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">About Us</a></li>
-                <li><a href="#" className="hover:text-white">Careers</a></li>
-                <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white">Terms of Service</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Contact</h3>
-              <div className="space-y-2 text-gray-400">
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  <span>1-800-LEGAL-AI</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  <span>support@legalai.pro</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>San Francisco, CA</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator className="my-8 bg-gray-700" />
-
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">
-              © 2024 LegalAI Pro. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4 text-sm text-gray-400">
-              <Lock className="h-4 w-4" />
-              <span>SOC 2 Compliant</span>
-              <Globe className="h-4 w-4" />
-              <span>GDPR Ready</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
       <ChatWidget />
     </div>
   );

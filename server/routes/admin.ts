@@ -455,7 +455,14 @@ let brandingConfig = {
     linkedin: "",
     facebook: "",
     instagram: "",
-    youtube: ""
+    youtube: "",
+    socialToggles: {
+      twitter: true,
+      linkedin: true,
+      facebook: true,
+      instagram: true,
+      youtube: true
+    }
   },
   seo: {
     ogImage: null as string | null,
