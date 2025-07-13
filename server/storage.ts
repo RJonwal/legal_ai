@@ -1,6 +1,6 @@
 import { 
   users, cases, chatMessages, documents, caseTimeline,
-  type User, type InsertUser,
+  type User as SchemaUser, type InsertUser,
   type Case, type InsertCase,
   type ChatMessage, type InsertChatMessage,
   type Document, type InsertDocument,
@@ -12,15 +12,15 @@ import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // User operations
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, updates: Partial<User>): Promise<User>;
-  updateUserStripe(id: number, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User>;
-  verifyUser(id: number): Promise<User>;
-  updatePassword(id: number, hashedPassword: string): Promise<User>;
-  setResetToken(email: string, token: string, expiry: Date): Promise<User | undefined>;
+  getUser(id: number): Promise<SchemaUser | undefined>;
+  getUserByUsername(username: string): Promise<SchemaUser | undefined>;
+  getUserByEmail(email: string): Promise<SchemaUser | undefined>;
+  createUser(user: InsertUser): Promise<SchemaUser>;
+  updateUser(id: number, updates: Partial<SchemaUser>): Promise<SchemaUser>;
+  updateUserStripe(id: number, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<SchemaUser>;
+  verifyUser(id: number): Promise<SchemaUser>;
+  updatePassword(id: number, hashedPassword: string): Promise<SchemaUser>;
+  setResetToken(email: string, token: string, expiry: Date): Promise<SchemaUser | undefined>;
 
   // Case operations
   getCase(id: number): Promise<Case | undefined>;
@@ -72,7 +72,7 @@ export interface User {
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User> = new Map();
+  private users: Map<number, SchemaUser> = new Map();
   private cases: Map<number, Case> = new Map();
   private chatMessages: Map<number, ChatMessage> = new Map();
   private documents: Map<number, Document> = new Map();
@@ -93,16 +93,22 @@ export class MemStorage implements IStorage {
 
   private initializeSampleData() {
     // Create sample user
-    const sampleUser: User = {
+    const sampleUser: SchemaUser = {
       id: 1,
       username: "sarah.johnson",
+      email: "sarah@example.com",
       password: "password",
       fullName: "Sarah Johnson",
       role: "Senior Attorney",
-      createdAt: new Date(),
+      userType: "attorney",
+      isVerified: false,
+      resetToken: null,
+      resetTokenExpiry: null,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
       subscriptionStatus: "active",
-      isActive: true,
-      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(1, sampleUser);
     this.userIdCounter = 2;
@@ -293,27 +299,32 @@ export class MemStorage implements IStorage {
     this.folderIdCounter = 7;
   }
 
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: number): Promise<SchemaUser | undefined> {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
+  async getUserByUsername(username: string): Promise<SchemaUser | undefined> {
     return Array.from(this.users.values()).find(user => user.username === username);
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
+  async getUserByEmail(email: string): Promise<SchemaUser | undefined> {
     return Array.from(this.users.values()).find(user => user.email === email);
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const user: User = {
+  async createUser(insertUser: InsertUser): Promise<SchemaUser> {
+    const user: SchemaUser = {
       ...insertUser,
       id: this.userIdCounter++,
-      createdAt: new Date(),
       role: insertUser.role || "attorney",
+      userType: insertUser.userType || "attorney",
+      isVerified: false,
+      resetToken: null,
+      resetTokenExpiry: null,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
       subscriptionStatus: "inactive",
-      isActive: true,
-      emailVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(user.id, user);
     return user;
@@ -381,13 +392,13 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
-  async updateUser(id: number, updates: Partial<User>): Promise<User> {
+  async updateUser(id: number, updates: Partial<SchemaUser>): Promise<SchemaUser> {
     const user = this.users.get(id);
     if (!user) {
       throw new Error('User not found');
     }
 
-    const updated: User = {
+    const updated: SchemaUser = {
       ...user,
       ...updates,
     };
@@ -396,59 +407,59 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
-  async updateUserStripe(id: number, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User> {
+  async updateUserStripe(id: number, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<SchemaUser> {
     const user = this.users.get(id);
     if (!user) {
       throw new Error('User not found');
     }
 
-    const updated: User = {
+    const updated: SchemaUser = {
       ...user,
       stripeCustomerId: stripeCustomerId,
-      stripeSubscriptionId: stripeSubscriptionId,
+      stripeSubscriptionId: stripeSubscriptionId || null,
     };
 
     this.users.set(id, updated);
     return updated;
   }
 
-  async verifyUser(id: number): Promise<User> {
+  async verifyUser(id: number): Promise<SchemaUser> {
     const user = this.users.get(id);
     if (!user) {
       throw new Error('User not found');
     }
 
-    const updated: User = {
+    const updated: SchemaUser = {
       ...user,
-      emailVerified: true,
+      isVerified: true,
     };
 
     this.users.set(id, updated);
     return updated;
   }
 
-  async updatePassword(id: number, hashedPassword: string): Promise<User> {
+  async updatePassword(id: number, hashedPassword: string): Promise<SchemaUser> {
     const user = this.users.get(id);
     if (!user) {
       throw new Error('User not found');
     }
 
-    const updated: User = {
+    const updated: SchemaUser = {
       ...user,
-      passwordHash: hashedPassword,
+      password: hashedPassword,
     };
 
     this.users.set(id, updated);
     return updated;
   }
 
-    async setResetToken(email: string, token: string, expiry: Date): Promise<User | undefined> {
+    async setResetToken(email: string, token: string, expiry: Date): Promise<SchemaUser | undefined> {
     const user = Array.from(this.users.values()).find(user => user.email === email);
     if (!user) {
       return undefined;
     }
 
-    const updated: User = {
+    const updated: SchemaUser = {
       ...user,
       resetToken: token,
       resetTokenExpiry: expiry,
