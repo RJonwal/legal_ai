@@ -30,7 +30,8 @@ import {
   Key,
   MessageSquare,
   Phone,
-  FileText
+  FileText,
+  Scale
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Link } from "wouter";
@@ -108,6 +109,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       url: "/admin/landing-config",
       icon: Globe,
       isActive: location === "/admin/landing-config"
+    },
+    {
+      title: "Attorney Connect",
+      url: "/admin/attorney-connect",
+      icon: Scale,
+      isActive: location === "/admin/attorney-connect"
     }
   ];
 

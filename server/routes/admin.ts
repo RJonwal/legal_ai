@@ -585,4 +585,252 @@ router.post("/apply-branding", (req: Request, res: Response) => {
   }
 });
 
+// Attorney Directory Management
+let attorneyDirectory = {
+  attorneys: [
+    {
+      id: "1",
+      userId: 1,
+      fullName: "Sarah Johnson",
+      email: "sarah@johnsonlaw.com",
+      barNumber: "BAR123456",
+      firmName: "Johnson & Associates",
+      practiceAreas: ["Family Law", "Divorce", "Child Custody"],
+      yearsOfExperience: 8,
+      address: "123 Legal St, Suite 200",
+      city: "New York",
+      state: "NY",
+      zipCode: "10001",
+      phone: "(555) 123-4567",
+      website: "www.johnsonlaw.com",
+      bio: "Experienced family law attorney dedicated to protecting clients' rights and interests.",
+      hourlyRate: 35000, // $350.00
+      availableForProSe: true,
+      maxProSeClients: 5,
+      currentProSeClients: 2,
+      isVerified: true,
+      subscription: "premium",
+      rating: 475, // 4.75 stars
+      reviewCount: 23,
+      isActive: true,
+      joinedAt: "2024-01-15",
+      connections: ["3", "7"]
+    },
+    {
+      id: "2",
+      userId: 2,
+      fullName: "Michael Chen",
+      email: "mchen@chenlegal.com",
+      barNumber: "BAR789012",
+      firmName: "Chen Legal Services",
+      practiceAreas: ["Immigration", "Business Law"],
+      yearsOfExperience: 12,
+      address: "456 Business Ave",
+      city: "Los Angeles",
+      state: "CA",
+      zipCode: "90210",
+      phone: "(555) 987-6543",
+      website: "www.chenlegal.com",
+      bio: "Immigration and business law specialist with extensive experience in complex cases.",
+      hourlyRate: 42500, // $425.00
+      availableForProSe: true,
+      maxProSeClients: 3,
+      currentProSeClients: 1,
+      isVerified: true,
+      subscription: "basic",
+      rating: 495, // 4.95 stars
+      reviewCount: 47,
+      isActive: true,
+      joinedAt: "2024-02-01",
+      connections: ["5"]
+    }
+  ],
+  proSeUsers: [
+    {
+      id: "3",
+      userId: 3,
+      fullName: "Robert Smith",
+      email: "robert.smith@email.com",
+      caseType: "Divorce",
+      city: "New York",
+      state: "NY",
+      zipCode: "10002",
+      connectedAttorneyId: "1",
+      connectionStatus: "active",
+      connectedAt: "2024-10-15",
+      needsAttorney: false,
+      preferredPracticeAreas: ["Family Law", "Divorce"]
+    },
+    {
+      id: "4",
+      userId: 4,
+      fullName: "Maria Garcia",
+      email: "maria.garcia@email.com",
+      caseType: "Immigration",
+      city: "Miami",
+      state: "FL",
+      zipCode: "33101",
+      connectedAttorneyId: null,
+      connectionStatus: "seeking",
+      needsAttorney: true,
+      preferredPracticeAreas: ["Immigration", "Citizenship"]
+    }
+  ]
+};
+
+// Get all attorneys
+router.get("/attorneys", (req: Request, res: Response) => {
+  const { search, state, zipCode, practiceArea, availability } = req.query;
+  
+  let filteredAttorneys = attorneyDirectory.attorneys;
+  
+  if (search) {
+    const searchTerm = search.toString().toLowerCase();
+    filteredAttorneys = filteredAttorneys.filter(attorney => 
+      attorney.fullName.toLowerCase().includes(searchTerm) ||
+      attorney.firmName.toLowerCase().includes(searchTerm) ||
+      attorney.practiceAreas.some(area => area.toLowerCase().includes(searchTerm))
+    );
+  }
+  
+  if (state) {
+    filteredAttorneys = filteredAttorneys.filter(attorney => attorney.state === state);
+  }
+  
+  if (zipCode) {
+    filteredAttorneys = filteredAttorneys.filter(attorney => attorney.zipCode === zipCode);
+  }
+  
+  if (practiceArea) {
+    filteredAttorneys = filteredAttorneys.filter(attorney => 
+      attorney.practiceAreas.includes(practiceArea.toString())
+    );
+  }
+  
+  if (availability === 'available') {
+    filteredAttorneys = filteredAttorneys.filter(attorney => 
+      attorney.availableForProSe && attorney.currentProSeClients < attorney.maxProSeClients
+    );
+  }
+  
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/attorneys 200`);
+  res.json(filteredAttorneys);
+});
+
+// Get attorney statistics
+router.get("/attorneys/stats", (req: Request, res: Response) => {
+  const stats = {
+    total: attorneyDirectory.attorneys.length,
+    verified: attorneyDirectory.attorneys.filter(a => a.isVerified).length,
+    available: attorneyDirectory.attorneys.filter(a => a.availableForProSe && a.currentProSeClients < a.maxProSeClients).length,
+    premium: attorneyDirectory.attorneys.filter(a => a.subscription === 'premium').length,
+    averageRating: attorneyDirectory.attorneys.reduce((sum, a) => sum + a.rating, 0) / attorneyDirectory.attorneys.length / 100,
+    totalConnections: attorneyDirectory.attorneys.reduce((sum, a) => sum + a.connections.length, 0),
+    totalProSeUsers: attorneyDirectory.proSeUsers.length,
+    activeConnections: attorneyDirectory.proSeUsers.filter(u => u.connectionStatus === 'active').length,
+    seekingConnections: attorneyDirectory.proSeUsers.filter(u => u.connectionStatus === 'seeking').length
+  };
+  
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/attorneys/stats 200`);
+  res.json(stats);
+});
+
+// Get all pro se users
+router.get("/pro-se-users", (req: Request, res: Response) => {
+  const { search, state, needsAttorney } = req.query;
+  
+  let filteredUsers = attorneyDirectory.proSeUsers;
+  
+  if (search) {
+    const searchTerm = search.toString().toLowerCase();
+    filteredUsers = filteredUsers.filter(user => 
+      user.fullName.toLowerCase().includes(searchTerm) ||
+      user.caseType.toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  if (state) {
+    filteredUsers = filteredUsers.filter(user => user.state === state);
+  }
+  
+  if (needsAttorney === 'true') {
+    filteredUsers = filteredUsers.filter(user => user.needsAttorney);
+  }
+  
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pro-se-users 200`);
+  res.json(filteredUsers);
+});
+
+// Connect attorney to pro se user
+router.post("/attorney-connections", (req: Request, res: Response) => {
+  try {
+    const { attorneyId, proSeUserId, connectionType = "consultation" } = req.body;
+    
+    // Find the attorney and pro se user
+    const attorneyIndex = attorneyDirectory.attorneys.findIndex(a => a.id === attorneyId);
+    const proSeIndex = attorneyDirectory.proSeUsers.findIndex(u => u.id === proSeUserId);
+    
+    if (attorneyIndex === -1 || proSeIndex === -1) {
+      return res.status(404).json({ error: "Attorney or Pro Se user not found" });
+    }
+    
+    const attorney = attorneyDirectory.attorneys[attorneyIndex];
+    const proSeUser = attorneyDirectory.proSeUsers[proSeIndex];
+    
+    // Check if attorney is available
+    if (attorney.currentProSeClients >= attorney.maxProSeClients) {
+      return res.status(400).json({ error: "Attorney has reached maximum client capacity" });
+    }
+    
+    // Update connections
+    attorney.connections.push(proSeUserId);
+    attorney.currentProSeClients += 1;
+    
+    proSeUser.connectedAttorneyId = attorneyId;
+    proSeUser.connectionStatus = "active";
+    proSeUser.connectedAt = new Date().toISOString().split('T')[0];
+    proSeUser.needsAttorney = false;
+    
+    const connection = {
+      id: Date.now().toString(),
+      attorneyId,
+      proSeUserId,
+      connectionType,
+      status: "active",
+      createdAt: new Date().toISOString()
+    };
+    
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/attorney-connections 201`);
+    res.status(201).json({ success: true, connection });
+  } catch (error) {
+    console.error("Error creating attorney connection:", error);
+    res.status(500).json({ error: "Failed to create connection" });
+  }
+});
+
+// Update attorney status
+router.put("/attorneys/:id/status", (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isActive, availableForProSe } = req.body;
+    
+    const attorneyIndex = attorneyDirectory.attorneys.findIndex(a => a.id === id);
+    if (attorneyIndex === -1) {
+      return res.status(404).json({ error: "Attorney not found" });
+    }
+    
+    attorneyDirectory.attorneys[attorneyIndex] = {
+      ...attorneyDirectory.attorneys[attorneyIndex],
+      isActive: isActive !== undefined ? isActive : attorneyDirectory.attorneys[attorneyIndex].isActive,
+      availableForProSe: availableForProSe !== undefined ? availableForProSe : attorneyDirectory.attorneys[attorneyIndex].availableForProSe
+    };
+    
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/attorneys/${id}/status 200`);
+    res.json({ success: true, attorney: attorneyDirectory.attorneys[attorneyIndex] });
+  } catch (error) {
+    console.error("Error updating attorney status:", error);
+    res.status(500).json({ error: "Failed to update attorney status" });
+  }
+});
+
 export default router;
