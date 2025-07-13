@@ -612,11 +612,14 @@ export default function EmailManagement() {
   const [testEmail, setTestEmail] = useState("");
   const [newOperationalEmail, setNewOperationalEmail] = useState("");
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+  const [isEditingTemplate, setIsEditingTemplate] = useState(false);
   const [isCreatingSignature, setIsCreatingSignature] = useState(false);
+  const [isEditingSignature, setIsEditingSignature] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailLog | null>(null);
   const [isRespondingToEmail, setIsRespondingToEmail] = useState(false);
   const [responseContent, setResponseContent] = useState("");
   const [selectedSignature, setSelectedSignature] = useState("");
+  const [editingSignature, setEditingSignature] = useState<any>(null);
   const [newTemplate, setNewTemplate] = useState({
     name: "",
     subject: "",
@@ -697,6 +700,58 @@ export default function EmailManagement() {
     },
     onError: () => {
       toast({ title: "Failed to create template", variant: "destructive" });
+    },
+  });
+
+  // Update template mutation
+  const updateTemplateMutation = useMutation({
+    mutationFn: async ({ id, template }: { id: string; template: Partial<EmailTemplate> }) => {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/admin/email/templates/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify(template),
+      });
+      if (!response.ok) throw new Error('Failed to update template');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-email-config'] });
+      toast({ title: "Template updated successfully" });
+      setIsEditingTemplate(false);
+      setActiveTemplate(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to update template", variant: "destructive" });
+    },
+  });
+
+  // Update signature mutation
+  const updateSignatureMutation = useMutation({
+    mutationFn: async ({ id, signature }: { id: string; signature: any }) => {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/admin/email/signatures/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify(signature),
+      });
+      if (!response.ok) throw new Error('Failed to update signature');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-email-config'] });
+      toast({ title: "Signature updated successfully" });
+      setIsEditingSignature(false);
+      setEditingSignature(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to update signature", variant: "destructive" });
     },
   });
 
@@ -835,6 +890,59 @@ export default function EmailManagement() {
   const handleInterceptEmail = (emailId: string) => {
     // Implement AI interception logic
     toast({ title: "AI response intercepted - switching to manual mode" });
+  };
+
+  const handleExportLogs = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/admin/email/logs/export', {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to export logs');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `email_logs_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({ title: "Email logs exported successfully" });
+    } catch (error) {
+      toast({ title: "Failed to export logs", variant: "destructive" });
+    }
+  };
+
+  const handleEditTemplate = (template: EmailTemplate) => {
+    setActiveTemplate(template);
+    setIsEditingTemplate(true);
+  };
+
+  const handleUpdateTemplate = () => {
+    if (!activeTemplate) return;
+    updateTemplateMutation.mutate({
+      id: activeTemplate.id,
+      template: activeTemplate
+    });
+  };
+
+  const handleEditSignature = (signature: any) => {
+    setEditingSignature({ ...signature });
+    setIsEditingSignature(true);
+  };
+
+  const handleUpdateSignature = () => {
+    if (!editingSignature) return;
+    updateSignatureMutation.mutate({
+      id: editingSignature.id,
+      signature: editingSignature
+    });
   };
 
   const aiPermissionCategories = [
@@ -1106,7 +1214,7 @@ export default function EmailManagement() {
                       <Badge variant={template.enabled ? "default" : "secondary"}>
                         {template.enabled ? "Active" : "Disabled"}
                       </Badge>
-                      <Button size="sm" variant="outline" onClick={() => setActiveTemplate(template)}>
+                      <Button size="sm" variant="outline" onClick={() => handleEditTemplate(template)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
@@ -1194,6 +1302,78 @@ export default function EmailManagement() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Template Dialog */}
+          <Dialog open={isEditingTemplate} onOpenChange={setIsEditingTemplate}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Edit Email Template</DialogTitle>
+                <p className="text-sm text-muted-foreground">Edit the email template</p>
+              </DialogHeader>
+              {activeTemplate && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Template Name</Label>
+                      <Input
+                        value={activeTemplate.name}
+                        onChange={(e) => setActiveTemplate({ ...activeTemplate, name: e.target.value })}
+                        placeholder="Welcome Email"
+                      />
+                    </div>
+                    <div>
+                      <Label>Type</Label>
+                      <Select value={activeTemplate.type} onValueChange={(value) => setActiveTemplate({ ...activeTemplate, type: value as any })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="signup">Signup</SelectItem>
+                          <SelectItem value="payment">Payment</SelectItem>
+                          <SelectItem value="support">Support</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Subject</Label>
+                    <Input
+                      value={activeTemplate.subject}
+                      onChange={(e) => setActiveTemplate({ ...activeTemplate, subject: e.target.value })}
+                      placeholder="Welcome to Wizzered!"
+                    />
+                  </div>
+                  <div>
+                    <Label>Content</Label>
+                    <Textarea
+                      value={activeTemplate.content}
+                      onChange={(e) => setActiveTemplate({ ...activeTemplate, content: e.target.value })}
+                      placeholder="Email content with {{variables}}"
+                      rows={8}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="template-enabled"
+                      checked={activeTemplate.enabled}
+                      onCheckedChange={(checked) => setActiveTemplate({ ...activeTemplate, enabled: checked })}
+                    />
+                    <Label htmlFor="template-enabled">Template Enabled</Label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleUpdateTemplate} disabled={updateTemplateMutation.isPending}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Update Template
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsEditingTemplate(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="signatures" className="space-y-4">
@@ -1216,7 +1396,7 @@ export default function EmailManagement() {
                     </div>
                     <div className="flex items-center gap-2">
                       {signature.isDefault && <Badge>Default</Badge>}
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleEditSignature(signature)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
@@ -1285,6 +1465,71 @@ export default function EmailManagement() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Signature Dialog */}
+          <Dialog open={isEditingSignature} onOpenChange={setIsEditingSignature}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Email Signature</DialogTitle>
+                <p className="text-sm text-muted-foreground">Edit the email signature</p>
+              </DialogHeader>
+              {editingSignature && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Signature Name</Label>
+                      <Input
+                        value={editingSignature.name}
+                        onChange={(e) => setEditingSignature({ ...editingSignature, name: e.target.value })}
+                        placeholder="Support Team"
+                      />
+                    </div>
+                    <div>
+                      <Label>Department</Label>
+                      <Select value={editingSignature.department} onValueChange={(value) => setEditingSignature({ ...editingSignature, department: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="support">Support</SelectItem>
+                          <SelectItem value="legal">Legal</SelectItem>
+                          <SelectItem value="billing">Billing</SelectItem>
+                          <SelectItem value="sales">Sales</SelectItem>
+                          <SelectItem value="executive">Executive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Signature Content</Label>
+                    <Textarea
+                      value={editingSignature.content}
+                      onChange={(e) => setEditingSignature({ ...editingSignature, content: e.target.value })}
+                      placeholder="Best regards,&#10;Your Name&#10;Department&#10;Email: email@company.com"
+                      rows={6}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="signature-default"
+                      checked={editingSignature.isDefault}
+                      onCheckedChange={(checked) => setEditingSignature({ ...editingSignature, isDefault: checked })}
+                    />
+                    <Label htmlFor="signature-default">Set as Default</Label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleUpdateSignature} disabled={updateSignatureMutation.isPending}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Update Signature
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsEditingSignature(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-4">
@@ -1313,7 +1558,7 @@ export default function EmailManagement() {
                   <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExportLogs}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>

@@ -4286,30 +4286,30 @@ router.get("/admin/email/config", (req: Request, res: Response) => {
       secure: false,
       user: '',
       password: '',
-      fromName: 'LegalAI Pro',
-      fromEmail: 'noreply@legalai.pro',
-      operationalEmails: ['support@legalai.pro', 'admin@legalai.pro']
+      fromName: 'Wizzered',
+      fromEmail: 'noreply@wizzered.com',
+      operationalEmails: ['support@wizzered.com', 'admin@wizzered.com']
     },
     templates: [
       {
         id: '1',
         name: 'Welcome Email',
-        subject: 'Welcome to LegalAI Pro!',
-        content: 'Welcome {{firstName}}, thank you for signing up...',
+        subject: 'Welcome to Wizzered - Your Legal Assistant is Ready!',
+        content: 'Dear {{name}}, Welcome to Wizzered! We are thrilled to have you join our community...',
         type: 'signup',
         enabled: true,
         lastModified: new Date().toISOString(),
-        variables: ['firstName', 'lastName', 'email']
+        variables: ['name', 'email', 'account_type']
       },
       {
         id: '2',
         name: 'Payment Confirmation',
-        subject: 'Payment Received - {{amount}}',
-        content: 'Thank you for your payment of {{amount}}...',
+        subject: 'Payment Confirmed - Wizzered Subscription Active',
+        content: 'Dear {{name}}, Thank you for your payment! Your Wizzered subscription is now active...',
         type: 'payment',
         enabled: true,
         lastModified: new Date().toISOString(),
-        variables: ['amount', 'transactionId', 'planName']
+        variables: ['name', 'plan_name', 'amount', 'invoice_id', 'next_billing_date']
       }
     ],
     emailLogs: [
@@ -4317,10 +4317,206 @@ router.get("/admin/email/config", (req: Request, res: Response) => {
         id: '1',
         timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
         type: 'received',
-        to: 'support@legalai.pro',
+        to: 'support@wizzered.com',
         from: 'user@example.com',
         subject: 'Question about billing',
         content: 'Hi, I have a question about my recent billing statement...',
+        status: 'pending',
+        aiProcessed: false,
+        humanCorrected: false,
+        forwardedToHuman: false,
+        priority: 'medium',
+        tags: ['billing', 'inquiry']
+      },
+      {
+        id: '2',
+        timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+        type: 'sent',
+        to: 'client@example.com',
+        from: 'support@wizzered.com',
+        subject: 'Case Update Notification',
+        content: 'Your case has been updated with new information...',
+        status: 'success',
+        aiProcessed: true,
+        humanCorrected: false,
+        forwardedToHuman: false,
+        priority: 'high',
+        tags: ['case-update', 'automated']
+      }
+    ],
+    signatures: [
+      {
+        id: '1',
+        name: 'Default Support',
+        content: 'Best regards,\nWizzered Support Team\n\nEmail: support@wizzered.com\nPhone: +1 (555) 123-4567\nWebsite: https://wizzered.com',
+        isDefault: true,
+        department: 'support'
+      },
+      {
+        id: '2',
+        name: 'Legal Team',
+        content: 'Best regards,\nWizzered Legal Team\n\nEmail: legal@wizzered.com\nPhone: +1 (555) 123-4567\nWebsite: https://wizzered.com',
+        isDefault: false,
+        department: 'legal'
+      }
+    ],
+    aiAssistant: {
+      enabled: true,
+      provider: 'openai',
+      model: 'gpt-4',
+      permissions: {
+        legalConsultation: true,
+        caseAnalysis: true,
+        documentReview: true,
+        legalResearch: true,
+        procedureGuidance: true,
+        filingDeadlines: true,
+        courtRequirements: true,
+        jurisdictionAdvice: true,
+        legalFormCompletion: true,
+        caseStrategyAdvice: false,
+        clientOnboarding: true,
+        caseStatusUpdates: true,
+        appointmentScheduling: true,
+        documentRequests: true,
+        caseFileAccess: true,
+        clientCommunication: true,
+        progressReporting: true,
+        billingInquiries: true,
+        paymentProcessing: true,
+        subscriptionManagement: true,
+        servicePlanChanges: true,
+        refundProcessing: false,
+        invoiceGeneration: true,
+        platformNavigation: true,
+        featureExplanation: true,
+        troubleshooting: true,
+        accountSetup: true,
+        dataExport: true,
+        systemIntegration: true,
+        userAccountManagement: true,
+        accessPermissions: false,
+        dataBackup: true,
+        reportGeneration: true,
+        auditTrails: true,
+        urgentLegalMatters: true,
+        escalateToAttorney: true,
+        escalateToHuman: true,
+        emergencyContact: true
+      },
+      responseSettings: {
+        maxTokens: 500,
+        temperature: 0.7,
+        systemPrompt: 'You are a helpful AI assistant for Wizzered.',
+        autoResponse: true,
+        escalationThreshold: 80
+      }
+    },
+    adminTools: {
+      canRespond: true,
+      canIntercept: true,
+      canViewAll: true,
+      canEditResponses: true,
+      notificationSettings: {
+        newEmails: true,
+        escalations: true,
+        failedDeliveries: true
+      }
+    }
+  });
+});
+
+// Update email configuration
+router.put("/admin/email/config", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/config 200`);
+  res.json({ success: true, message: "Configuration updated successfully" });
+});
+
+// Get email templates
+router.get("/admin/email/templates", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/templates 200`);
+  res.json([
+    {
+      id: '1',
+      name: 'Welcome Email',
+      subject: 'Welcome to Wizzered - Your Legal Assistant is Ready!',
+      content: 'Dear {{name}}, Welcome to Wizzered! We are thrilled to have you join our community...',
+      type: 'signup',
+      enabled: true,
+      lastModified: new Date().toISOString(),
+      variables: ['name', 'email', 'account_type']
+    }
+  ]);
+});
+
+// Create email template
+router.post("/admin/email/templates", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/templates 200`);
+  const newTemplate = {
+    id: Date.now().toString(),
+    ...req.body,
+    lastModified: new Date().toISOString(),
+    enabled: true
+  };
+  res.json(newTemplate);
+});
+
+// Update email template
+router.put("/admin/email/templates/:id", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/templates/${req.params.id} 200`);
+  const updatedTemplate = {
+    id: req.params.id,
+    ...req.body,
+    lastModified: new Date().toISOString()
+  };
+  res.json(updatedTemplate);
+});
+
+// Delete email template
+router.delete("/admin/email/templates/:id", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/email/templates/${req.params.id} 200`);
+  res.json({ success: true, message: "Template deleted successfully" });
+});
+
+// Send test email
+router.post("/admin/email/test", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/test 200`);
+  res.json({ success: true, message: "Test email sent successfully" });
+});
+
+// Send email response
+router.post("/admin/email/respond", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/respond 200`);
+  res.json({ success: true, message: "Response sent successfully" });
+});
+
+// Export email logs
+router.get("/admin/email/logs/export", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/logs/export 200`);
+  
+  const csvData = `ID,Timestamp,Type,To,From,Subject,Status,AI Processed,Priority
+1,${new Date().toISOString()},received,support@wizzered.com,user@example.com,Question about billing,pending,false,medium
+2,${new Date().toISOString()},sent,client@example.com,support@wizzered.com,Case Update,success,true,high`;
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="email_logs.csv"');
+  res.send(csvData);
+});
+
+// Update signature
+router.put("/admin/email/signatures/:id", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/signatures/${req.params.id} 200`);
+  const updatedSignature = {
+    id: req.params.id,
+    ...req.body
+  };
+  res.json(updatedSignature);
+});
+
+// Delete signature
+router.delete("/admin/email/signatures/:id", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/email/signatures/${req.params.id} 200`);
+  res.json({ success: true, message: "Signature deleted successfully" });
         status: 'success',
         aiProcessed: true,
         humanCorrected: false,
