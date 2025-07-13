@@ -4432,6 +4432,142 @@ const mockCases = [
   }
 ];
 
+  // GDPR/CCPA Compliance API
+  app.get("/api/compliance/privacy-settings", (req, res) => {
+    const defaultSettings = {
+      marketing: false,
+      analytics: false,
+      dataProcessing: true,
+      dataRetention: true,
+      thirdPartySharing: false,
+      profileVisibility: true,
+      communicationPreferences: {
+        email: true,
+        sms: false,
+        push: false,
+        marketing: false
+      }
+    };
+    res.json(defaultSettings);
+  });
+
+  app.put("/api/compliance/privacy-settings", (req, res) => {
+    const updatedSettings = req.body;
+    res.json({ success: true, settings: updatedSettings });
+  });
+
+  app.post("/api/compliance/privacy-request", (req, res) => {
+    const { type, description } = req.body;
+    
+    if (!type || !description) {
+      return res.status(400).json({ error: "Type and description are required" });
+    }
+
+    const newRequest = {
+      id: Date.now().toString(),
+      type,
+      description,
+      status: 'pending',
+      submittedAt: new Date().toISOString(),
+      userId: req.body.userId || 'anonymous'
+    };
+
+    res.status(201).json(newRequest);
+  });
+
+  app.get("/api/compliance/data-export", (req, res) => {
+    const exportData = {
+      personalData: {
+        name: "John Doe",
+        email: "john.doe@example.com",
+        accountCreated: "2024-01-15T10:00:00Z",
+        lastLogin: new Date().toISOString()
+      },
+      privacySettings: {
+        marketing: false,
+        analytics: false,
+        dataProcessing: true
+      },
+      activityLog: [
+        {
+          action: "login",
+          timestamp: new Date().toISOString(),
+          ipAddress: "192.168.1.1"
+        }
+      ],
+      dataProcessingActivities: [
+        {
+          purpose: "Service Provision",
+          legalBasis: "Contract Performance",
+          dataTypes: ["Account Information", "Usage Data"]
+        }
+      ],
+      exportedAt: new Date().toISOString()
+    };
+
+    res.json(exportData);
+  });
+
+  app.delete("/api/compliance/data-deletion", (req, res) => {
+    const deletionRequest = {
+      requestId: Date.now().toString(),
+      status: 'processing',
+      submittedAt: new Date().toISOString(),
+      estimatedCompletion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    };
+
+    res.json(deletionRequest);
+  });
+
+  app.get("/api/compliance/cookie-preferences", (req, res) => {
+    const preferences = {
+      necessary: true,
+      analytics: false,
+      marketing: false,
+      functional: false,
+      consentDate: null
+    };
+    res.json(preferences);
+  });
+
+  app.put("/api/compliance/cookie-preferences", (req, res) => {
+    const { necessary, analytics, marketing, functional } = req.body;
+    
+    const updatedPreferences = {
+      necessary: true,
+      analytics: !!analytics,
+      marketing: !!marketing,
+      functional: !!functional,
+      consentDate: new Date().toISOString()
+    };
+
+    res.json(updatedPreferences);
+  });
+
+  app.get("/api/compliance/encryption-status", (req, res) => {
+    const encryptionStatus = {
+      atRest: {
+        algorithm: "AES-256-GCM",
+        keyManagement: "Hardware Security Module",
+        status: "Active"
+      },
+      inTransit: {
+        protocol: "TLS 1.3",
+        certificate: "Extended Validation SSL",
+        status: "Active"
+      },
+      database: {
+        encryption: "Transparent Data Encryption",
+        backups: "Encrypted",
+        status: "Active"
+      },
+      lastAudit: "2024-12-15T10:00:00Z",
+      complianceLevel: "SOC 2 Type II"
+    };
+
+    res.json(encryptionStatus);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

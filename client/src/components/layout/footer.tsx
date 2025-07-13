@@ -1,9 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { Scale, Phone, Mail, MapPin, Lock, Globe } from "lucide-react";
+import { Scale, Phone, Mail, MapPin, Lock, Globe, Shield, Cookie } from "lucide-react";
 import { SiFacebook, SiX, SiLinkedin, SiInstagram, SiYoutube } from "react-icons/si";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
+import PrivacyManager from "@/components/compliance/privacy-manager";
 
 export default function Footer() {
   const { data: footerConfig } = useQuery({
@@ -145,15 +146,41 @@ export default function Footer() {
 
         <Separator className="my-8 bg-gray-700" />
 
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400">
-            © 2024 {brandingConfig?.brand?.companyName || "LegalAI Pro"}. All rights reserved.
-          </p>
-          <div className="flex items-center gap-4 text-sm text-gray-400">
-            <Lock className="h-4 w-4" />
-            <span>SOC 2 Compliant</span>
-            <Globe className="h-4 w-4" />
-            <span>GDPR Ready</span>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <p className="text-gray-400">
+              © 2025 {brandingConfig?.brand?.companyName || "LegalAI Pro"}. All rights reserved.
+            </p>
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              <Link href="/terms-and-conditions" className="hover:text-white transition-colors">
+                Terms
+              </Link>
+              <Link href="/privacy-policy" className="hover:text-white transition-colors">
+                Privacy
+              </Link>
+              <Link href="/cookie-policy" className="hover:text-white transition-colors flex items-center gap-1">
+                <Cookie className="h-3 w-3" />
+                Cookies
+              </Link>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <PrivacyManager />
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              <div className="flex items-center gap-1">
+                <Lock className="h-3 w-3" />
+                <span>AES-256 Encrypted</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Shield className="h-3 w-3" />
+                <span>GDPR/CCPA Compliant</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Globe className="h-3 w-3" />
+                <span>SOC 2 Type II</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,8 +1,14 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { securityMiddleware } from "./services/encryption";
 
 const app = express();
+
+// Add security middleware
+app.use(securityMiddleware.addSecurityHeaders);
+app.use(securityMiddleware.rateLimit);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

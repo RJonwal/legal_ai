@@ -17,6 +17,7 @@ import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import TermsPage from "@/pages/terms";
 import PrivacyPage from "@/pages/privacy";
+import CookiePolicyPage from "@/pages/cookie-policy";
 import AboutPage from "@/pages/about";
 
 // Import auth pages
@@ -40,6 +41,7 @@ import GlobalPromptManagement from "@/pages/admin/global-prompt-management";
 
 import "./index.css";
 import ErrorBoundary from "./components/error-boundary";
+import CookieBanner from "@/components/compliance/cookie-banner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -196,12 +198,14 @@ function App() {
               <Route path="/terms-and-conditions" component={TermsPage} />
               <Route path="/privacy" component={PrivacyPage} />
               <Route path="/privacy-policy" component={PrivacyPage} />
+              <Route path="/cookie-policy" component={CookiePolicyPage} />
               <Route path="/about" component={AboutPage} />
 
               {/* 404 page */}
               <Route component={NotFound} />
             </Switch>
           </Router>
+          <CookieBanner />
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
