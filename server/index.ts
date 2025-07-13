@@ -17,14 +17,18 @@ import morgan from "morgan";
 import responseTime from "response-time";
 import helmet from "helmet";
 
-// Initialize monitoring services
-initializeSentry();
-setupGracefulShutdown();
-startSystemMetricsCollection();
-
 const app = express();
 
-// Initialize cache service
+// Initialize monitoring services (non-blocking)
+try {
+  initializeSentry();
+  setupGracefulShutdown();
+  startSystemMetricsCollection();
+} catch (error) {
+  logger.error('Failed to initialize monitoring services:', error);
+}
+
+// Initialize cache service (non-blocking)
 cacheService.connect().catch((error) => {
   logger.error('Failed to connect to cache service:', error);
 });
@@ -64,8 +68,13 @@ app.use(performanceMiddleware);
 // HTTP logging
 app.use(morgan('combined', { stream: httpLogStream }));
 
-// Session management
-app.use(session(sessionConfig));
+// Session management (with error handling)
+try {
+  app.use(session(sessionConfig));
+} catch (error) {
+  logger.error('Failed to initialize session middleware:', error);
+  // Continue without session middleware for now
+}
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

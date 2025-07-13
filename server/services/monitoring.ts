@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import { logger } from './logger';
+import { logger } from './simple-logger';
 import { cacheService } from './cache';
 import { Request, Response } from 'express';
 

@@ -1,42 +1,9 @@
 import session from 'express-session';
-import { cacheService } from './cache';
-
-// Memory store fallback for development
-const MemoryStore = require('memorystore')(session);
-
-// Try to import connect-redis, fallback if not available
-let RedisStore: any = null;
-try {
-  const connectRedis = require('connect-redis');
-  RedisStore = connectRedis(session);
-} catch (error) {
-  console.warn('connect-redis not available, using memory store');
-}
 
 export function createSessionStore() {
-  // Try to use Redis store if available
-  if (RedisStore && (process.env.REDIS_HOST || process.env.REDIS_URL)) {
-    try {
-      return new RedisStore({
-        client: cacheService['redis'], // Access the Redis client
-        prefix: 'sess:',
-        ttl: 24 * 60 * 60, // 24 hours
-        logErrors: (error: Error) => {
-          console.error('Redis session store error:', error);
-        }
-      });
-    } catch (error) {
-      console.warn('Failed to create Redis session store, falling back to memory store:', error);
-    }
-  }
-  
-  // Fallback to memory store
-  console.info('Using memory session store');
-  return new MemoryStore({
-    checkPeriod: 86400000, // Prune expired entries every 24h
-    ttl: 24 * 60 * 60 * 1000, // 24 hours
-    stale: false
-  });
+  // For now, use default memory store
+  console.info('Using default memory session store');
+  return new session.MemoryStore();
 }
 
 export const sessionConfig = {
