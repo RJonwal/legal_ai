@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLayout from "@/components/layout/mobile-layout";
 import AdminLayout from "@/components/layout/admin-layout";
-import { lazy, useEffect } from 'react';
+import { lazy, useEffect, Suspense } from 'react';
 
 // Import pages
 import LandingPage from "@/pages/simple-landing";
@@ -25,8 +25,9 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
-import Subscription from "@/pages/subscription";
-import Billing from "@/pages/billing";
+// Lazy load payment pages to avoid Stripe loading issues
+const Subscription = lazy(() => import("@/pages/subscription"));
+const Billing = lazy(() => import("@/pages/billing"));
 // Import admin pages
 import AdminDashboard from "@/pages/admin/index";
 import AdminUsers from "@/pages/admin/users";
@@ -120,9 +121,21 @@ function App() {
               <Route path="/signup" component={Register} />
               <Route path="/forgot-password" component={ForgotPassword} />
               <Route path="/reset-password" component={ResetPassword} />
-              <Route path="/subscription" component={Subscription} />
-              <Route path="/subscribe" component={Subscription} />
-              <Route path="/billing" component={Billing} />
+              <Route path="/subscription">
+                <Suspense fallback={<div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>}>
+                  <Subscription />
+                </Suspense>
+              </Route>
+              <Route path="/subscribe">
+                <Suspense fallback={<div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>}>
+                  <Subscription />
+                </Suspense>
+              </Route>
+              <Route path="/billing">
+                <Suspense fallback={<div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>}>
+                  <Billing />
+                </Suspense>
+              </Route>
 
               {/* Admin routes with layout */}
               <Route path="/admin">

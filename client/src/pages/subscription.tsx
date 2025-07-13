@@ -10,9 +10,14 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Check, Crown, Zap } from "lucide-react";
 
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+// Lazy load Stripe only when needed
+const getStripePromise = () => {
+  if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+    console.warn('VITE_STRIPE_PUBLIC_KEY not found. Payment processing unavailable.');
+    return null;
+  }
+  return loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+};
 
 interface SubscriptionPlan {
   id: string;
@@ -120,6 +125,7 @@ function PaymentForm({ plan }: { plan: SubscriptionPlan }) {
 function SubscriptionPlans() {
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [stripePromise] = useState(() => getStripePromise());
 
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["/api/payment/plans"],
