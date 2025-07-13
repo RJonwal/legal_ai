@@ -150,20 +150,36 @@ process.on('warning', (warning) => {
 
 // Note: Graceful shutdown is handled by monitoring service
 
-// Global error handlers
+// Global error handlers with better logging
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+  logger.error('Uncaught Exception:', {
+    error: error.message,
+    stack: error.stack,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Report to Sentry if configured
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(error);
+  }
+  
   // Don't exit immediately in development
   if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
+    setTimeout(() => process.exit(1), 1000); // Give time for logging
   }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Don't exit immediately in development
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
+  logger.error('Unhandled Rejection:', {
+    reason: reason instanceof Error ? reason.message : reason,
+    stack: reason instanceof Error ? reason.stack : undefined,
+    promise: promise.toString(),
+    timestamp: new Date().toISOString()
+  });
+  
+  // Report to Sentry if configured
+  if (process.env.SENTRY_DSN && reason instanceof Error) {
+    Sentry.captureException(reason);
   }
 });
 

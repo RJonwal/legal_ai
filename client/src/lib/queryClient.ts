@@ -67,15 +67,17 @@ export const queryClient = new QueryClient({
         if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
-        // Retry up to 2 times for other errors
-        return failureCount < 2;
+        // Retry up to 1 time for other errors to reduce load
+        return failureCount < 1;
       },
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (updated from cacheTime)
+      gcTime: 5 * 60 * 1000, // 5 minutes - reduced to prevent memory buildup
       // Prevent infinite loading states
       suspense: false,
+      refetchInterval: false,
+      refetchOnMount: false, // Prevent excessive refetching
     },
     mutations: {
       retry: (failureCount, error: any) => {
@@ -85,7 +87,6 @@ export const queryClient = new QueryClient({
         }
         return failureCount < 1;
       },
-      // Add timeout for mutations
       networkMode: 'online',
     },
   },

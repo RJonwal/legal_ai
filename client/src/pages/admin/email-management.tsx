@@ -1581,7 +1581,7 @@ export default function EmailManagement() {
                 <p className="text-sm text-muted-foreground">
                   Configure what actions the AI assistant can perform autonomously
                 </p>
-                
+
                 {aiPermissionCategories.map((category) => (
                   <div key={category.title} className="space-y-3">
                     <h5 className="font-medium text-sm">{category.title}</h5>
@@ -1733,4 +1733,4 @@ export default function EmailManagement() {
       </Tabs>
     </div>
   );
-}SelectItem></
+}

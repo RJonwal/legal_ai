@@ -75,7 +75,7 @@ export default function ChatInterface({
       refetchCase();
       refetchChatMessages();
     }
-  }, [caseId, refetchCase, refetchChatMessages]); // Include all dependencies
+  }, [caseId]); // Remove function dependencies to prevent infinite loop
 
   // Listen for case selection events
   useEffect(() => {
@@ -251,7 +251,7 @@ export default function ChatInterface({
 
   // Initialize with welcome message only once
   useEffect(() => {
-    if (messages.length === 0 && chatMessages.length === 0) {
+    if (messages.length === 0 && chatMessages.length === 0 && caseId) {
       setMessages([{
         id: '1',
         content: 'Hello! I\'m your AI legal assistant. How can I help you today?',
@@ -260,7 +260,7 @@ export default function ChatInterface({
         metadata: {}
       }]);
     }
-  }, [chatMessages.length]); // Only depend on chatMessages length
+  }, [caseId]); // Only depend on caseId to prevent excessive re-renders
 
   return (
     <QueryErrorBoundary>
