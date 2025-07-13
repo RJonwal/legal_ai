@@ -8,7 +8,7 @@ import AdminLayout from "@/components/layout/admin-layout";
 import { lazy, useEffect } from 'react';
 
 // Import pages
-import LandingPage from "@/pages/landing";
+import LandingPage from "@/pages/simple-landing";
 import LegalAssistant from "@/pages/legal-assistant";
 import NewCase from "@/pages/new-case";
 import SearchCases from "@/pages/search-cases";
@@ -62,8 +62,21 @@ const queryClient = new QueryClient({
 function App() {
   const isMobile = useIsMobile();
 
-  // Memory cleanup and performance monitoring
+  // Error handling and cleanup
   useEffect(() => {
+    // Handle unhandled promise rejections
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      event.preventDefault();
+    };
+
+    const handleError = (event: ErrorEvent) => {
+      console.error('Global error:', event.error);
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+
     // Monitor memory usage in development
     if (process.env.NODE_ENV === 'development') {
       const memoryMonitor = setInterval(() => {
@@ -79,21 +92,16 @@ function App() {
         }
       }, 30000); // Check every 30 seconds
 
-      return () => clearInterval(memoryMonitor);
+      return () => {
+        clearInterval(memoryMonitor);
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+        window.removeEventListener('error', handleError);
+      };
     }
-  }, []);
-
-  // Global error handler for unhandled promises
-  useEffect(() => {
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('Unhandled promise rejection:', event.reason);
-      event.preventDefault(); // Prevent default browser behavior
-    };
-
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
     return () => {
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
     };
   }, []);
 

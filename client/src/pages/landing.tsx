@@ -39,25 +39,41 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
 
-  // Load landing page configuration
+  // Load landing page configuration with error handling
   const { data: landingConfig } = useQuery({
     queryKey: ['landing-config'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/landing-config');
-      return response.json();
-    }
+      try {
+        const response = await fetch('/api/admin/landing-config');
+        if (!response.ok) throw new Error('Failed to fetch config');
+        return response.json();
+      } catch (error) {
+        console.warn('Landing config not available, using defaults');
+        return {};
+      }
+    },
+    retry: false,
+    staleTime: Infinity
   });
 
   const { data: brandingConfig } = useQuery({
     queryKey: ['branding-config'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/branding-config');
-      return response.json();
-    }
+      try {
+        const response = await fetch('/api/admin/branding-config');
+        if (!response.ok) throw new Error('Failed to fetch branding');
+        return response.json();
+      } catch (error) {
+        console.warn('Branding config not available, using defaults');
+        return {};
+      }
+    },
+    retry: false,
+    staleTime: Infinity
   });
 
   const handleGetStarted = () => {
-    setLocation("/dashboard");
+    setLocation("/register");
   };
 
   const handleWatchDemo = () => {
@@ -87,7 +103,7 @@ export default function Landing() {
               <a href="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">Pricing</a>
               <a href="#testimonials" className="text-gray-600 hover:text-blue-600 transition-colors">Reviews</a>
               <a href="#contact" className="text-gray-600 hover:text-blue-600 transition-colors">Contact</a>
-              <Button variant="outline" onClick={() => setLocation("/dashboard")}>
+              <Button variant="outline" onClick={() => setLocation("/login")}>
                 Sign In
               </Button>
               <Button onClick={handleGetStarted} className="bg-blue-600 hover:bg-blue-700">

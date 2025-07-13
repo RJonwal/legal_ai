@@ -14,21 +14,20 @@ import rateLimit from "express-rate-limit";
 import express from "express";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Rate limiting
+  // Rate limiting - more permissive for development
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: 1000, // increased limit for development
     message: "Too many requests from this IP, please try again later"
   });
 
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 requests per windowMs for auth routes
+    max: 20, // increased limit for development testing
     message: "Too many authentication attempts, please try again later"
   });
 
-  // Apply rate limiting
-  app.use("/api", generalLimiter);
+  // Apply rate limiting only to auth routes to avoid blocking admin access
   app.use("/api/auth/login", authLimiter);
   app.use("/api/auth/register", authLimiter);
   app.use("/api/auth/forgot-password", authLimiter);
