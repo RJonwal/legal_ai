@@ -31,7 +31,7 @@ import {
   DollarSign,
   Search,
   Filter,
-  Connect,
+  Network,
   Award,
   Building,
   Calendar,
@@ -451,7 +451,7 @@ export default function AttorneyConnect() {
                           onClick={() => setSelectedAttorney(attorney)}
                           disabled={!attorney.availableForProSe || attorney.currentProSeClients >= attorney.maxProSeClients}
                         >
-                          <Connect className="h-4 w-4 mr-2" />
+                          <Network className="h-4 w-4 mr-2" />
                           Connect
                         </Button>
                       </div>
