@@ -375,20 +375,21 @@ export default function AdminUsers() {
                 onClick={() => {
                   const name = (document.getElementById('new-user-name') as HTMLInputElement)?.value;
                   const email = (document.getElementById('new-user-email') as HTMLInputElement)?.value;
-                  const role = document.querySelector('[id^="new-user-role"]')?.getAttribute('data-value') || 'free_user';
-                  const subscription = document.querySelector('[id^="new-user-subscription"]')?.getAttribute('data-value') || 'Pro Se';
                   
                   if (name && email) {
                     createUserMutation.mutate({
                       name,
                       email,
-                      role,
-                      subscription
+                      role: 'free_user',
+                      subscription: 'Pro Se'
                     });
+                  } else {
+                    alert('Please fill in all required fields');
                   }
                 }}
+                disabled={createUserMutation.isPending}
               >
-                Create User
+                {createUserMutation.isPending ? 'Creating...' : 'Create User'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -917,7 +918,12 @@ export default function AdminUsers() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Select defaultValue={user.role}>
+                          <Select 
+                            defaultValue={user.role}
+                            onValueChange={(value) => {
+                              updateRoleMutation.mutate({ userId: user.id, role: value });
+                            }}
+                          >
                             <SelectTrigger className="w-40">
                               <SelectValue />
                             </SelectTrigger>
@@ -1002,18 +1008,14 @@ export default function AdminUsers() {
                                       exportData: true
                                     };
                                     const limits = {
-                                      casesPerMonth: parseInt((document.getElementById('case-limit') as HTMLInputElement)?.value || '10'),
-                                      tokensPerMonth: parseInt((document.getElementById('token-limit') as HTMLInputElement)?.value || '5000')
+                                      caseLimit: parseInt((document.getElementById('case-limit') as HTMLInputElement)?.value || '10'),
+                                      tokenLimit: parseInt((document.getElementById('token-limit') as HTMLInputElement)?.value || '5000')
                                     };
-                                    
-                                    updatePermissionsMutation.mutate({
-                                      userId: user.id,
-                                      permissions,
-                                      limits
-                                    });
+                                    updatePermissionsMutation.mutate({ userId: user.id, permissions, limits });
                                   }}
+                                  disabled={updatePermissionsMutation.isPending}
                                 >
-                                  Save Permissions
+                                  {updatePermissionsMutation.isPending ? 'Saving...' : 'Save Permissions'}
                                 </Button>
                               </DialogFooter>
                             </DialogContent>

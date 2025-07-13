@@ -1058,10 +1058,7 @@ export default function EmailManagement() {
                   <Label htmlFor="smtp-host">SMTP Host</Label>
                   <Input
                     id="smtp-host"
-                    value={currentConfig.smtp.host}
-                    onChange={(e) => updateConfig({
-                      smtp: { ...currentConfig.smtp, host: e.target.value }
-                    })}
+                    defaultValue={currentConfig.smtp.host}
                     placeholder="smtp.gmail.com"
                   />
                 </div>
@@ -1070,10 +1067,7 @@ export default function EmailManagement() {
                   <Input
                     id="smtp-port"
                     type="number"
-                    value={currentConfig.smtp.port}
-                    onChange={(e) => updateConfig({
-                      smtp: { ...currentConfig.smtp, port: parseInt(e.target.value) }
-                    })}
+                    defaultValue={currentConfig.smtp.port}
                     placeholder="587"
                   />
                 </div>
@@ -1084,10 +1078,7 @@ export default function EmailManagement() {
                   <Label htmlFor="smtp-user">Username</Label>
                   <Input
                     id="smtp-user"
-                    value={currentConfig.smtp.user}
-                    onChange={(e) => updateConfig({
-                      smtp: { ...currentConfig.smtp, user: e.target.value }
-                    })}
+                    defaultValue={currentConfig.smtp.user}
                     placeholder="your-email@gmail.com"
                   />
                 </div>
@@ -1096,10 +1087,7 @@ export default function EmailManagement() {
                   <Input
                     id="smtp-password"
                     type="password"
-                    value={currentConfig.smtp.password}
-                    onChange={(e) => updateConfig({
-                      smtp: { ...currentConfig.smtp, password: e.target.value }
-                    })}
+                    defaultValue={currentConfig.smtp.password}
                     placeholder="your-app-password"
                   />
                 </div>
@@ -1109,22 +1097,16 @@ export default function EmailManagement() {
                 <div>
                   <Label htmlFor="from-name">From Name</Label>
                   <Input
-                    id="from-name"
-                    value={currentConfig.smtp.fromName}
-                    onChange={(e) => updateConfig({
-                      smtp: { ...currentConfig.smtp, fromName: e.target.value }
-                    })}
+                    id="smtp-from-name"
+                    defaultValue={currentConfig.smtp.fromName}
                     placeholder="Wizzered"
                   />
                 </div>
                 <div>
                   <Label htmlFor="from-email">From Email</Label>
                   <Input
-                    id="from-email"
-                    value={currentConfig.smtp.fromEmail}
-                    onChange={(e) => updateConfig({
-                      smtp: { ...currentConfig.smtp, fromEmail: e.target.value }
-                    })}
+                    id="smtp-from-email"
+                    defaultValue={currentConfig.smtp.fromEmail}
                     placeholder="noreply@wizzered.com"
                   />
                 </div>
@@ -1178,7 +1160,17 @@ export default function EmailManagement() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button onClick={() => updateConfig(currentConfig)}>
+                  <Button onClick={() => updateConfig({
+                    smtp: {
+                      ...currentConfig.smtp,
+                      host: document.getElementById('smtp-host')?.value || currentConfig.smtp.host,
+                      port: parseInt(document.getElementById('smtp-port')?.value || currentConfig.smtp.port.toString()),
+                      user: document.getElementById('smtp-user')?.value || currentConfig.smtp.user,
+                      password: document.getElementById('smtp-password')?.value || currentConfig.smtp.password,
+                      fromName: document.getElementById('smtp-from-name')?.value || currentConfig.smtp.fromName,
+                      fromEmail: document.getElementById('smtp-from-email')?.value || currentConfig.smtp.fromEmail
+                    }
+                  })}>
                     <Save className="h-4 w-4 mr-2" />
                     Save SMTP Settings
                   </Button>
