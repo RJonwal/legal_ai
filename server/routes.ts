@@ -2440,6 +2440,18 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       password: '',
       customEndpoint: ''
     },
+    customProvider: {
+      name: '',
+      description: '',
+      webhookUrl: '',
+      apiEndpoint: '',
+      authMethod: 'apikey',
+      apiKey: '',
+      username: '',
+      password: '',
+      additionalHeaders: '',
+      features: []
+    },
     voiceSettings: {
       voice: 'Polly.Joanna',
       language: 'en-US',
@@ -2731,6 +2743,7 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     res.json(analytics);
   });
 
+  // Enhanced call monitoring endpoints
   app.get("/api/admin/voip/call-monitor", (req, res) => {
     console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/voip/call-monitor 200');
     
@@ -2744,7 +2757,13 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         topic: 'Billing inquiry',
         aiConfidence: 0.85,
         escalationRisk: 'low',
-        startTime: new Date(Date.now() - 3 * 60 * 1000).toISOString()
+        startTime: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+        audioQuality: 'high',
+        transcript: [
+          { speaker: 'AI', text: 'How can I assist you with your legal matter today?', timestamp: '00:00:05' },
+          { speaker: 'Caller', text: 'I need help with understanding my contract terms...', timestamp: '00:00:15' },
+          { speaker: 'AI', text: 'I\'d be happy to help you review your contract. Can you tell me what specific terms you\'re concerned about?', timestamp: '00:00:25' }
+        ]
       },
       {
         id: 'call_live_002',
@@ -2755,7 +2774,9 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         topic: 'Complex legal matter',
         aiConfidence: 0.45,
         escalationRisk: 'high',
-        startTime: new Date(Date.now() - 7 * 60 * 1000).toISOString()
+        startTime: new Date(Date.now() - 7 * 60 * 1000).toISOString(),
+        audioQuality: 'medium',
+        transcript: []
       },
       {
         id: 'call_live_003',
@@ -2766,11 +2787,67 @@ app.get("/api/admin/impersonation/history", (req, res) => {
         topic: 'Account questions',
         aiConfidence: 0.92,
         escalationRisk: 'low',
-        startTime: new Date(Date.now() - 1 * 60 * 1000).toISOString()
+        startTime: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
+        audioQuality: 'high',
+        transcript: [
+          { speaker: 'AI', text: 'Hello, how can I help you today?', timestamp: '00:00:02' },
+          { speaker: 'Caller', text: 'I have questions about my account settings', timestamp: '00:00:10' }
+        ]
       }
     ];
     
     res.json(activeCalls);
+  });
+
+  app.post("/api/admin/voip/start-listening", (req, res) => {
+    const { callId } = req.body;
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/voip/start-listening 200');
+    console.log('Starting audio stream for call:', callId);
+    
+    res.json({
+      success: true,
+      message: 'Audio stream started',
+      callId,
+      streamUrl: `wss://voip-stream.example.com/call/${callId}`,
+      audioFormat: 'webm',
+      sampleRate: 16000,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  app.post("/api/admin/voip/stop-listening", (req, res) => {
+    const { callId } = req.body;
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/voip/stop-listening 200');
+    console.log('Stopping audio stream for call:', callId);
+    
+    res.json({
+      success: true,
+      message: 'Audio stream stopped',
+      callId,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  app.post("/api/admin/voip/test-audio-quality", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/voip/test-audio-quality 200');
+    
+    // Simulate quality test
+    const qualities = ['high', 'medium', 'low'];
+    const quality = qualities[Math.floor(Math.random() * qualities.length)];
+    const latency = Math.floor(Math.random() * 200) + 50; // 50-250ms
+    const packetLoss = Math.random() * 5; // 0-5%
+    
+    res.json({
+      success: true,
+      quality,
+      metrics: {
+        latency: `${latency}ms`,
+        packetLoss: `${packetLoss.toFixed(2)}%`,
+        bandwidth: '64 kbps',
+        jitter: `${Math.floor(Math.random() * 20)}ms`
+      },
+      timestamp: new Date().toISOString()
+    });
   });
 
   app.post("/api/admin/voip/call/:id/intercept", (req, res) => {

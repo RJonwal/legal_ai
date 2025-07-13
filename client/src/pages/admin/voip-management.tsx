@@ -48,6 +48,60 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 // Call Monitor Modal Component
 function CallMonitorModal({ activeCallsData, isEnabled }: { activeCallsData?: any; isEnabled: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedCall, setSelectedCall] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [audioQuality, setAudioQuality] = useState<'high' | 'medium' | 'low'>('high');
+  const [monitorSettings, setMonitorSettings] = useState({
+    autoRefresh: true,
+    refreshInterval: 5000,
+    showTranscript: true,
+    recordSession: false,
+    qualityAlerts: true
+  });
+
+  const startListening = (callId: string) => {
+    setSelectedCall(callId);
+    setIsListening(true);
+    // Simulate audio connection
+    console.log(`Starting to listen to call: ${callId}`);
+  };
+
+  const stopListening = () => {
+    setIsListening(false);
+    setSelectedCall(null);
+    console.log('Stopped listening to call');
+  };
+
+  const testAudioQuality = () => {
+    // Simulate quality test
+    const qualities = ['high', 'medium', 'low'];
+    const randomQuality = qualities[Math.floor(Math.random() * qualities.length)] as 'high' | 'medium' | 'low';
+    setAudioQuality(randomQuality);
+    
+    setTimeout(() => {
+      setAudioQuality('high'); // Reset after test
+    }, 3000);
+  };
+
+  const exportCallData = () => {
+    const callData = {
+      timestamp: new Date().toISOString(),
+      activeCalls: activeCallsData?.calls || [],
+      totalToday: activeCallsData?.totalToday || 0,
+      aiResolutionRate: activeCallsData?.aiResolutionRate || '0%',
+      averageDuration: activeCallsData?.averageDuration || '0min',
+      monitorSettings
+    };
+    
+    const dataStr = JSON.stringify(callData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `call-monitor-export-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -57,7 +111,7 @@ function CallMonitorModal({ activeCallsData, isEnabled }: { activeCallsData?: an
           Open Call Monitor
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PhoneCall className="h-5 w-5" />
@@ -66,10 +120,67 @@ function CallMonitorModal({ activeCallsData, isEnabled }: { activeCallsData?: an
               <Activity className="h-3 w-3 mr-1" />
               Live
             </Badge>
+            {isListening && (
+              <Badge variant="destructive" className="ml-2">
+                <Mic className="h-3 w-3 mr-1" />
+                Listening
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Monitor Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Monitor Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={monitorSettings.autoRefresh}
+                    onCheckedChange={(checked) => setMonitorSettings({...monitorSettings, autoRefresh: checked})}
+                  />
+                  <Label className="text-sm">Auto Refresh</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={monitorSettings.showTranscript}
+                    onCheckedChange={(checked) => setMonitorSettings({...monitorSettings, showTranscript: checked})}
+                  />
+                  <Label className="text-sm">Show Transcript</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={monitorSettings.recordSession}
+                    onCheckedChange={(checked) => setMonitorSettings({...monitorSettings, recordSession: checked})}
+                  />
+                  <Label className="text-sm">Record Session</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={monitorSettings.qualityAlerts}
+                    onCheckedChange={(checked) => setMonitorSettings({...monitorSettings, qualityAlerts: checked})}
+                  />
+                  <Label className="text-sm">Quality Alerts</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={testAudioQuality}>
+                    <TestTube className="h-3 w-3 mr-1" />
+                    Test Quality
+                  </Button>
+                  <Badge variant={audioQuality === 'high' ? 'default' : audioQuality === 'medium' ? 'secondary' : 'destructive'}>
+                    {audioQuality}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Real-time metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="p-4">
@@ -104,43 +215,84 @@ function CallMonitorModal({ activeCallsData, isEnabled }: { activeCallsData?: an
             <div className="space-y-3">
               {activeCallsData?.calls?.length > 0 ? (
                 activeCallsData.calls.map((call: any) => (
-                  <div key={call.id} className="flex items-center justify-between p-4 border rounded-lg bg-white">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <PhoneCall className="h-4 w-4 text-muted-foreground" />
+                  <div key={call.id} className="border rounded-lg bg-white overflow-hidden">
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <PhoneCall className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{call.caller}</div>
+                          <div className="text-sm text-muted-foreground">{call.topic}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-medium">{call.caller}</div>
-                        <div className="text-sm text-muted-foreground">{call.topic}</div>
+                      <div className="text-right">
+                        <div className="font-medium">
+                          {Math.floor(call.duration / 60)}:{(call.duration % 60).toString().padStart(2, '0')}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={call.status === 'AI Handling' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {call.status}
+                          </Badge>
+                          {call.status === 'AI Handling' && (
+                            <span className="text-xs text-muted-foreground">
+                              {call.confidence}%
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">
-                        {Math.floor(call.duration / 60)}:{(call.duration % 60).toString().padStart(2, '0')}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant={call.status === 'AI Handling' ? 'default' : 'secondary'}
-                          className="text-xs"
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant={selectedCall === call.id && isListening ? "destructive" : "outline"}
+                          onClick={() => selectedCall === call.id && isListening ? stopListening() : startListening(call.id)}
                         >
-                          {call.status}
-                        </Badge>
-                        {call.status === 'AI Handling' && (
-                          <span className="text-xs text-muted-foreground">
-                            {call.confidence}%
-                          </span>
-                        )}
+                          {selectedCall === call.id && isListening ? (
+                            <>
+                              <Volume2 className="h-4 w-4 mr-1" />
+                              Stop
+                            </>
+                          ) : (
+                            <>
+                              <Mic className="h-4 w-4 mr-1" />
+                              Listen
+                            </>
+                          )}
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <UserCheck className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <UserCheck className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {selectedCall === call.id && isListening && monitorSettings.showTranscript && (
+                      <div className="border-t bg-gray-50 p-4">
+                        <h5 className="text-sm font-medium mb-2">Live Transcript</h5>
+                        <div className="text-sm space-y-1 max-h-32 overflow-y-auto">
+                          <div><strong>AI:</strong> How can I assist you with your legal matter today?</div>
+                          <div><strong>Caller:</strong> I need help with understanding my contract terms...</div>
+                          <div><strong>AI:</strong> I'd be happy to help you review your contract. Can you tell me what specific terms you're concerned about?</div>
+                          <div className="text-green-600"><em>AI is handling this inquiry with 85% confidence</em></div>
+                        </div>
+                        <div className="mt-2 flex items-center gap-2">
+                          <Badge variant={audioQuality === 'high' ? 'default' : audioQuality === 'medium' ? 'secondary' : 'destructive'}>
+                            Audio: {audioQuality}
+                          </Badge>
+                          {monitorSettings.recordSession && (
+                            <Badge variant="outline">
+                              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-1"></div>
+                              Recording
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
@@ -152,15 +304,28 @@ function CallMonitorModal({ activeCallsData, isEnabled }: { activeCallsData?: an
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export Call Logs
-            </Button>
-            <Button size="sm" variant="outline">
-              <Settings className="h-4 w-4 mr-2" />
-              Monitor Settings
-            </Button>
+          <div className="flex gap-2 justify-between">
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={exportCallData}>
+                <Download className="h-4 w-4 mr-2" />
+                Export Call Data
+              </Button>
+              <Button size="sm" variant="outline" onClick={testAudioQuality}>
+                <TestTube className="h-4 w-4 mr-2" />
+                Test Audio Quality
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              {isListening && (
+                <Button size="sm" variant="destructive" onClick={stopListening}>
+                  <Volume2 className="h-4 w-4 mr-2" />
+                  Stop All Listening
+                </Button>
+              )}
+              <Button size="sm" variant="outline" onClick={() => setIsOpen(false)}>
+                Close Monitor
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -278,6 +443,18 @@ export default function VoipManagement() {
   const [newForwardNumber, setNewForwardNumber] = useState("");
   const [newTriggerKeyword, setNewTriggerKeyword] = useState("");
   const [testNumber, setTestNumber] = useState("");
+  const [customProviderConfig, setCustomProviderConfig] = useState({
+    name: '',
+    description: '',
+    webhookUrl: '',
+    apiEndpoint: '',
+    authMethod: 'apikey',
+    apiKey: '',
+    username: '',
+    password: '',
+    additionalHeaders: '',
+    features: [] as string[]
+  });
 
   // Fetch VoIP configuration
   const { data: voipConfig, isLoading } = useQuery({
@@ -995,20 +1172,219 @@ export default function VoipManagement() {
               )}
 
               {currentConfig.provider === 'custom' && (
-                <div>
-                  <Label>Custom Endpoint</Label>
-                  <Input 
-                    value={currentConfig.credentials.customEndpoint || ''}
-                    placeholder="https://your-voip-api.com/webhook"
-                    onChange={(e) =>
-                      handleUpdateConfig({
-                        credentials: {
-                          ...currentConfig.credentials,
-                          customEndpoint: e.target.value
-                        }
-                      })
-                    }
-                  />
+                <div className="space-y-6">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">Custom VoIP Provider Configuration</h4>
+                    <p className="text-sm text-blue-700">
+                      Configure your own VoIP service provider with custom settings and authentication.
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Provider Name</Label>
+                      <Input 
+                        value={customProviderConfig.name}
+                        placeholder="My Custom VoIP Provider"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          name: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Provider Description</Label>
+                      <Input 
+                        value={customProviderConfig.description}
+                        placeholder="Description of your VoIP service"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          description: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>API Endpoint</Label>
+                      <Input 
+                        value={customProviderConfig.apiEndpoint}
+                        placeholder="https://api.yourprovider.com/v1"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          apiEndpoint: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Webhook URL</Label>
+                      <Input 
+                        value={customProviderConfig.webhookUrl}
+                        placeholder="https://your-voip-api.com/webhook"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          webhookUrl: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Authentication Method</Label>
+                    <Select 
+                      value={customProviderConfig.authMethod}
+                      onValueChange={(value) => setCustomProviderConfig({
+                        ...customProviderConfig,
+                        authMethod: value
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="apikey">API Key</SelectItem>
+                        <SelectItem value="basic">Basic Auth (Username/Password)</SelectItem>
+                        <SelectItem value="bearer">Bearer Token</SelectItem>
+                        <SelectItem value="oauth">OAuth 2.0</SelectItem>
+                        <SelectItem value="custom">Custom Headers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {customProviderConfig.authMethod === 'apikey' && (
+                    <div>
+                      <Label>API Key</Label>
+                      <Input 
+                        type="password"
+                        value={customProviderConfig.apiKey}
+                        placeholder="Your API key"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          apiKey: e.target.value
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  {customProviderConfig.authMethod === 'basic' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Username</Label>
+                        <Input 
+                          value={customProviderConfig.username}
+                          placeholder="Username"
+                          onChange={(e) => setCustomProviderConfig({
+                            ...customProviderConfig,
+                            username: e.target.value
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Password</Label>
+                        <Input 
+                          type="password"
+                          value={customProviderConfig.password}
+                          placeholder="Password"
+                          onChange={(e) => setCustomProviderConfig({
+                            ...customProviderConfig,
+                            password: e.target.value
+                          })}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {customProviderConfig.authMethod === 'bearer' && (
+                    <div>
+                      <Label>Bearer Token</Label>
+                      <Input 
+                        type="password"
+                        value={customProviderConfig.apiKey}
+                        placeholder="Bearer token"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          apiKey: e.target.value
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  {customProviderConfig.authMethod === 'custom' && (
+                    <div>
+                      <Label>Additional Headers (JSON format)</Label>
+                      <Textarea
+                        value={customProviderConfig.additionalHeaders}
+                        placeholder='{"Authorization": "Custom token", "X-API-Version": "v1"}'
+                        rows={3}
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          additionalHeaders: e.target.value
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <Label>Supported Features</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                      {[
+                        'Voice Calls',
+                        'SMS/Text',
+                        'Call Recording',
+                        'Call Forwarding',
+                        'Voicemail',
+                        'Conference Calls',
+                        'SIP Trunking',
+                        'Number Porting'
+                      ].map((feature) => (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={customProviderConfig.features.includes(feature)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setCustomProviderConfig({
+                                  ...customProviderConfig,
+                                  features: [...customProviderConfig.features, feature]
+                                });
+                              } else {
+                                setCustomProviderConfig({
+                                  ...customProviderConfig,
+                                  features: customProviderConfig.features.filter(f => f !== feature)
+                                });
+                              }
+                            }}
+                          />
+                          <Label className="text-sm">{feature}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => {
+                        handleUpdateConfig({
+                          provider: 'custom',
+                          credentials: {
+                            ...currentConfig.credentials,
+                            customEndpoint: customProviderConfig.webhookUrl,
+                            apiKey: customProviderConfig.apiKey,
+                            username: customProviderConfig.username,
+                            password: customProviderConfig.password
+                          },
+                          customProvider: customProviderConfig
+                        });
+                      }}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Custom Provider
+                    </Button>
+                    <Button variant="outline">
+                      <TestTube className="h-4 w-4 mr-2" />
+                      Test Connection
+                    </Button>
+                  </div>
                 </div>
               )}
 
