@@ -103,9 +103,9 @@ export default function AttorneyConnect() {
   const queryClient = useQueryClient();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [stateFilter, setStateFilter] = useState("");
-  const [practiceAreaFilter, setPracticeAreaFilter] = useState("");
-  const [availabilityFilter, setAvailabilityFilter] = useState("");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [practiceAreaFilter, setPracticeAreaFilter] = useState("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [selectedAttorney, setSelectedAttorney] = useState<AttorneyProfile | null>(null);
   const [selectedProSeUser, setSelectedProSeUser] = useState<ProSeUser | null>(null);
   const [showConnectionModal, setShowConnectionModal] = useState(false);
@@ -116,9 +116,9 @@ export default function AttorneyConnect() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
-      if (stateFilter) params.append('state', stateFilter);
-      if (practiceAreaFilter) params.append('practiceArea', practiceAreaFilter);
-      if (availabilityFilter) params.append('availability', availabilityFilter);
+      if (stateFilter && stateFilter !== 'all') params.append('state', stateFilter);
+      if (practiceAreaFilter && practiceAreaFilter !== 'all') params.append('practiceArea', practiceAreaFilter);
+      if (availabilityFilter && availabilityFilter !== 'all') params.append('availability', availabilityFilter);
       
       const response = await fetch(`/api/admin/attorneys?${params}`);
       if (!response.ok) throw new Error('Failed to fetch attorneys');
@@ -328,7 +328,7 @@ export default function AttorneyConnect() {
                       <SelectValue placeholder="All states" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All states</SelectItem>
+                      <SelectItem value="all">All states</SelectItem>
                       <SelectItem value="NY">New York</SelectItem>
                       <SelectItem value="CA">California</SelectItem>
                       <SelectItem value="TX">Texas</SelectItem>
@@ -344,7 +344,7 @@ export default function AttorneyConnect() {
                       <SelectValue placeholder="All areas" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All areas</SelectItem>
+                      <SelectItem value="all">All areas</SelectItem>
                       <SelectItem value="Family Law">Family Law</SelectItem>
                       <SelectItem value="Immigration">Immigration</SelectItem>
                       <SelectItem value="Business Law">Business Law</SelectItem>
@@ -360,7 +360,7 @@ export default function AttorneyConnect() {
                       <SelectValue placeholder="All attorneys" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All attorneys</SelectItem>
+                      <SelectItem value="all">All attorneys</SelectItem>
                       <SelectItem value="available">Available for Pro Se</SelectItem>
                     </SelectContent>
                   </Select>
