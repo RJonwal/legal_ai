@@ -79,7 +79,7 @@ const EnhancedLiveChat = ({
             sender: 'ai',
             timestamp: new Date()
           }]);
-          
+
           if (activeConfig.autoOpen) {
             setIsOpen(true);
           } else {
@@ -102,7 +102,7 @@ const EnhancedLiveChat = ({
     bubble.className = 'fixed bottom-20 right-6 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm animate-bounce z-50';
     bubble.textContent = 'New message!';
     document.body.appendChild(bubble);
-    
+
     setTimeout(() => {
       document.body.removeChild(bubble);
     }, 3000);
@@ -156,7 +156,7 @@ const EnhancedLiveChat = ({
     if (msg.includes('help') || msg.includes('support')) return legalResponses.help;
     if (msg.includes('trial') || msg.includes('free')) return legalResponses.trial;
     if (msg.includes('security') || msg.includes('safe') || msg.includes('privacy')) return legalResponses.security;
-    
+
     return legalResponses.default;
   };
 
@@ -167,7 +167,7 @@ const EnhancedLiveChat = ({
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
         setUploadedImage(imageUrl);
-        
+
         const imageMessage: Message = {
           id: Date.now().toString(),
           text: `Shared an image: ${file.name}`,
@@ -175,9 +175,9 @@ const EnhancedLiveChat = ({
           timestamp: new Date(),
           imageUrl: imageUrl
         };
-        
+
         setMessages(prev => [...prev, imageMessage]);
-        
+
         // Auto-respond to image upload
         setTimeout(() => {
           const aiResponse: Message = {
@@ -199,10 +199,10 @@ const EnhancedLiveChat = ({
         video: true,
         audio: true
       });
-      
+
       setScreenStream(stream);
       setIsScreenSharing(true);
-      
+
       const screenMessage: Message = {
         id: Date.now().toString(),
         text: "Started screen sharing session",
@@ -210,24 +210,24 @@ const EnhancedLiveChat = ({
         timestamp: new Date(),
         isScreenShare: true
       };
-      
+
       setMessages(prev => [...prev, screenMessage]);
-      
+
       // Handle stream end
       stream.getVideoTracks()[0].onended = () => {
         setIsScreenSharing(false);
         setScreenStream(null);
-        
+
         const endMessage: Message = {
           id: Date.now().toString(),
           text: "Screen sharing session ended",
           sender: 'system',
           timestamp: new Date()
         };
-        
+
         setMessages(prev => [...prev, endMessage]);
       };
-      
+
       // Auto-respond to screen share
       setTimeout(() => {
         const aiResponse: Message = {
@@ -238,7 +238,7 @@ const EnhancedLiveChat = ({
         };
         setMessages(prev => [...prev, aiResponse]);
       }, 1000);
-      
+
     } catch (error) {
       console.error('Screen share error:', error);
       const errorMessage: Message = {
@@ -275,7 +275,7 @@ const EnhancedLiveChat = ({
       // Generate AI response
       try {
         const aiResponse = await generateAIResponse(message);
-        
+
         setTimeout(() => {
           setIsTyping(false);
           setMessages(prev => [...prev, {
@@ -357,7 +357,7 @@ const EnhancedLiveChat = ({
                           {msg.sender === 'ai' ? 'AI Assistant' : msg.sender === 'user' ? 'You' : 'Support'}
                         </span>
                       </div>
-                      
+
                       {/* Show image if present */}
                       {msg.imageUrl && (
                         <div className="mb-2">
@@ -368,7 +368,7 @@ const EnhancedLiveChat = ({
                           />
                         </div>
                       )}
-                      
+
                       {/* Show screen share indicator */}
                       {msg.isScreenShare && (
                         <div className="flex items-center gap-2 mb-1">
@@ -376,13 +376,13 @@ const EnhancedLiveChat = ({
                           <span className="text-xs font-medium">Screen Share</span>
                         </div>
                       )}
-                      
+
                       <p className="text-sm">{msg.text}</p>
                       <p className="text-xs opacity-70 mt-1">{msg.timestamp.toLocaleTimeString()}</p>
                     </div>
                   </div>
                 ))}
-                
+
                 {isTyping && (
                   <div className="text-left mb-3">
                     <div className="inline-block p-3 rounded-lg bg-gray-100 text-gray-900">
@@ -398,7 +398,7 @@ const EnhancedLiveChat = ({
                     </div>
                   </div>
                 )}
-                
+
                 <div ref={messagesEndRef} />
               </div>
 
@@ -456,7 +456,7 @@ const EnhancedLiveChat = ({
           )}
         </div>
       )}
-      
+
       {/* Chat Button */}
       <Button
         onClick={() => {
@@ -475,7 +475,7 @@ const EnhancedLiveChat = ({
         style={{ backgroundColor: activeConfig.primaryColor }}
       >
         <MessageSquare className="h-6 w-6" />
-        
+
         {/* Notification indicator */}
         {messages.length > 0 && !isOpen && (
           <Badge 

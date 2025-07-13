@@ -490,7 +490,7 @@ During your trial, you've:
 Continue Your Journey:
 Choose from our flexible subscription plans to maintain uninterrupted access to Wizzered's powerful legal tools.
 
-Recommended Plan: {{recommended_plan}}
+Recommended Plan: ${"{{recommended_plan}}"}
 - Monthly: ${"{{monthly_price}}"}
 - Annual: ${"{{annual_price}}"} (Save ${"{{annual_savings}}"}!)
 

@@ -12,6 +12,7 @@ import {
   Sentry
 } from "./services/monitoring";
 import { sessionConfig } from "./services/session";
+import { pool } from "./db";
 import session from "express-session";
 import morgan from "morgan";
 import responseTime from "response-time";
@@ -73,7 +74,11 @@ try {
   app.use(session(sessionConfig));
 } catch (error) {
   logger.error('Failed to initialize session middleware:', error);
-  // Continue without session middleware for now
+  // Use basic session fallback
+  app.use((req, res, next) => {
+    req.session = req.session || {};
+    next();
+  });
 }
 
 // Body parsing
@@ -148,6 +153,13 @@ process.on('warning', (warning) => {
   });
 });
 
+// Memory leak prevention
+setInterval(() => {
+  if (global.gc) {
+    global.gc();
+  }
+}, 60000); // Run garbage collection every minute
+
 // Note: Graceful shutdown is handled by monitoring service
 
 // Global error handlers with better logging
@@ -186,12 +198,30 @@ process.on('unhandledRejection', (reason, promise) => {
 // Graceful shutdown handling
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
+  // Close server and database connections
+  if (pool) {
+    pool.end().then(() => {
+      process.exit(0);
+    }).catch(() => {
+      process.exit(1);
+    });
+  } else {
+    process.exit(0);
+  }
 });
 
 process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
+  // Close server and database connections
+  if (pool) {
+    pool.end().then(() => {
+      process.exit(0);
+    }).catch(() => {
+      process.exit(1);
+    });
+  } else {
+    process.exit(0);
+  }
 });
 
 // Add global error handler as Express middleware
