@@ -126,6 +126,8 @@ export default function GlobalPromptManagement() {
     );
   }
 
+  console.log('Global prompts data:', prompts);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -142,50 +144,56 @@ export default function GlobalPromptManagement() {
       </div>
 
       <div className="grid gap-6">
-        {prompts && prompts.map((prompt: GlobalPrompt) => (
-          <Card key={prompt.id} className="relative">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  {getCategoryIcon(prompt.category)}
-                  <div>
-                    <CardTitle className="text-lg">{prompt.name}</CardTitle>
-                    <CardDescription>{prompt.description}</CardDescription>
+        {prompts && Array.isArray(prompts) && prompts.length > 0 ? (
+          prompts.map((prompt: GlobalPrompt) => (
+            <Card key={prompt.id} className="relative">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    {getCategoryIcon(prompt.category)}
+                    <div>
+                      <CardTitle className="text-lg">{prompt.name}</CardTitle>
+                      <CardDescription>{prompt.description}</CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getCategoryColor(prompt.category)}>
+                      {prompt.category}
+                    </Badge>
+                    <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                      {prompt.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditPrompt(prompt)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge className={getCategoryColor(prompt.category)}>
-                    {prompt.category}
-                  </Badge>
-                  <Badge variant={prompt.isActive ? "default" : "secondary"}>
-                    {prompt.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditPrompt(prompt)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="max-h-32 overflow-y-auto">
+                    <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {prompt.promptContent.substring(0, 200)}...
+                    </pre>
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="max-h-32 overflow-y-auto">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {prompt.promptContent.substring(0, 200)}...
-                  </pre>
+                <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
+                  <span>Created: {new Date(prompt.createdAt).toLocaleDateString()}</span>
+                  <span>Last modified: {new Date(prompt.updatedAt).toLocaleDateString()}</span>
                 </div>
-              </div>
-              <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
-                <span>Created: {new Date(prompt.createdAt).toLocaleDateString()}</span>
-                <span>Last modified: {new Date(prompt.updatedAt).toLocaleDateString()}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No global prompts found.</p>
+          </div>
+        )}
       </div>
 
       {/* Edit Prompt Dialog */}
