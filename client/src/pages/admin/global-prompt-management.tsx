@@ -958,7 +958,7 @@ Each action should provide immediate, practical assistance tailored to the speci
           throw new Error('Failed to create prompt');
         }
 
-        // await refetch(); // refetch is undefined
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/global-prompts'] });
         setIsCreating(false);
         setNewPromptName('');
         setNewPromptDescription('');
@@ -976,6 +976,27 @@ Each action should provide immediate, practical assistance tailored to the speci
         });
       }
     }
+  };
+
+  const handleCopyPrompt = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({
+        title: "Copied",
+        description: "Prompt content copied to clipboard.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy to clipboard.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditPrompt = (prompt: GlobalPrompt) => {
+    setActivePrompt(prompt);
+    setEditingPrompt(prompt.content);
   };
 
   const handleTogglePrompt = async (promptId: string) => {
@@ -1074,7 +1095,7 @@ Each action should provide immediate, practical assistance tailored to the speci
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => navigator.clipboard.writeText(prompt.content)}
+                            onClick={() => handleCopyPrompt(prompt.content)}
                           >
                             <Copy className="h-4 w-4 mr-1" />
                             Copy
@@ -1082,10 +1103,7 @@ Each action should provide immediate, practical assistance tailored to the speci
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              setActivePrompt(prompt);
-                              setEditingPrompt(prompt.content);
-                            }}
+                            onClick={() => handleEditPrompt(prompt)}
                           >
                             <Brain className="h-4 w-4 mr-1" />
                             Edit
@@ -1094,6 +1112,7 @@ Each action should provide immediate, practical assistance tailored to the speci
                             variant="outline"
                             size="sm"
                             onClick={() => handleTogglePrompt(prompt.id)}
+                            disabled={togglePromptMutation.isPending}
                           >
                             {prompt.isActive ? "Deactivate" : "Activate"}
                           </Button>
@@ -1138,9 +1157,12 @@ Each action should provide immediate, practical assistance tailored to the speci
                     </div>
 
                     <div className="flex gap-2">
-                      <Button onClick={handleSavePrompt} disabled={!editingPrompt.trim()}>
+                      <Button 
+                        onClick={handleSavePrompt} 
+                        disabled={!editingPrompt.trim() || updatePromptMutation.isPending}
+                      >
                         <Save className="mr-2 h-4 w-4" />
-                        Save Changes
+                        {updatePromptMutation.isPending ? "Saving..." : "Save Changes"}
                       </Button>
                       <Button
                         variant="outline"

@@ -61,7 +61,7 @@ export interface IStorage {
     growth: number;
     newThisMonth: number;
   }>;
-  
+
   // Admin configuration management
   getAdminConfig(key: string): Promise<any>;
   setAdminConfig(key: string, value: any): Promise<void>;
@@ -635,7 +635,7 @@ export class MemStorage implements IStorage {
     const totalUsers = allUsers.length;
     const activeUsers = allUsers.filter(u => u.isVerified).length;
     const proUsers = allUsers.filter(u => u.subscriptionStatus === 'active').length;
-    
+
     return {
       totalUsers,
       activeUsers,
