@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,17 +36,8 @@ interface GlobalPrompt {
 
 export default function GlobalPromptManagement() {
   const { toast } = useToast();
-
-  // Load prompts from API
-  const { data: prompts = [], refetch } = useQuery({
-    queryKey: ['global-prompts'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/global-prompts');
-      return response.json();
-    }
-  });
-
-  const [localPrompts, setLocalPrompts] = useState<GlobalPrompt[]>([
+  
+  const [prompts, setPrompts] = useState<GlobalPrompt[]>([
     {
       id: "1",
       name: "Core Legal AI System Prompt",
