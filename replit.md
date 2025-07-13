@@ -127,3 +127,6 @@ Changelog:
 - July 13, 2025. Added filtering for empty values in SelectItem components to prevent React errors
 - July 13, 2025. Enhanced server resilience with uncaught exception handlers
 - July 13, 2025. Improved HMR stability to prevent server crashes during development
+- July 13, 2025. Fixed missing React import in AdminLayout component causing useState errors
+- July 13, 2025. Added comprehensive process-level error handling with graceful SIGTERM/SIGINT handling
+- July 13, 2025. Implemented permanent stability fixes for consistent development server operation

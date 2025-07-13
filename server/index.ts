@@ -36,7 +36,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add process-level error handling to prevent crashes
+// Add comprehensive process-level error handling to prevent crashes
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
   // Don't exit - just log the error and continue
@@ -45,6 +45,18 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   // Don't exit - just log the error and continue
+});
+
+// Handle SIGTERM gracefully
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+// Handle SIGINT gracefully
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
 });
 
 (async () => {
