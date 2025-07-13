@@ -10,7 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Check, Crown, Zap } from "lucide-react";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || "pk_test_TYooMQauvdEDq54NiTphI7jx");
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 interface SubscriptionPlan {
   id: string;
@@ -270,9 +272,17 @@ function SubscriptionPlans() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Elements stripe={stripePromise}>
-              <PaymentForm plan={selectedPlan} />
-            </Elements>
+            {!stripePromise ? (
+              <Alert>
+                <AlertDescription>
+                  Payment processing is currently unavailable. Please contact support or try again later.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Elements stripe={stripePromise}>
+                <PaymentForm plan={selectedPlan} />
+              </Elements>
+            )}
           </CardContent>
         </Card>
       )}
