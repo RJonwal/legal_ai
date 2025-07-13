@@ -808,6 +808,35 @@ router.post("/attorney-connections", (req: Request, res: Response) => {
   }
 });
 
+// Add new attorney
+router.post("/attorneys", (req: Request, res: Response) => {
+  try {
+    const newAttorney = {
+      id: Date.now().toString(),
+      userId: Date.now(),
+      ...req.body,
+      hourlyRate: req.body.hourlyRate || 0,
+      availableForProSe: true,
+      currentProSeClients: 0,
+      isVerified: false,
+      subscription: "basic",
+      rating: 0,
+      reviewCount: 0,
+      isActive: true,
+      joinedAt: new Date().toISOString().split('T')[0],
+      connections: []
+    };
+    
+    attorneyDirectory.attorneys.push(newAttorney);
+    
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/attorneys 200`);
+    res.status(201).json({ success: true, attorney: newAttorney });
+  } catch (error) {
+    console.error("Error adding attorney:", error);
+    res.status(500).json({ error: "Failed to add attorney" });
+  }
+});
+
 // Update attorney status
 router.put("/attorneys/:id/status", (req: Request, res: Response) => {
   try {
@@ -830,6 +859,37 @@ router.put("/attorneys/:id/status", (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error updating attorney status:", error);
     res.status(500).json({ error: "Failed to update attorney status" });
+  }
+});
+
+// Feature flags
+let featureFlags = {
+  attorneyConnect: true,
+  proSeDirectory: true,
+  aiAssistant: true,
+  videoConsultations: false
+};
+
+// Get feature flags
+router.get("/feature-flags", (req: Request, res: Response) => {
+  try {
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/feature-flags 200`);
+    res.json(featureFlags);
+  } catch (error) {
+    console.error("Error getting feature flags:", error);
+    res.status(500).json({ error: "Failed to get feature flags" });
+  }
+});
+
+// Update feature flags
+router.put("/feature-flags", (req: Request, res: Response) => {
+  try {
+    featureFlags = { ...featureFlags, ...req.body };
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/feature-flags 200`);
+    res.json({ success: true, featureFlags });
+  } catch (error) {
+    console.error("Error updating feature flags:", error);
+    res.status(500).json({ error: "Failed to update feature flags" });
   }
 });
 

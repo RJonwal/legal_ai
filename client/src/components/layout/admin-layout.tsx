@@ -1,4 +1,3 @@
-import { useLocation } from "wouter";
 import {
   Sidebar,
   SidebarContent,
@@ -31,10 +30,21 @@ import {
   MessageSquare,
   Phone,
   FileText,
-  Scale
+  Scale,
+  ToggleLeft,
+  ToggleRight
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Link } from "wouter";
+import { Link, useLocation, useNavigate } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+interface NavigationItem {
+  title: string;
+  url: string;
+  icon: any;
+  isActive: boolean;
+  hidden?: boolean;
+}
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -42,6 +52,8 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [location, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const [showFeatureToggle, setShowFeatureToggle] = useState(false);
 
   const navigationItems = [
     {
@@ -114,9 +126,36 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       title: "Attorney Connect",
       url: "/admin/attorney-connect",
       icon: Scale,
-      isActive: location === "/admin/attorney-connect"
+      isActive: location === "/admin/attorney-connect",
+      hidden: false // TODO: fetch this from feature flags and implement logic to toggle
     }
   ];
+
+  // Fetch feature flags
+  const { data: featureFlags } = useQuery({
+    queryKey: ['feature-flags'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/feature-flags');
+      if (!response.ok) throw new Error('Failed to fetch feature flags');
+      return response.json();
+    },
+  });
+
+  // Update feature flags mutation
+  const updateFeatureFlagsMutation = useMutation({
+    mutationFn: async (flags: any) => {
+      const response = await fetch('/api/admin/feature-flags', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(flags),
+      });
+      if (!response.ok) throw new Error('Failed to update feature flags');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feature-flags'] });
+    },
+  });
 
   return (
     <SidebarProvider>
@@ -144,7 +183,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {navigationItems.map((item) => (
+                {navigationItems.filter(item => !item.hidden).map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild 
