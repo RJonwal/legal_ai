@@ -35,10 +35,10 @@ interface DocumentCanvasProps {
   onDocumentUpdate?: (document: any) => void;
 }
 
-export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentCanvasProps) {
+export function DocumentCanvas({ caseId, document: documentProp, onDocumentUpdate }: DocumentCanvasProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(document?.title || "");
-  const [content, setContent] = useState(document?.content || "");
+  const [title, setTitle] = useState(documentProp?.title || "");
+  const [content, setContent] = useState(documentProp?.content || "");
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Times New Roman");
   const [fontSize, setFontSize] = useState(12);
@@ -69,15 +69,15 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   ];
 
   useEffect(() => {
-    if (document) {
-      setTitle(document.title);
-      setContent(document.content);
+    if (documentProp) {
+      setTitle(documentProp.title);
+      setContent(documentProp.content);
     }
-  }, [document]);
+  }, [documentProp]);
 
   const updateDocumentMutation = useMutation({
     mutationFn: async (updates: any) => {
-      const response = await apiRequest('PUT', `/api/documents/${document.id}`, updates);
+      const response = await apiRequest('PUT', `/api/documents/${documentProp.id}`, updates);
       return response.json();
     },
     onSuccess: async (updatedDocument) => {
@@ -141,13 +141,13 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
   });
 
   const handleSave = () => {
-    if (document) {
+    if (documentProp) {
       updateDocumentMutation.mutate({ title, content, status: 'draft' });
     }
   };
 
   const handleSaveFinal = () => {
-    if (document) {
+    if (documentProp) {
       updateDocumentMutation.mutate({ title, content, status: 'final' });
     }
   };
@@ -509,7 +509,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
     });
   };
 
-  if (!document && !generateDocumentMutation.isPending) {
+  if (!documentProp && !generateDocumentMutation.isPending) {
     return (
       <div className="h-full bg-gray-50 pt-3 px-1 pb-1 flex flex-col">
         {/* Material Design Floating Card */}
@@ -561,7 +561,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
               <h3 className="text-sm font-semibold text-gray-900 truncate">{title}</h3>
             )}
             <p className="text-xs text-gray-500 truncate">
-              {document?.status === 'final' ? 'Final' : 'Draft'} • Auto-saved
+              {documentProp?.status === 'final' ? 'Final' : 'Draft'} • Auto-saved
             </p>
           </div>
           <div className="flex items-center space-x-1 ml-2">
@@ -572,7 +572,7 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
               </SelectTrigger>
               <SelectContent>
                 {courtFonts.filter(font => font && font.trim() !== '').map((font) => (
-                  <SelectItem key={font} value={font}>
+                  <SelectItem key={font} value={font || ''}>
                     <span style={{ fontFamily: font }} className="text-xs">{font}</span>
                   </SelectItem>
                 ))}
@@ -593,31 +593,35 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
               </SelectContent>
             </Select>
 
-            {/* Download Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 px-2" disabled={isDownloading}>
-                  {isDownloading ? (
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-legal-blue"></div>
-                  ) : (
-                    <>
-                      <Download className="h-3 w-3" />
-                      <ChevronDown className="h-3 w-3 ml-1" />
-                    </>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleDownloadPDF}>
-                  <FileText className="h-3 w-3 mr-2" />
-                  <span className="text-xs">PDF</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownloadEditable}>
-                  <Edit3 className="h-3 w-3 mr-2" />
-                  <span className="text-xs">Editable</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Download Buttons - Temporarily disabled dropdown */}
+            <div className="flex space-x-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 px-2" 
+                disabled={isDownloading}
+                onClick={handleDownloadPDF}
+              >
+                {isDownloading ? (
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-legal-blue"></div>
+                ) : (
+                  <>
+                    <FileText className="h-3 w-3 mr-1" />
+                    <span className="text-xs">PDF</span>
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 px-2" 
+                disabled={isDownloading}
+                onClick={handleDownloadEditable}
+              >
+                <Edit3 className="h-3 w-3 mr-1" />
+                <span className="text-xs">TXT</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

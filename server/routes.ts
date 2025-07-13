@@ -60,6 +60,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Notifications endpoint (temporary simple implementation)
+  app.get("/api/notifications", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // For now, return empty array until proper notification system is implemented
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ 
+        message: "Failed to get notifications",
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Get current user (authenticated)
   app.get("/api/user", authenticateToken, async (req: AuthRequest, res) => {
     try {

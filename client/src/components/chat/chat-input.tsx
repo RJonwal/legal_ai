@@ -82,34 +82,15 @@ export function ChatInput({ onSendMessage, onFunctionClick, disabled }: ChatInpu
             Press Enter to send, Shift+Enter for new line
           </div>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                disabled={disabled}
-                className="text-legal-blue border-legal-blue hover:bg-legal-blue hover:text-white"
-              >
-                Case Actions
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {caseActions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <DropdownMenuItem
-                    key={action.id}
-                    onClick={() => onFunctionClick?.(action.id)}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{action.label}</span>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            disabled={disabled}
+            onClick={() => onFunctionClick?.(caseActions[0].id)}
+            className="text-legal-blue border-legal-blue hover:bg-legal-blue hover:text-white"
+          >
+            Case Actions
+          </Button>
         </div>
       </form>
     </div>

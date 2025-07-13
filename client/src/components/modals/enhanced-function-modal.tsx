@@ -1070,17 +1070,16 @@ export function EnhancedFunctionModal({
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <h4 className="font-medium">Document Management</h4>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-32 h-8 text-xs">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date">Date</SelectItem>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="type">Type</SelectItem>
-                    <SelectItem value="status">Status</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-32 h-8 text-xs border rounded px-2"
+                >
+                  <option value="date">Date</option>
+                  <option value="name">Name</option>
+                  <option value="type">Type</option>
+                  <option value="status">Status</option>
+                </select>
               </div>
               <div className="flex space-x-2">
                 <Button 
@@ -1511,19 +1510,19 @@ case 'case-analytics':
                   </div>
                   <div>
                     <Label htmlFor="deposition-type">Deposition Type</Label>
-                    <Select value={depositionInputs.depositionType} onValueChange={(value) => setDepositionInputs(prev => ({...prev, depositionType: value}))}>
-                      <SelectTrigger className="border-purple-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="fact-witness">Fact Witness</SelectItem>
-                        <SelectItem value="expert-witness">Expert Witness</SelectItem>
-                        <SelectItem value="party-deposition">Party Deposition</SelectItem>
-                        <SelectItem value="corporate-representative">Corporate Representative (30b6)</SelectItem>
-                        <SelectItem value="treating-physician">Treating Physician</SelectItem>
-                        <SelectItem value="character-witness">Character Witness</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <select 
+                      value={depositionInputs.depositionType} 
+                      onChange={(e) => setDepositionInputs(prev => ({...prev, depositionType: e.target.value}))}
+                      className="w-full p-2 border border-purple-200 rounded"
+                    >
+                      <option value="">Select deposition type</option>
+                      <option value="fact-witness">Fact Witness</option>
+                      <option value="expert-witness">Expert Witness</option>
+                      <option value="party-deposition">Party Deposition</option>
+                      <option value="corporate-representative">Corporate Representative (30b6)</option>
+                      <option value="treating-physician">Treating Physician</option>
+                      <option value="character-witness">Character Witness</option>
+                    </select>
                   </div>
                 </div>
 
@@ -1719,17 +1718,17 @@ case 'case-analytics':
                   </div>
                   <div>
                     <Label htmlFor="estimated-duration">Estimated Duration</Label>
-                    <Select value={depositionInputs.estimatedDuration || ''} onValueChange={(value) => setDepositionInputs(prev => ({...prev, estimatedDuration: value}))}>
-                      <SelectTrigger className="border-purple-200">
-                        <SelectValue placeholder="Select duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2-hours">2 hours</SelectItem>
-                        <SelectItem value="4-hours">4 hours</SelectItem>
-                        <SelectItem value="full-day">Full day (7 hours)</SelectItem>
-                        <SelectItem value="multi-day">Multiple days</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <select 
+                      value={depositionInputs.estimatedDuration || ''} 
+                      onChange={(e) => setDepositionInputs(prev => ({...prev, estimatedDuration: e.target.value}))}
+                      className="w-full p-2 border border-purple-200 rounded"
+                    >
+                      <option value="">Select duration</option>
+                      <option value="2-hours">2 hours</option>
+                      <option value="4-hours">4 hours</option>
+                      <option value="full-day">Full day (7 hours)</option>
+                      <option value="multi-day">Multiple days</option>
+                    </select>
                   </div>
                 </div>
               </TabsContent>
@@ -1844,20 +1843,20 @@ case 'case-analytics':
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="hearing-type">Hearing Type *</Label>
-                    <Select value={courtPrepInputs.hearingType} onValueChange={(value) => setCourtPrepInputs(prev => ({...prev, hearingType: value}))}>
-                      <SelectTrigger className="border-red-200">
-                        <SelectValue placeholder="Select hearing type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="motion-hearing">Motion Hearing</SelectItem>
-                        <SelectItem value="trial">Trial</SelectItem>
-                        <SelectItem value="preliminary-injunction">Preliminary Injunction</SelectItem>
-                        <SelectItem value="summary-judgment">Summary Judgment</SelectItem>
-                        <SelectItem value="settlement-conference">Settlement Conference</SelectItem>
-                        <SelectItem value="status-conference">Status Conference</SelectItem>
-                        <SelectItem value="case-management">Case Management Conference</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <select 
+                      value={courtPrepInputs.hearingType} 
+                      onChange={(e) => setCourtPrepInputs(prev => ({...prev, hearingType: e.target.value}))}
+                      className="w-full p-2 border border-red-200 rounded"
+                    >
+                      <option value="">Select hearing type</option>
+                      <option value="motion-hearing">Motion Hearing</option>
+                      <option value="trial">Trial</option>
+                      <option value="preliminary-injunction">Preliminary Injunction</option>
+                      <option value="summary-judgment">Summary Judgment</option>
+                      <option value="settlement-conference">Settlement Conference</option>
+                      <option value="status-conference">Status Conference</option>
+                      <option value="case-management">Case Management Conference</option>
+                    </select>
                   </div>
                   <div>
                     <Label htmlFor="opposing-counsel">Opposing Counsel</Label>
