@@ -52,6 +52,25 @@ export interface IStorage {
   updateCaseLastAccessed(caseId: number): Promise<void>;
 }
 
+export interface User {
+  id: number;
+  email: string;
+  passwordHash: string;
+  fullName: string;
+  phone?: string;
+  profilePicture?: string;
+  role: string;
+  subscriptionStatus: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  createdAt: Date;
+  lastLogin?: Date;
+  isActive: boolean;
+  emailVerified: boolean;
+  billingAddress?: string;
+  paymentMethodId?: string;
+}
+
 export class MemStorage implements IStorage {
   private users: Map<number, User> = new Map();
   private cases: Map<number, Case> = new Map();
@@ -81,6 +100,9 @@ export class MemStorage implements IStorage {
       fullName: "Sarah Johnson",
       role: "Senior Attorney",
       createdAt: new Date(),
+      subscriptionStatus: "active",
+      isActive: true,
+      emailVerified: true,
     };
     this.users.set(1, sampleUser);
     this.userIdCounter = 2;
@@ -279,12 +301,19 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.username === username);
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const user: User = {
       ...insertUser,
       id: this.userIdCounter++,
       createdAt: new Date(),
       role: insertUser.role || "attorney",
+      subscriptionStatus: "inactive",
+      isActive: true,
+      emailVerified: false,
     };
     this.users.set(user.id, user);
     return user;
@@ -364,6 +393,68 @@ export class MemStorage implements IStorage {
     };
 
     this.users.set(id, updated);
+    return updated;
+  }
+
+  async updateUserStripe(id: number, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updated: User = {
+      ...user,
+      stripeCustomerId: stripeCustomerId,
+      stripeSubscriptionId: stripeSubscriptionId,
+    };
+
+    this.users.set(id, updated);
+    return updated;
+  }
+
+  async verifyUser(id: number): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updated: User = {
+      ...user,
+      emailVerified: true,
+    };
+
+    this.users.set(id, updated);
+    return updated;
+  }
+
+  async updatePassword(id: number, hashedPassword: string): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updated: User = {
+      ...user,
+      passwordHash: hashedPassword,
+    };
+
+    this.users.set(id, updated);
+    return updated;
+  }
+
+    async setResetToken(email: string, token: string, expiry: Date): Promise<User | undefined> {
+    const user = Array.from(this.users.values()).find(user => user.email === email);
+    if (!user) {
+      return undefined;
+    }
+
+    const updated: User = {
+      ...user,
+      resetToken: token,
+      resetTokenExpiry: expiry,
+    };
+
+    this.users.set(user.id, updated);
     return updated;
   }
 

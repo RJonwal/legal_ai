@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { StripeService, subscriptionPlans } from "../services/stripe";
+import { BillingService } from "../services/billing";
 import { authenticateToken, type AuthRequest } from "../services/auth";
 import { z } from "zod";
+import path from "path";
 
 const router = Router();
 
@@ -187,6 +189,96 @@ router.post("/webhook", async (req, res) => {
   } catch (error) {
     console.error("Webhook error:", error);
     res.status(400).json({ message: "Webhook error" });
+  }
+});
+
+// Get billing history
+router.get("/billing-history", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+    const history = await BillingService.getUserBillingHistory(userId);
+    res.json(history);
+  } catch (error) {
+    console.error("Get billing history error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Generate invoice
+router.post("/generate-invoice", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const schema = z.object({
+      amount: z.number().min(1, "Amount must be greater than 0"),
+      description: z.string().min(1, "Description is required")
+    });
+
+    const validation = schema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        message: "Validation failed", 
+        errors: validation.error.errors 
+      });
+    }
+
+    const { amount, description } = validation.data;
+    const userId = req.user!.id;
+
+    const invoicePath = await BillingService.createInvoice(userId, amount, description);
+    
+    res.json({
+      message: "Invoice generated successfully",
+      invoicePath: path.basename(invoicePath)
+    });
+  } catch (error) {
+    console.error("Generate invoice error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Download invoice
+router.get("/invoice/:filename", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { filename } = req.params;
+    const invoicePath = path.join(process.cwd(), "uploads", "invoices", filename);
+    
+    res.download(invoicePath, (err) => {
+      if (err) {
+        console.error("Error downloading invoice:", err);
+        res.status(404).json({ message: "Invoice not found" });
+      }
+    });
+  } catch (error) {
+    console.error("Download invoice error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Update payment method
+router.post("/update-payment-method", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const schema = z.object({
+      paymentMethodId: z.string().min(1, "Payment method ID is required")
+    });
+
+    const validation = schema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        message: "Validation failed", 
+        errors: validation.error.errors 
+      });
+    }
+
+    const { paymentMethodId } = validation.data;
+    const userId = req.user!.id;
+
+    await BillingService.updatePaymentMethod(userId, paymentMethodId);
+    
+    res.json({ message: "Payment method updated successfully" });
+  } catch (error) {
+    console.error("Update payment method error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

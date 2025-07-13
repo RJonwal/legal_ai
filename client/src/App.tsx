@@ -26,14 +26,14 @@ import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import Subscription from "@/pages/subscription";
-
+import Billing from "@/pages/billing";
 // Import admin pages
 import AdminDashboard from "@/pages/admin/index";
 import AdminUsers from "@/pages/admin/users";
 import AdminLandingConfig from "@/pages/admin/landing-config";
 import AdminAnalytics from "@/pages/admin/analytics";
 import AdminSystem from "@/pages/admin/system";
-import AdminBilling from "@/pages/admin/billing";
+import AdminBillingPage from "@/pages/admin/billing";
 import AdminAPIManagement from "@/pages/admin/api-management";
 import EmailManagement from "@/pages/admin/email-management";
 import LiveChatManagement from "@/pages/admin/livechat-management";
@@ -122,6 +122,7 @@ function App() {
               <Route path="/reset-password" component={ResetPassword} />
               <Route path="/subscription" component={Subscription} />
               <Route path="/subscribe" component={Subscription} />
+              <Route path="/billing" component={Billing} />
 
               {/* Admin routes with layout */}
               <Route path="/admin">
@@ -138,7 +139,7 @@ function App() {
 
               <Route path="/admin/billing">
                 <AdminLayout>
-                  <AdminBilling />
+                  <AdminBillingPage />
                 </AdminLayout>
               </Route>
 
