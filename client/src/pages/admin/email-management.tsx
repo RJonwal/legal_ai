@@ -492,7 +492,7 @@ Choose from our flexible subscription plans to maintain uninterrupted access to 
 
 Recommended Plan: {{recommended_plan}}
 - Monthly: ${"{{monthly_price}}"}
-- Annual: ${"{{annual_price}}"} (Save {{annual_savings}}!)
+- Annual: ${"{{annual_price}}"} (Save ${"{{annual_savings}}"}!)
 
 Features you'll keep:
 - AI-powered legal analysis
