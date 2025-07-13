@@ -1,8 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, X, Send, Bot, User, Minimize2, Maximize2, Settings, Image, Monitor, Phone, Paperclip, ScreenShare, StopCircle, Camera } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { 
+  MessageCircle, 
+  Send, 
+  Phone, 
+  Video, 
+  Paperclip, 
+  Smile, 
+  MoreVertical,
+  Users,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  X,
+  Minimize2,
+  Maximize2,
+  Settings,
+  Star,
+  Archive,
+  Flag
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 
 interface Message {
@@ -424,7 +447,7 @@ const EnhancedLiveChat = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={handleScreenShare}
+                    onClick={startScreenShare}
                     className={`flex items-center gap-1 ${isScreenSharing ? 'bg-red-100 text-red-600' : ''}`}
                   >
                     {isScreenSharing ? <StopCircle className="h-4 w-4" /> : <ScreenShare className="h-4 w-4" />}
@@ -474,7 +497,7 @@ const EnhancedLiveChat = ({
         className="rounded-full h-12 w-12 shadow-lg relative"
         style={{ backgroundColor: activeConfig.primaryColor }}
       >
-        <MessageSquare className="h-6 w-6" />
+        <MessageCircle className="h-6 w-6" />
 
         {/* Notification indicator */}
         {messages.length > 0 && !isOpen && (

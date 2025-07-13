@@ -240,7 +240,7 @@ Thank you for your payment! Your Wizzered subscription is now active.
 
 Payment Details:
 - Plan: {{plan_name}}
-- Amount: ${"{{amount}}"}
+- Amount: {{amount}}
 - Invoice ID: {{invoice_id}}
 - Next billing date: {{next_billing_date}}
 
@@ -490,9 +490,9 @@ During your trial, you've:
 Continue Your Journey:
 Choose from our flexible subscription plans to maintain uninterrupted access to Wizzered's powerful legal tools.
 
-Recommended Plan: ${"{{recommended_plan}}"}
-- Monthly: ${"{{monthly_price}}"}
-- Annual: ${"{{annual_price}}"} (Save ${"{{annual_savings}}"}!)
+Recommended Plan: {{recommended_plan}}
+- Monthly: {{monthly_price}}
+- Annual: {{annual_price}} (Save {{annual_savings}}!)
 
 Features you'll keep:
 - AI-powered legal analysis
@@ -900,9 +900,9 @@ export default function EmailManagement() {
           'Authorization': token ? `Bearer ${token}` : '',
         },
       });
-      
+
       if (!response.ok) throw new Error('Failed to export logs');
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -912,7 +912,7 @@ export default function EmailManagement() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast({ title: "Email logs exported successfully" });
     } catch (error) {
       toast({ title: "Failed to export logs", variant: "destructive" });
@@ -1892,8 +1892,7 @@ export default function EmailManagement() {
                       checked={currentConfig.adminTools.canIntercept}
                       onCheckedChange={(checked) => updateConfig({
                         adminTools: { ...currentConfig.adminTools, canIntercept: checked }
-                      })}
-                    />
+                      })}                    />
                     <Label htmlFor="admin-can-intercept">Admin can intercept AI responses</Label>
                   </div>
                   <div className="flex items-center space-x-2">
