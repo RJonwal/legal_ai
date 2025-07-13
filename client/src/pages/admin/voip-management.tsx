@@ -37,7 +37,9 @@ import {
   Plus,
   Trash2,
   TestTube,
-  Save
+  Save,
+  Eye,
+  Download
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
