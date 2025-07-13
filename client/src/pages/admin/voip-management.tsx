@@ -278,6 +278,85 @@ export default function VoipManagement() {
   const [newTriggerKeyword, setNewTriggerKeyword] = useState("");
   const [testNumber, setTestNumber] = useState("");
 
+  // Fetch VoIP configuration
+  const { data: voipConfig, isLoading } = useQuery({
+    queryKey: ['admin-voip-config'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/voip/config');
+      if (!response.ok) throw new Error('Failed to fetch VoIP config');
+      return response.json();
+    },
+  });
+
+  // Update configuration mutation
+  const updateConfigMutation = useMutation({
+    mutationFn: async (config: Partial<VoIPConfig>) => {
+      const response = await fetch('/api/admin/voip/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) throw new Error('Failed to update configuration');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-voip-config'] });
+      toast({ title: "Configuration updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update configuration", variant: "destructive" });
+    },
+  });
+
+  // Test call mutation
+  const testCallMutation = useMutation({
+    mutationFn: async (data: { number: string }) => {
+      const response = await fetch('/api/admin/voip/test-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to initiate test call');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Test call initiated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to initiate test call", variant: "destructive" });
+    },
+  });
+
+  // Test voice mutation
+  const testVoiceMutation = useMutation({
+    mutationFn: async (data: { voice: string; language: string; speed: number; pitch: number; volume: number; text?: string }) => {
+      const response = await fetch('/api/admin/voip/test-voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, text: 'Hello, this is a test of your voice settings for LegalAI Pro.' }),
+      });
+      if (!response.ok) throw new Error('Failed to test voice');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Voice test completed successfully" });
+    },
+    onError: () => {
+      toast({ title: "Voice test failed", variant: "destructive" });
+    },
+  });
+
+  // Active calls query
+  const { data: activeCallsData } = useQuery({
+    queryKey: ['admin-voip-active-calls'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/voip/active-calls');
+      if (!response.ok) throw new Error('Failed to fetch active calls');
+      return response.json();
+    },
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
   // Default configuration
   const defaultConfig: VoIPConfig = useMemo(() => ({
     enabled: false,
@@ -392,55 +471,6 @@ export default function VoipManagement() {
     }
   }), []);
 
-  // Fetch VoIP configuration
-  const { data: voipConfig, isLoading } = useQuery({
-    queryKey: ['admin-voip-config'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/voip/config');
-      if (!response.ok) throw new Error('Failed to fetch VoIP config');
-      return response.json();
-    },
-  });
-
-  // Update configuration mutation
-  const updateConfigMutation = useMutation({
-    mutationFn: async (config: Partial<VoIPConfig>) => {
-      const response = await fetch('/api/admin/voip/config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
-      });
-      if (!response.ok) throw new Error('Failed to update configuration');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-voip-config'] });
-      toast({ title: "Configuration updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update configuration", variant: "destructive" });
-    },
-  });
-
-  // Test call mutation
-  const testCallMutation = useMutation({
-    mutationFn: async (data: { number: string }) => {
-      const response = await fetch('/api/admin/voip/test-call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to initiate test call');
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Test call initiated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to initiate test call", variant: "destructive" });
-    },
-  });
-
   const currentConfig = voipConfig || defaultConfig;
 
   if (isLoading) {
@@ -533,36 +563,6 @@ export default function VoipManagement() {
     { value: 'Azure.Davis', label: 'Davis (Neural)' },
     { value: 'Google.WaveNet', label: 'WaveNet (Premium)' }
   ];
-
-  // Test voice mutation
-  const testVoiceMutation = useMutation({
-    mutationFn: async (data: { voice: string; language: string; speed: number; pitch: number; volume: number; text?: string }) => {
-      const response = await fetch('/api/admin/voip/test-voice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, text: 'Hello, this is a test of your voice settings for LegalAI Pro.' }),
-      });
-      if (!response.ok) throw new Error('Failed to test voice');
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Voice test completed successfully" });
-    },
-    onError: () => {
-      toast({ title: "Voice test failed", variant: "destructive" });
-    },
-  });
-
-  // Active calls query
-  const { data: activeCallsData } = useQuery({
-    queryKey: ['admin-voip-active-calls'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/voip/active-calls');
-      if (!response.ok) throw new Error('Failed to fetch active calls');
-      return response.json();
-    },
-    refetchInterval: 5000, // Refresh every 5 seconds
-  });
 
   return (
     <div className="space-y-6">
