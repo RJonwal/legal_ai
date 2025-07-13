@@ -876,6 +876,7 @@ Each action should provide immediate, practical assistance tailored to the speci
   const [newPromptName, setNewPromptName] = useState('');
   const [newPromptDescription, setNewPromptDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [currentTab, setCurrentTab] = useState('prompts');
 
   // Use fetched prompts if available, otherwise use local state
   const displayPrompts = fetchedPrompts || prompts;
@@ -997,9 +998,17 @@ Each action should provide immediate, practical assistance tailored to the speci
   const handleEditPrompt = (prompt: GlobalPrompt) => {
     setActivePrompt(prompt);
     setEditingPrompt(prompt.content);
+    setCurrentTab('editor');
   };
 
   const handleTogglePrompt = async (promptId: string) => {
+    // Update local state immediately for optimistic UI
+    setPrompts(prevPrompts => 
+      prevPrompts.map(p => 
+        p.id === promptId ? { ...p, isActive: !p.isActive } : p
+      )
+    );
+    
     togglePromptMutation.mutate(promptId);
   };
 
@@ -1037,7 +1046,7 @@ Each action should provide immediate, practical assistance tailored to the speci
           </Button>
         </div>
 
-        <Tabs defaultValue="prompts" className="space-y-6">
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="prompts">Active Prompts</TabsTrigger>
             <TabsTrigger value="editor">Prompt Editor</TabsTrigger>
