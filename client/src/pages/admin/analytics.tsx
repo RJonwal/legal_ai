@@ -23,6 +23,7 @@ import {
   Search
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 interface AIUsageRecord {
   id: string;
@@ -66,8 +67,29 @@ export default function AdminAnalytics() {
   const [sortField, setSortField] = useState("profit");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  // Mock AI usage data
-  const aiUsageData: AIUsageRecord[] = [
+  // Fetch real analytics data
+  const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['/api/admin/analytics', dateRange],
+    enabled: true
+  });
+
+  const { data: aiUsageData = [], isLoading: aiUsageLoading } = useQuery({
+    queryKey: ['/api/admin/ai-usage', dateRange, filterProvider],
+    enabled: true
+  });
+
+  const { data: profitabilityData = [], isLoading: profitabilityLoading } = useQuery({
+    queryKey: ['/api/admin/user-profitability', dateRange],
+    enabled: true
+  });
+
+  const { data: plReportData = [], isLoading: plReportLoading } = useQuery({
+    queryKey: ['/api/admin/pl-report', dateRange],
+    enabled: true
+  });
+
+  // Default mock data for fallback
+  const defaultAiUsageData: AIUsageRecord[] = [
     {
       id: "1",
       userId: "user_1",
@@ -104,8 +126,9 @@ export default function AdminAnalytics() {
     }
   ];
 
-  // Mock user profitability data
-  const userProfitability: UserProfitability[] = [
+  // Use real data or fallback to mock
+  const displayAiUsageData = aiUsageData.length > 0 ? aiUsageData : defaultAiUsageData;
+  const displayProfitabilityData = profitabilityData.length > 0 ? profitabilityData : [
     {
       userId: "user_1",
       userName: "Sarah Johnson",
@@ -144,8 +167,7 @@ export default function AdminAnalytics() {
     }
   ];
 
-  // Mock P&L data
-  const plData: PLReportItem[] = [
+  const displayPlData = plReportData.length > 0 ? plReportData : [
     {
       category: "Revenue",
       subcategory: "Subscription Revenue",
@@ -213,13 +235,13 @@ export default function AdminAnalytics() {
     }
   };
 
-  const filteredUsageData = aiUsageData.filter(record => {
+  const filteredUsageData = displayAiUsageData.filter(record => {
     const providerMatch = filterProvider === "all" || record.provider.toLowerCase().includes(filterProvider.toLowerCase());
     const userMatch = searchUser === "" || record.userName.toLowerCase().includes(searchUser.toLowerCase());
     return providerMatch && userMatch;
   });
 
-  const sortedProfitability = [...userProfitability].sort((a, b) => {
+  const sortedProfitability = [...displayProfitabilityData].sort((a, b) => {
     const aValue = a[sortField as keyof UserProfitability] as number;
     const bValue = b[sortField as keyof UserProfitability] as number;
     return sortDirection === "desc" ? bValue - aValue : aValue - bValue;
@@ -705,8 +727,15 @@ export default function AdminAnalytics() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {plData.map((item, index) => (
-                      <TableRow key={index}>
+                    {plReportLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      displayPlData.map((item, index) => (
+                        <TableRow key={index}>
                         <TableCell className="font-medium">{item.category}</TableCell>
                         <TableCell>{item.subcategory}</TableCell>
                         <TableCell className={`font-medium ${item.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -721,8 +750,9 @@ export default function AdminAnalytics() {
                         <TableCell className={`text-sm ${item.trendValue > 0 ? 'text-green-600' : item.trendValue < 0 ? 'text-red-600' : 'text-gray-600'}`}>
                           {item.trendValue > 0 ? '+' : ''}{item.trendValue}%
                         </TableCell>
-                      </TableRow>
-                    ))}
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>

@@ -1,6 +1,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -375,48 +376,49 @@ export default function LiveChatManagement() {
   }), []);
 
   // Fetch live chat configuration
-  const { data: chatConfig, isLoading } = useQuery({
-    queryKey: ['admin-livechat-config'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/livechat/config');
-      if (!response.ok) throw new Error('Failed to fetch live chat config');
-      return response.json();
+  const { data: chatConfig = defaultConfig, isLoading: configLoading } = useQuery({
+    queryKey: ['/api/admin/livechat-config'],
+    enabled: true
+  });
+
+  // Update chat configuration
+  const updateChatConfigMutation = useMutation({
+    mutationFn: async (config: LiveChatConfig) => {
+      return await apiRequest("PUT", "/api/admin/livechat-config", config);
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/livechat-config'] });
+      toast({
+        title: "Success",
+        description: "Chat configuration updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update chat configuration",
+        variant: "destructive",
+      });
+    }
   });
 
   // Fetch live chat conversations
   const { data: conversations } = useQuery({
-    queryKey: ['admin-livechat-conversations'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/livechat/conversations');
-      if (!response.ok) throw new Error('Failed to fetch conversations');
-      return response.json();
-    },
+    queryKey: ['/api/admin/livechat-conversations'],
     refetchInterval: 5000, // Refresh every 5 seconds
     enabled: showLiveChatMonitor
   });
 
   // Fetch messages for selected conversation
   const { data: messages } = useQuery({
-    queryKey: ['admin-livechat-messages', selectedConversation],
-    queryFn: async () => {
-      if (!selectedConversation) return [];
-      const response = await fetch(`/api/admin/livechat/conversations/${selectedConversation}/messages`);
-      if (!response.ok) throw new Error('Failed to fetch messages');
-      return response.json();
-    },
+    queryKey: ['/api/admin/livechat-messages', selectedConversation],
     refetchInterval: 2000, // Refresh every 2 seconds
     enabled: !!selectedConversation
   });
 
   // Fetch live chat analytics
   const { data: analytics } = useQuery({
-    queryKey: ['admin-livechat-analytics'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/livechat/analytics');
-      if (!response.ok) throw new Error('Failed to fetch analytics');
-      return response.json();
-    },
+    queryKey: ['/api/admin/livechat-analytics'],
     refetchInterval: 10000, // Refresh every 10 seconds
     enabled: showLiveChatMonitor
   });

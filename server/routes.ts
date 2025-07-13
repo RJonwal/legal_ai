@@ -1915,91 +1915,96 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   };
 
   // LiveChat configuration endpoints
-  app.get("/api/admin/livechat/config", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/config 200');
+  app.get("/api/admin/livechat-config", async (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat-config 200');
     
-    res.json(liveChatConfigState);
+    try {
+      const config = await storage.getAdminConfig('livechat_config');
+      res.json(config || liveChatConfigState);
+    } catch (error) {
+      console.error('Error fetching livechat config:', error);
+      res.status(500).json({ error: 'Failed to fetch livechat configuration' });
+    }
   });
 
-  app.put("/api/admin/livechat/config", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/livechat/config 200');
+  app.put("/api/admin/livechat-config", async (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/livechat-config 200');
     console.log('Updating livechat config:', req.body);
     
-    // Validate the plugin configuration
-    if (req.body.plugin && req.body.plugin.type) {
-      console.log('Plugin type updated to:', req.body.plugin.type);
-      console.log('Plugin name updated to:', req.body.plugin.name);
+    try {
+      await storage.setAdminConfig('livechat_config', req.body);
+      res.json({ 
+        success: true, 
+        message: 'Configuration updated successfully',
+        config: req.body,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error updating livechat config:', error);
+      res.status(500).json({ error: 'Failed to update livechat configuration' });
     }
-    
-    // Merge the updates into the existing state
-    liveChatConfigState = {
-      ...liveChatConfigState,
-      ...req.body
-    };
-    
-    // Store the updated config (in real app, save to database)
-    res.json({ 
-      success: true, 
-      message: 'Configuration updated successfully',
-      config: liveChatConfigState,
-      timestamp: new Date().toISOString()
-    });
   });
 
-  app.get("/api/admin/livechat/conversations", (req, res) => {
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/conversations 200');
+  app.get("/api/admin/livechat-conversations", async (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat-conversations 200');
     
-    const conversations = [
-      {
-        id: 'conv_001',
-        user: { name: 'John Doe', email: 'john@example.com' },
-        lastMessage: 'I need help with my case documents',
-        status: 'active',
-        assignedTo: 'ai',
-        messageCount: 5,
-        source: 'dashboard', // Track source: 'dashboard' or 'landing'
-        hasUploads: true,
-        hasScreenShare: false,
-        createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-        externalProvider: 'crisp', // Track which external provider if any
-        syncedWithProvider: true
-      },
-      {
-        id: 'conv_002',
-        user: { name: 'Sarah Smith', email: 'sarah@example.com' },
-        lastMessage: 'When is my court date?',
-        status: 'pending',
-        assignedTo: 'queue',
-        messageCount: 3,
-        source: 'landing',
-        hasUploads: false,
-        hasScreenShare: false,
-        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-        externalProvider: 'crisp',
-        syncedWithProvider: true
-      },
-      {
-        id: 'conv_003',
-        user: { name: 'Mike Johnson', email: 'mike@example.com' },
-        lastMessage: 'Thank you for the assistance',
-        status: 'active',
-        assignedTo: 'human',
-        messageCount: 8,
-        source: 'dashboard',
-        hasUploads: false,
-        hasScreenShare: true,
-        createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-        externalProvider: 'crisp',
-        syncedWithProvider: true
-      }
-    ];
-    
-    res.json(conversations);
+    try {
+      // Mock conversations data for demonstration
+      const conversations = [
+        {
+          id: 'conv_001',
+          user: { name: 'John Doe', email: 'john@example.com' },
+          lastMessage: 'I need help with my case documents',
+          status: 'active',
+          assignedTo: 'ai',
+          messageCount: 5,
+          source: 'dashboard', // Track source: 'dashboard' or 'landing'
+          hasUploads: true,
+          hasScreenShare: false,
+          createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+          externalProvider: 'crisp', // Track which external provider if any
+          syncedWithProvider: true
+        },
+        {
+          id: 'conv_002',
+          user: { name: 'Sarah Smith', email: 'sarah@example.com' },
+          lastMessage: 'When is my court date?',
+          status: 'pending',
+          assignedTo: 'queue',
+          messageCount: 3,
+          source: 'landing',
+          hasUploads: false,
+          hasScreenShare: false,
+          createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+          externalProvider: 'crisp',
+          syncedWithProvider: true
+        },
+        {
+          id: 'conv_003',
+          user: { name: 'Mike Johnson', email: 'mike@example.com' },
+          lastMessage: 'Thank you for the assistance',
+          status: 'active',
+          assignedTo: 'human',
+          messageCount: 8,
+          source: 'dashboard',
+          hasUploads: false,
+          hasScreenShare: true,
+          createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+          externalProvider: 'crisp',
+          syncedWithProvider: true
+        }
+      ];
+      
+      res.json(conversations);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      res.status(500).json({ error: 'Failed to fetch conversations' });
+    }
   });
 
-  app.get("/api/admin/livechat/conversations/:id/messages", (req, res) => {
+  app.get("/api/admin/livechat-messages/:id", async (req, res) => {
     const { id } = req.params;
-    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat/conversations/' + id + '/messages 200');
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat-messages/' + id + ' 200');
     
     const messages = [
       {
@@ -2096,6 +2101,36 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       message: 'File uploaded successfully',
       file: uploadedFile
     });
+  });
+
+  // Live chat analytics endpoint
+  app.get("/api/admin/livechat-analytics", async (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/livechat-analytics 200');
+    
+    try {
+      // Mock analytics data for demonstration
+      const analytics = {
+        totalConversations: 156,
+        activeConversations: 8,
+        avgResponseTime: 45, // seconds
+        satisfactionScore: 4.2,
+        totalMessages: 1247,
+        aiResolutionRate: 78,
+        humanHandoffRate: 22,
+        peakHours: ['10:00', '14:00', '16:00'],
+        commonQueries: [
+          { query: 'Subscription help', count: 45 },
+          { query: 'Document generation', count: 38 },
+          { query: 'Account access', count: 32 },
+          { query: 'Billing inquiries', count: 28 }
+        ]
+      };
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
   });
 
   // Screen share request endpoint
@@ -5400,6 +5435,153 @@ const mockCases = [
     } catch (error) {
       console.error("Error updating billing plans:", error);
       res.status(500).json({ error: "Failed to update billing plans" });
+    }
+  });
+
+  // Analytics endpoints
+  app.get('/api/admin/analytics', async (req: Request, res: Response) => {
+    try {
+      const dateRange = req.query.dateRange || '30d';
+      const stats = await storage.getUserStats();
+      const analyticsData = {
+        totalUsers: stats.totalUsers,
+        activeUsers: stats.activeUsers,
+        totalCases: stats.totalCases,
+        totalDocuments: stats.totalDocuments,
+        revenueMetrics: {
+          totalRevenue: 45000,
+          monthlyGrowth: 12.5,
+          averageSubscription: 89.99
+        },
+        userGrowth: {
+          thisMonth: 156,
+          lastMonth: 134,
+          growth: 16.4
+        }
+      };
+      res.json(analyticsData);
+    } catch (error) {
+      console.error('Analytics error:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics data' });
+    }
+  });
+
+  app.get('/api/admin/ai-usage', async (req: Request, res: Response) => {
+    try {
+      const dateRange = req.query.dateRange || '30d';
+      const filterProvider = req.query.filterProvider || 'all';
+      
+      // Mock AI usage data for now - would be real usage tracking in production
+      const aiUsageData = [
+        {
+          id: "1",
+          userId: "user_1",
+          userName: "Sarah Johnson",
+          provider: "OpenAI",
+          model: "gpt-4o",
+          tokens: 1250,
+          cost: 0.025,
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          caseId: "case_1",
+          caseTitle: "Contract Review - ABC Corp"
+        },
+        {
+          id: "2",
+          userId: "user_2",
+          userName: "Michael Chen",
+          provider: "OpenAI",
+          model: "gpt-4o",
+          tokens: 2100,
+          cost: 0.042,
+          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          caseId: "case_2",
+          caseTitle: "Lease Agreement Analysis"
+        }
+      ];
+      
+      res.json(aiUsageData);
+    } catch (error) {
+      console.error('AI usage error:', error);
+      res.status(500).json({ error: 'Failed to fetch AI usage data' });
+    }
+  });
+
+  app.get('/api/admin/user-profitability', async (req: Request, res: Response) => {
+    try {
+      const dateRange = req.query.dateRange || '30d';
+      const users = await storage.getAllUsers();
+      
+      const profitabilityData = users.map(user => ({
+        userId: user.id,
+        userName: user.name || 'Unknown User',
+        subscription: user.subscription || 'Free',
+        monthlyRevenue: user.subscription === 'Pro' ? 89.99 : 0,
+        aiCosts: Math.random() * 15,
+        otherCosts: Math.random() * 5,
+        totalCosts: Math.random() * 20,
+        profit: user.subscription === 'Pro' ? (89.99 - Math.random() * 20) : -Math.random() * 5,
+        margin: user.subscription === 'Pro' ? 0.75 : -1,
+        status: user.subscription === 'Pro' ? 'profitable' : 'loss'
+      }));
+      
+      res.json(profitabilityData);
+    } catch (error) {
+      console.error('Profitability error:', error);
+      res.status(500).json({ error: 'Failed to fetch profitability data' });
+    }
+  });
+
+  app.get('/api/admin/pl-report', async (req: Request, res: Response) => {
+    try {
+      const dateRange = req.query.dateRange || '30d';
+      
+      const plReportData = [
+        {
+          category: "Revenue",
+          subcategory: "Subscription Revenue",
+          amount: 45000,
+          percentage: 85,
+          trend: "up",
+          trendValue: 12.5
+        },
+        {
+          category: "Revenue",
+          subcategory: "One-time Purchases",
+          amount: 8000,
+          percentage: 15,
+          trend: "stable",
+          trendValue: 2.1
+        },
+        {
+          category: "Costs",
+          subcategory: "AI API Costs",
+          amount: -15000,
+          percentage: 60,
+          trend: "up",
+          trendValue: 18.3
+        },
+        {
+          category: "Costs",
+          subcategory: "Infrastructure",
+          amount: -5000,
+          percentage: 20,
+          trend: "stable",
+          trendValue: 1.2
+        },
+        {
+          category: "Costs",
+          subcategory: "Support & Operations",
+          amount: -5000,
+          percentage: 20,
+          trend: "down",
+          trendValue: -5.8
+        }
+      ];
+      
+      res.json(plReportData);
+    } catch (error) {
+      console.error('P&L report error:', error);
+      res.status(500).json({ error: 'Failed to fetch P&L report data' });
     }
   });
 
