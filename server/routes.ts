@@ -4568,6 +4568,102 @@ const mockCases = [
     res.json(encryptionStatus);
   });
 
+  // Health Check Endpoints
+  app.get("/health", async (req, res) => {
+    const { healthCheckService } = await import("./services/monitoring");
+    const health = await healthCheckService.getHealthStatus();
+    
+    res.status(health.status === 'healthy' ? 200 : 503).json(health);
+  });
+
+  app.get("/health/live", (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  app.get("/health/ready", async (req, res) => {
+    const { healthCheckService } = await import("./services/monitoring");
+    const checks = await healthCheckService.runHealthChecks();
+    const isReady = Object.values(checks).every(check => check);
+    
+    res.status(isReady ? 200 : 503).json({
+      status: isReady ? 'ready' : 'not ready',
+      checks,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Performance Monitoring Endpoints
+  app.get("/api/monitoring/metrics", async (req, res) => {
+    const { metricsService } = await import("./services/monitoring");
+    const metrics = metricsService.getMetrics();
+    
+    res.json(metrics);
+  });
+
+  app.get("/api/monitoring/performance", async (req, res) => {
+    const { cacheService } = await import("./services/cache");
+    
+    const performance = {
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      cpu: process.cpuUsage(),
+      timestamp: new Date().toISOString(),
+      cache: await cacheService.getStats(),
+      eventLoop: {
+        delay: process.hrtime.bigint(),
+        utilization: process.cpuUsage().user / (process.cpuUsage().user + process.cpuUsage().system)
+      }
+    };
+    
+    res.json(performance);
+  });
+
+  app.get("/api/monitoring/logs", async (req, res) => {
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+      const logsDir = path.join(process.cwd(), 'logs');
+      const logFiles = fs.existsSync(logsDir) ? fs.readdirSync(logsDir) : [];
+      
+      const logs = [];
+      for (const file of logFiles.slice(0, 5)) { // Last 5 log files
+        const filePath = path.join(logsDir, file);
+        const content = fs.readFileSync(filePath, 'utf8');
+        const lines = content.split('\n').filter(line => line.trim()).slice(-100); // Last 100 lines
+        
+        logs.push({
+          file,
+          lines,
+          size: fs.statSync(filePath).size,
+          modified: fs.statSync(filePath).mtime
+        });
+      }
+      
+      res.json({ logs, timestamp: new Date().toISOString() });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to read logs', timestamp: new Date().toISOString() });
+    }
+  });
+
+  app.post("/api/monitoring/cache/clear", async (req, res) => {
+    const { cacheService } = await import("./services/cache");
+    
+    try {
+      await cacheService.flushAll();
+      res.json({ success: true, message: 'Cache cleared successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to clear cache' });
+    }
+  });
+
+  app.get("/api/monitoring/cache/stats", async (req, res) => {
+    const { cacheService } = await import("./services/cache");
+    const stats = await cacheService.getStats();
+    
+    res.json(stats);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -2,15 +2,74 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { securityMiddleware } from "./services/encryption";
+import { logger, httpLogStream } from "./services/simple-logger";
+import { cacheService } from "./services/cache";
+import { 
+  initializeSentry, 
+  performanceMiddleware, 
+  startSystemMetricsCollection, 
+  setupGracefulShutdown,
+  Sentry
+} from "./services/monitoring";
+import { sessionConfig } from "./services/session";
+import session from "express-session";
+import morgan from "morgan";
+import responseTime from "response-time";
+import helmet from "helmet";
+
+// Initialize monitoring services
+initializeSentry();
+setupGracefulShutdown();
+startSystemMetricsCollection();
 
 const app = express();
+
+// Initialize cache service
+cacheService.connect().catch((error) => {
+  logger.error('Failed to connect to cache service:', error);
+});
+
+// Sentry request handler (must be first)
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.requestHandler());
+  app.use(Sentry.Handlers.tracingHandler());
+}
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 
 // Add security middleware
 app.use(securityMiddleware.addSecurityHeaders);
 app.use(securityMiddleware.rateLimit);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Performance monitoring
+app.use(responseTime());
+app.use(performanceMiddleware);
+
+// HTTP logging
+app.use(morgan('combined', { stream: httpLogStream }));
+
+// Session management
+app.use(session(sessionConfig));
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -42,47 +101,45 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add comprehensive process-level error handling to prevent crashes
+// Enhanced process-level error handling with structured logging
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  // Log stack trace for debugging
-  console.error('Stack:', error.stack);
-  // Don't exit - just log the error and continue
+  logger.error('Uncaught Exception:', {
+    error: error.message,
+    stack: error.stack,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Report to Sentry if configured
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(error);
+  }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Log additional details for debugging
-  if (reason instanceof Error) {
-    console.error('Error stack:', reason.stack);
+  logger.error('Unhandled Rejection:', {
+    reason: reason instanceof Error ? reason.message : reason,
+    stack: reason instanceof Error ? reason.stack : undefined,
+    promise: promise.toString(),
+    timestamp: new Date().toISOString()
+  });
+  
+  // Report to Sentry if configured
+  if (process.env.SENTRY_DSN && reason instanceof Error) {
+    Sentry.captureException(reason);
   }
-  // Don't exit - just log the error and continue
 });
 
 // Handle memory pressure
 process.on('warning', (warning) => {
-  console.warn('Node.js Warning:', warning.name, warning.message);
-  if (warning.name === 'MaxListenersExceededWarning') {
-    console.warn('Potential memory leak detected - too many listeners');
-  }
+  logger.warn('Node.js Warning:', {
+    name: warning.name,
+    message: warning.message,
+    stack: warning.stack,
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Graceful cleanup on exit
-process.on('exit', (code) => {
-  console.log('Process exiting with code:', code);
-});
-
-// Handle SIGTERM gracefully
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-// Handle SIGINT gracefully
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
+// Note: Graceful shutdown is handled by monitoring service
 
 // Add global error handler as Express middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
