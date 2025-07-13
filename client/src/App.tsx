@@ -48,6 +48,7 @@ import Documentation from "@/pages/documentation";
 import "./index.css";
 import ErrorBoundary from "./components/error-boundary";
 import CookieBanner from "@/components/compliance/cookie-banner";
+import MinimalCookieBanner from "@/components/compliance/minimal-cookie-banner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -246,7 +247,7 @@ function App() {
               <Route component={NotFound} />
             </Switch>
           </Router>
-          <CookieBanner />
+          <MinimalCookieBanner />
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, X, Send, Bot, User, Minimize2, Maximize2, Settings } from "lucide-react";
+import { MessageSquare, X, Send, Bot, User, Minimize2, Maximize2, Settings, Image, Monitor, Phone, Paperclip, ScreenShare, StopCircle, Camera } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 interface Message {
@@ -11,6 +11,10 @@ interface Message {
   sender: 'user' | 'ai' | 'support';
   timestamp: Date;
   isTyping?: boolean;
+  imageUrl?: string;
+  fileUrl?: string;
+  fileName?: string;
+  isScreenShare?: boolean;
 }
 
 interface LiveChatConfig {
@@ -38,7 +42,12 @@ const EnhancedLiveChat = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [hasEngaged, setHasEngaged] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isConnectedToAdmin, setIsConnectedToAdmin] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch live chat configuration
   const { data: chatConfig } = useQuery({
@@ -150,6 +159,81 @@ const EnhancedLiveChat = ({
     return legalResponses.default;
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target?.result as string;
+        setUploadedImage(imageUrl);
+        
+        const imageMessage: Message = {
+          id: Date.now().toString(),
+          text: `Shared an image: ${file.name}`,
+          sender: 'user',
+          timestamp: new Date(),
+          imageUrl: imageUrl,
+          fileName: file.name
+        };
+        
+        setMessages(prev => [...prev, imageMessage]);
+        
+        // Reset image input
+        if (imageInputRef.current) {
+          imageInputRef.current.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleScreenShare = async () => {
+    if (!isScreenSharing) {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true
+        });
+        
+        setIsScreenSharing(true);
+        
+        const screenShareMessage: Message = {
+          id: Date.now().toString(),
+          text: 'Started screen sharing',
+          sender: 'user',
+          timestamp: new Date(),
+          isScreenShare: true
+        };
+        
+        setMessages(prev => [...prev, screenShareMessage]);
+        
+        // Stop screen sharing when stream ends
+        stream.getVideoTracks()[0].addEventListener('ended', () => {
+          setIsScreenSharing(false);
+          const endMessage: Message = {
+            id: Date.now().toString(),
+            text: 'Screen sharing ended',
+            sender: 'user',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, endMessage]);
+        });
+        
+      } catch (error) {
+        console.error('Error starting screen share:', error);
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          text: 'Screen sharing failed to start. Please check your browser permissions.',
+          sender: 'ai',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } else {
+      setIsScreenSharing(false);
+    }
+  };
+
   const sendMessage = async () => {
     if (message.trim()) {
       const userMessage: Message = {
@@ -248,6 +332,26 @@ const EnhancedLiveChat = ({
                           {msg.sender === 'ai' ? 'AI Assistant' : msg.sender === 'user' ? 'You' : 'Support'}
                         </span>
                       </div>
+                      
+                      {/* Show image if present */}
+                      {msg.imageUrl && (
+                        <div className="mb-2">
+                          <img 
+                            src={msg.imageUrl} 
+                            alt={msg.fileName || 'Shared image'} 
+                            className="max-w-full h-auto rounded-lg border"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Show screen share indicator */}
+                      {msg.isScreenShare && (
+                        <div className="flex items-center gap-2 mb-1">
+                          <Monitor className="h-4 w-4" />
+                          <span className="text-xs font-medium">Screen Share</span>
+                        </div>
+                      )}
+                      
                       <p className="text-sm">{msg.text}</p>
                       <p className="text-xs opacity-70 mt-1">{msg.timestamp.toLocaleTimeString()}</p>
                     </div>
@@ -274,25 +378,54 @@ const EnhancedLiveChat = ({
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t flex">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Ask about Wizzered..."
-                  className="flex-1 p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={isTyping}
-                />
-                <Button 
-                  size="sm" 
-                  onClick={sendMessage} 
-                  className="ml-2"
-                  disabled={isTyping || !message.trim()}
-                  style={{ backgroundColor: activeConfig.primaryColor }}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+              <div className="p-4 border-t">
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    ref={imageInputRef}
+                    className="hidden"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="flex items-center gap-1"
+                  >
+                    <Image className="h-4 w-4" />
+                    Image
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleScreenShare}
+                    className={`flex items-center gap-1 ${isScreenSharing ? 'bg-red-100 text-red-600' : ''}`}
+                  >
+                    {isScreenSharing ? <StopCircle className="h-4 w-4" /> : <ScreenShare className="h-4 w-4" />}
+                    {isScreenSharing ? 'Stop' : 'Share Screen'}
+                  </Button>
+                </div>
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    placeholder="Ask about Wizzered..."
+                    className="flex-1 p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={isTyping}
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={sendMessage} 
+                    className="ml-2"
+                    disabled={isTyping || !message.trim()}
+                    style={{ backgroundColor: activeConfig.primaryColor }}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </>
           )}

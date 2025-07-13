@@ -137,141 +137,101 @@ const USCookieBanner = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <CardContent className="p-0">
-          {/* Header */}
-          <div className="bg-blue-600 text-white p-6 relative">
-            <button
-              onClick={() => setIsVisible(false)}
-              className="absolute top-4 right-4 text-white hover:text-gray-200"
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center space-x-3 flex-1">
+            <Cookie className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-gray-900 dark:text-white">
+                We use cookies to enhance your experience. Choose your preferences:
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleRejectAll}
+              variant="outline"
+              size="sm"
+              className="text-xs px-3 py-1.5 h-auto"
             >
-              <X className="h-5 w-5" />
-            </button>
+              Necessary Only
+            </Button>
             
-            <div className="flex items-center gap-3 mb-4">
-              <Cookie className="h-8 w-8" />
-              <div>
-                <h2 className="text-2xl font-bold">Cookie Preferences</h2>
-                <p className="text-blue-100">We respect your privacy and data protection rights</p>
-              </div>
-            </div>
+            <Button
+              onClick={() => setShowDetails(!showDetails)}
+              variant="outline"
+              size="sm"
+              className="text-xs px-3 py-1.5 h-auto"
+            >
+              Customize
+            </Button>
+            
+            <Button
+              onClick={handleAcceptAll}
+              size="sm"
+              className="text-xs px-3 py-1.5 h-auto bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Accept All
+            </Button>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="p-6">
-            <div className="mb-6">
-              <p className="text-gray-600 mb-4">
-                Wizzered uses cookies to enhance your experience, provide personalized content, and analyze our traffic. 
-                You can customize your cookie preferences below or accept all cookies to continue.
-              </p>
+        {showDetails && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Necessary</span>
+                  <Badge variant="outline" className="text-xs">Required</Badge>
+                </div>
+                <Switch checked={true} disabled />
+              </div>
               
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Shield className="h-4 w-4" />
-                  <span>CCPA Compliant</span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Functional</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Shield className="h-4 w-4" />
-                  <span>GDPR Compliant</span>
-                </div>
+                <Switch 
+                  checked={preferences.functional}
+                  onCheckedChange={(checked) => setPreferences(prev => ({...prev, functional: checked}))}
+                />
               </div>
-            </div>
-
-            {/* Cookie Types */}
-            <div className="space-y-4 mb-6">
-              {cookieTypes.map((type) => (
-                <div key={type.key} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900">{type.title}</h3>
-                      {type.required && (
-                        <Badge variant="secondary" className="text-xs">Required</Badge>
-                      )}
-                    </div>
-                    <Switch
-                      checked={preferences[type.key]}
-                      onCheckedChange={(checked) => {
-                        if (!type.required) {
-                          setPreferences(prev => ({
-                            ...prev,
-                            [type.key]: checked
-                          }));
-                        }
-                      }}
-                      disabled={type.required}
-                    />
-                  </div>
-                  
-                  <p className="text-sm text-gray-600 mb-2">{type.description}</p>
-                  
-                  <div className="flex flex-wrap gap-1">
-                    {type.examples.map((example, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {example}
-                      </Badge>
-                    ))}
-                  </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Analytics</span>
                 </div>
-              ))}
-            </div>
-
-            {/* Legal Links */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h4 className="font-semibold text-gray-900 mb-2">Your Rights</h4>
-              <p className="text-sm text-gray-600 mb-3">
-                Under US privacy laws (CCPA) and international regulations (GDPR), you have the right to:
-              </p>
-              <ul className="text-sm text-gray-600 space-y-1 mb-3">
-                <li>• Access your personal data</li>
-                <li>• Correct inaccurate data</li>
-                <li>• Delete your data</li>
-                <li>• Opt-out of sale of personal information</li>
-                <li>• Withdraw consent at any time</li>
-              </ul>
-              <div className="flex gap-4 text-sm">
-                <a href="/privacy-policy" className="text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                  Privacy Policy <ExternalLink className="h-3 w-3" />
-                </a>
-                <a href="/cookie-policy" className="text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                  Cookie Policy <ExternalLink className="h-3 w-3" />
-                </a>
-                <a href="/privacy-manager" className="text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                  Privacy Manager <ExternalLink className="h-3 w-3" />
-                </a>
+                <Switch 
+                  checked={preferences.analytics}
+                  onCheckedChange={(checked) => setPreferences(prev => ({...prev, analytics: checked}))}
+                />
               </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                onClick={handleAcceptAll}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                Accept All Cookies
-              </Button>
-              <Button 
-                onClick={handleAcceptSelected}
-                variant="outline"
-                className="flex-1"
-              >
-                Accept Selected
-              </Button>
-              <Button 
-                onClick={handleRejectAll}
-                variant="outline"
-                className="flex-1"
-              >
-                Reject All
-              </Button>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Marketing</span>
+                </div>
+                <Switch 
+                  checked={preferences.marketing}
+                  onCheckedChange={(checked) => setPreferences(prev => ({...prev, marketing: checked}))}
+                />
+              </div>
             </div>
             
-            <p className="text-xs text-gray-500 text-center mt-4">
-              You can change your preferences at any time by accessing the Privacy Manager in the footer.
-            </p>
+            <div className="flex justify-end space-x-2">
+              <Button
+                onClick={handleAcceptSelected}
+                size="sm"
+                className="text-xs px-4 py-1.5 h-auto bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Save Preferences
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </div>
   );
 };

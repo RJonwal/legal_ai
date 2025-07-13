@@ -176,24 +176,6 @@ const FeaturesGrid = () => {
       title: "Enterprise Security",
       description: "Bank-grade encryption with GDPR/CCPA compliance",
       color: "text-red-600"
-    },
-    {
-      icon: Clock,
-      title: "Time Tracking",
-      description: "Automated billable hour tracking with detailed reporting",
-      color: "text-orange-600"
-    },
-    {
-      icon: Users,
-      title: "Team Collaboration",
-      description: "Multi-user access with role-based permissions",
-      color: "text-pink-600"
-    },
-    {
-      icon: Globe,
-      title: "Multi-Jurisdiction Support",
-      description: "Legal forms and procedures for all 50 states",
-      color: "text-cyan-600"
     }
   ];
 

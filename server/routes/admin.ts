@@ -161,23 +161,44 @@ let landingConfig = {
   features: [
     {
       id: "1",
-      icon: "Scale",
-      title: "AI-Powered Legal Analysis",
-      description: "Advanced AI that thinks like a senior attorney with 20+ years of experience",
+      icon: "MessageSquare",
+      title: "AI Legal Assistant Chat",
+      description: "Intelligent chat interface with proactive legal guidance and case analysis",
       enabled: true
     },
     {
       id: "2", 
       icon: "FileText",
-      title: "Automated Document Generation",
-      description: "Generate court-ready legal documents, briefs, and motions instantly",
+      title: "Document Generation",
+      description: "Create legal documents with AI assistance in real-time document canvas",
       enabled: true
     },
     {
       id: "3",
-      icon: "Gavel", 
-      title: "Case Strategy Planning",
-      description: "Comprehensive case analysis with proactive strategic recommendations",
+      icon: "FolderOpen", 
+      title: "Case Management",
+      description: "Organize cases, track timeline events, and manage legal documents",
+      enabled: true
+    },
+    {
+      id: "4",
+      icon: "Search",
+      title: "Case Search & Discovery",
+      description: "Advanced search capabilities across all cases and legal documents",
+      enabled: true
+    },
+    {
+      id: "5",
+      icon: "Shield",
+      title: "Enterprise Security",
+      description: "Bank-grade encryption with GDPR/CCPA compliance",
+      enabled: true
+    },
+    {
+      id: "6",
+      icon: "MessageSquare",
+      title: "Live Support Chat",
+      description: "AI-powered support with admin connectivity and real-time assistance",
       enabled: true
     }
   ],

@@ -36,6 +36,14 @@ interface GlobalPrompt {
 
 export default function GlobalPromptManagement() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch global prompts from API
+  const { data: fetchedPrompts, isLoading, refetch } = useQuery({
+    queryKey: ['/api/admin/global-prompts'],
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const [prompts, setPrompts] = useState<GlobalPrompt[]>([
     {
@@ -869,39 +877,61 @@ Each action should provide immediate, practical assistance tailored to the speci
   const [newPromptDescription, setNewPromptDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
+  // Use fetched prompts if available, otherwise use local state
+  const displayPrompts = fetchedPrompts || prompts;
+
+  // Mutations for CRUD operations
+  const updatePromptMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<GlobalPrompt> }) => {
+      return await apiRequest('PUT', `/api/admin/global-prompts/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/global-prompts'] });
+      setActivePrompt(null);
+      setEditingPrompt('');
+      toast({
+        title: "Prompt Updated",
+        description: "Global prompt has been successfully updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update prompt. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const togglePromptMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest('PATCH', `/api/admin/global-prompts/${id}/toggle`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/global-prompts'] });
+      toast({
+        title: "Prompt Status Updated",
+        description: "Prompt activation status has been changed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update prompt status. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleSavePrompt = async () => {
-    if (activePrompt) {
-      try {
-        const response = await fetch(`/api/admin/global-prompts/${activePrompt.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...activePrompt,
-            content: editingPrompt
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update prompt');
+    if (activePrompt && editingPrompt.trim()) {
+      updatePromptMutation.mutate({
+        id: activePrompt.id,
+        data: {
+          ...activePrompt,
+          content: editingPrompt
         }
-
-        // await refetch();  // refetch is undefined
-        setActivePrompt(null);
-        setEditingPrompt('');
-
-        toast({
-          title: "Prompt Updated",
-          description: "The global prompt has been successfully updated.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update prompt. Please try again.",
-          variant: "destructive"
-        });
-      }
+      });
     }
   };
 
@@ -949,31 +979,7 @@ Each action should provide immediate, practical assistance tailored to the speci
   };
 
   const handleTogglePrompt = async (promptId: string) => {
-    try {
-      const response = await fetch(`/api/admin/global-prompts/${promptId}/toggle`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to toggle prompt');
-      }
-
-      // await refetch(); // refetch is undefined
-
-      toast({
-        title: "Prompt Status Updated",
-        description: "Prompt activation status has been changed.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update prompt status. Please try again.",
-        variant: "destructive"
-      });
-    }
+    togglePromptMutation.mutate(promptId);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -1019,7 +1025,12 @@ Each action should provide immediate, practical assistance tailored to the speci
 
           <TabsContent value="prompts">
             <div className="grid gap-6">
-              {(prompts.length > 0 ? prompts : staticPrompts).map((prompt) => (
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <RefreshCw className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                displayPrompts.map((prompt) => (
                 <Card key={prompt.id} className="relative">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
@@ -1091,7 +1102,8 @@ Each action should provide immediate, practical assistance tailored to the speci
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                ))
+              )}
             </div>
           </TabsContent>
 
