@@ -1138,6 +1138,7 @@ export default function EmailManagement() {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create Email Template</DialogTitle>
+                <p className="text-sm text-muted-foreground">Create a new email template for automated communications</p>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -1235,6 +1236,7 @@ export default function EmailManagement() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create Email Signature</DialogTitle>
+                <p className="text-sm text-muted-foreground">Create a new email signature for your team</p>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -1297,7 +1299,7 @@ export default function EmailManagement() {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="sent">Sent</SelectItem>
                   <SelectItem value="received">Received</SelectItem>
-                  <SelectItem value="forwarded">Forwarded</SelectItem>SelectItem>
+                  <SelectItem value="forwarded">Forwarded</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={emailFilters.status} onValueChange={(value) => setEmailFilters({ ...emailFilters, status: value })}>
@@ -1388,6 +1390,7 @@ export default function EmailManagement() {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Respond to Email</DialogTitle>
+                <p className="text-sm text-muted-foreground">Compose your response to this email</p>
               </DialogHeader>
               {selectedEmail && (
                 <div className="space-y-4">

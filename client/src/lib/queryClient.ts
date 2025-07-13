@@ -14,19 +14,27 @@ export async function apiRequest(
 ): Promise<Response> {
   const token = localStorage.getItem('auth_token');
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const config: RequestInit = {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-    },
+    headers,
+    credentials: 'include',
   };
 
   if (data) {
     config.body = JSON.stringify(data);
   }
 
-  return fetch(url, config);
+  const res = await fetch(url, config);
+  await throwIfResNotOk(res);
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

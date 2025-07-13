@@ -92,15 +92,19 @@ function App() {
       const memoryMonitor = setInterval(() => {
         if ('memory' in performance) {
           const memory = (performance as any).memory;
-          if (memory.usedJSHeapSize > 100 * 1024 * 1024) { // 100MB threshold
+          if (memory.usedJSHeapSize > 150 * 1024 * 1024) { // Increased threshold to 150MB
             console.warn('High memory usage detected:', {
               used: Math.round(memory.usedJSHeapSize / 1024 / 1024) + 'MB',
               total: Math.round(memory.totalJSHeapSize / 1024 / 1024) + 'MB',
               limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024) + 'MB'
             });
+            // Trigger garbage collection if possible
+            if (window.gc) {
+              window.gc();
+            }
           }
         }
-      }, 30000); // Check every 30 seconds
+      }, 60000); // Check every 60 seconds instead of 30
 
       return () => {
         clearInterval(memoryMonitor);
@@ -108,6 +112,11 @@ function App() {
         window.removeEventListener('error', handleError);
       };
     }
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
+    };
 
     return () => {
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);

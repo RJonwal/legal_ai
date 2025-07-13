@@ -117,7 +117,7 @@ process.on('uncaughtException', (error) => {
     stack: error.stack,
     timestamp: new Date().toISOString()
   });
-  
+
   // Report to Sentry if configured
   if (process.env.SENTRY_DSN) {
     Sentry.captureException(error);
@@ -131,7 +131,7 @@ process.on('unhandledRejection', (reason, promise) => {
     promise: promise.toString(),
     timestamp: new Date().toISOString()
   });
-  
+
   // Report to Sentry if configured
   if (process.env.SENTRY_DSN && reason instanceof Error) {
     Sentry.captureException(reason);
@@ -150,6 +150,34 @@ process.on('warning', (warning) => {
 
 // Note: Graceful shutdown is handled by monitoring service
 
+// Global error handlers
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Don't exit immediately in development
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit immediately in development
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
+
 // Add global error handler as Express middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Express error handler caught:', {
@@ -157,7 +185,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     stack: err.stack,
     timestamp: new Date().toISOString()
   });
-  
+
   // Don't crash the server - just return an error response
   if (!res.headersSent) {
     res.status(500).json({
@@ -217,7 +245,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     // this serves both the API and the client.
     // It is the only port that is not firewalled.
     const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-    
+
     server.on('error', (error) => {
       console.error('Server error:', error);
       // Don't exit - just log the error
