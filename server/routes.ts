@@ -2427,6 +2427,262 @@ app.get("/api/admin/impersonation/history", (req, res) => {
     }
   });
 
+  // VoIP Management endpoints
+  app.get("/api/admin/voip/config", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/voip/config 200');
+    
+    const defaultVoipConfig = {
+      enabled: false,
+      provider: 'twilio',
+      credentials: {
+        accountSid: '',
+        authToken: '',
+        phoneNumber: '',
+        apiKey: '',
+        username: '',
+        password: '',
+        customEndpoint: ''
+      },
+      voiceSettings: {
+        voice: 'Polly.Joanna',
+        language: 'en-US',
+        speed: 1.0,
+        pitch: 1.0,
+        volume: 1.0,
+        engine: 'neural'
+      },
+      callFlow: {
+        welcomeMessage: 'Thank you for calling LegalAI Pro. How can I assist you today?',
+        businessHours: {
+          enabled: true,
+          timezone: 'UTC',
+          schedule: {
+            monday: { start: '09:00', end: '17:00', active: true },
+            tuesday: { start: '09:00', end: '17:00', active: true },
+            wednesday: { start: '09:00', end: '17:00', active: true },
+            thursday: { start: '09:00', end: '17:00', active: true },
+            friday: { start: '09:00', end: '17:00', active: true },
+            saturday: { start: '10:00', end: '14:00', active: false },
+            sunday: { start: '10:00', end: '14:00', active: false }
+          }
+        },
+        afterHoursMessage: 'Thank you for calling. We are currently closed. Please leave a message or call back during business hours.',
+        maxCallDuration: 30,
+        recordCalls: true,
+        transcriptionEnabled: true
+      },
+      humanHandoff: {
+        enabled: true,
+        triggerKeywords: ['human', 'agent', 'lawyer', 'attorney', 'speak to someone', 'urgent', 'emergency'],
+        escalationThreshold: 3,
+        forwardNumbers: ['+1234567890'],
+        autoEscalateTime: 10,
+        ringTimeout: 30,
+        failoverNumbers: []
+      },
+      aiAssistant: {
+        enabled: true,
+        model: 'gpt-4',
+        maxTokens: 300,
+        temperature: 0.7,
+        systemPrompt: 'You are a professional AI assistant for LegalAI Pro. Provide helpful, accurate information about legal services while maintaining confidentiality.',
+        permissions: {
+          legalConsultation: true,
+          caseAnalysis: true,
+          procedureGuidance: true,
+          legalResearch: true,
+          courtDeadlines: true,
+          filingRequirements: true,
+          jurisdictionAdvice: true,
+          documentGuidance: true,
+          caseStrategy: false,
+          clientIntake: true,
+          appointmentScheduling: true,
+          caseStatusInquiry: true,
+          documentCollection: true,
+          progressUpdates: true,
+          caseFileAccess: true,
+          serviceQuotes: true,
+          pricingInformation: true,
+          billingInquiries: true,
+          paymentProcessing: true,
+          subscriptionManagement: true,
+          refundRequests: false,
+          platformNavigation: true,
+          featureGuidance: true,
+          troubleshooting: true,
+          accountSupport: true,
+          integrationHelp: true,
+          transferToAttorney: true,
+          transferToSpecialist: true,
+          takeDetailedMessages: true,
+          scheduleCallbacks: true,
+          escalateUrgent: true,
+          recordCalls: true,
+          urgentLegalMatters: true,
+          emergencyEscalation: true,
+          afterHoursSupport: true,
+          crisisManagement: true
+        }
+      },
+      analytics: {
+        trackCalls: true,
+        recordMetrics: true,
+        generateReports: true,
+        enableRealTimeMonitoring: true
+      }
+    };
+    
+    res.json(defaultVoipConfig);
+  });
+
+  app.put("/api/admin/voip/config", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/voip/config 200');
+    console.log('Updating VoIP config:', req.body);
+    
+    res.json({
+      success: true,
+      message: 'VoIP configuration updated successfully',
+      config: req.body,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  app.post("/api/admin/voip/test-call", (req, res) => {
+    const { number } = req.body;
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/voip/test-call 200');
+    console.log('Initiating test call to:', number);
+    
+    // Simulate test call
+    const success = Math.random() > 0.1; // 90% success rate
+    
+    if (success) {
+      res.json({
+        success: true,
+        message: `Test call initiated to ${number}`,
+        callId: 'test_call_' + Date.now(),
+        status: 'connecting',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Test call failed',
+        error: 'Number unreachable or invalid configuration',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  app.get("/api/admin/voip/analytics", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/voip/analytics 200');
+    
+    const analytics = {
+      activeCalls: 5,
+      callsToday: 42,
+      aiResolutionRate: 87,
+      avgCallDuration: 8.5,
+      humanHandoffs: 6,
+      customerSatisfaction: 4.6,
+      callVolume: [
+        { hour: '09:00', calls: 3 },
+        { hour: '10:00', calls: 7 },
+        { hour: '11:00', calls: 12 },
+        { hour: '12:00', calls: 8 },
+        { hour: '13:00', calls: 5 },
+        { hour: '14:00', calls: 9 },
+        { hour: '15:00', calls: 11 },
+        { hour: '16:00', calls: 6 }
+      ],
+      recentCalls: [
+        {
+          id: 'call_001',
+          number: '+1-555-0123',
+          duration: '4:32',
+          status: 'completed',
+          aiHandled: true,
+          timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'call_002',
+          number: '+1-555-0456',
+          duration: '12:45',
+          status: 'transferred',
+          aiHandled: false,
+          timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'call_003',
+          number: '+1-555-0789',
+          duration: '2:18',
+          status: 'completed',
+          aiHandled: true,
+          timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString()
+        }
+      ]
+    };
+    
+    res.json(analytics);
+  });
+
+  app.get("/api/admin/voip/call-monitor", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/voip/call-monitor 200');
+    
+    const activeCalls = [
+      {
+        id: 'call_live_001',
+        callerNumber: '+1-555-0123',
+        callerName: 'John Smith',
+        duration: '00:03:42',
+        status: 'ai_handling',
+        topic: 'Billing inquiry',
+        aiConfidence: 0.85,
+        escalationRisk: 'low',
+        startTime: new Date(Date.now() - 3 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'call_live_002',
+        callerNumber: '+1-555-0456',
+        callerName: 'Sarah Johnson',
+        duration: '00:07:15',
+        status: 'human_transferred',
+        topic: 'Complex legal matter',
+        aiConfidence: 0.45,
+        escalationRisk: 'high',
+        startTime: new Date(Date.now() - 7 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'call_live_003',
+        callerNumber: '+1-555-0789',
+        callerName: 'Mike Wilson',
+        duration: '00:01:23',
+        status: 'ai_handling',
+        topic: 'Account questions',
+        aiConfidence: 0.92,
+        escalationRisk: 'low',
+        startTime: new Date(Date.now() - 1 * 60 * 1000).toISOString()
+      }
+    ];
+    
+    res.json(activeCalls);
+  });
+
+  app.post("/api/admin/voip/call/:id/intercept", (req, res) => {
+    const { id } = req.params;
+    const { action } = req.body; // 'take_over', 'monitor', 'end_call'
+    
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/voip/call/' + id + '/intercept 200');
+    console.log('Call intercept action:', action, 'for call:', id);
+    
+    res.json({
+      success: true,
+      message: `Call ${id} ${action} successful`,
+      callId: id,
+      action,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Enhanced webhook configuration with granular controls
   app.get("/api/admin/webhooks", (req, res) => {
     console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/webhooks 200');

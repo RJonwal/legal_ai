@@ -1429,7 +1429,16 @@ export default function VoipManagement() {
                       </div>
                     </Card>
                   </div>
-                  <Button className="w-full">
+                  <Button 
+                    className="w-full"
+                    onClick={() => {
+                      // In a real implementation, this would open a real-time call monitoring interface
+                      toast({ 
+                        title: "Call Monitor", 
+                        description: "Real-time call monitoring interface would open here" 
+                      });
+                    }}
+                  >
                     <Activity className="h-4 w-4 mr-2" />
                     Open Call Monitor
                   </Button>
@@ -1456,6 +1465,100 @@ export default function VoipManagement() {
                   <div className="text-sm text-muted-foreground">Avg Call Duration</div>
                 </Card>
               </div>
+
+              {currentConfig.analytics.enableRealTimeMonitoring && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PhoneCall className="h-5 w-5" />
+                      Live Call Monitor
+                    </CardTitle>
+                    <CardDescription>
+                      Real-time view of active calls and AI performance
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Active Calls</h4>
+                        <Badge variant="outline">
+                          <Activity className="h-3 w-3 mr-1" />
+                          Live
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {[
+                          { 
+                            id: 'call_001', 
+                            caller: '+1-555-0123', 
+                            duration: '03:42', 
+                            status: 'AI Handling',
+                            topic: 'Billing inquiry',
+                            confidence: 85
+                          },
+                          { 
+                            id: 'call_002', 
+                            caller: '+1-555-0456', 
+                            duration: '07:15', 
+                            status: 'Human Agent',
+                            topic: 'Complex legal matter',
+                            confidence: 45
+                          },
+                          { 
+                            id: 'call_003', 
+                            caller: '+1-555-0789', 
+                            duration: '01:23', 
+                            status: 'AI Handling',
+                            topic: 'Account questions',
+                            confidence: 92
+                          }
+                        ].map((call) => (
+                          <div key={call.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <PhoneCall className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <div className="font-medium">{call.caller}</div>
+                                <div className="text-sm text-muted-foreground">{call.topic}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium">{call.duration}</div>
+                              <div className="flex items-center gap-2">
+                                <Badge 
+                                  variant={call.status === 'AI Handling' ? 'default' : 'secondary'}
+                                  className="text-xs"
+                                >
+                                  {call.status}
+                                </Badge>
+                                {call.status === 'AI Handling' && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {call.confidence}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Monitor All
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Download className="h-4 w-4 mr-2" />
+                          Export Logs
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
