@@ -382,17 +382,30 @@ router.put("/branding-config", authenticateToken, async (req: AuthRequest, res: 
 });
 
 // Upload logo/images endpoint
-router.post("/branding/upload", (req: Request, res: Response) => {
+router.post("/branding/upload", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { type, imageData, filename } = req.body;
 
-    // Simulate file upload - in production, you'd save to cloud storage
-    const mockUrl = `/uploads/branding/${type}/${Date.now()}-${filename}`;
+    // Save to uploads directory and database
+    const uploadPath = `/uploads/branding/${type}`;
+    const fullPath = `${uploadPath}/${Date.now()}-${filename}`;
+
+    // Store the file path in admin config
+    const currentConfig = await storage.getAdminConfig('branding-config') || {};
+    const updatedConfig = {
+      ...currentConfig,
+      assets: {
+        ...currentConfig.assets,
+        [type]: fullPath
+      }
+    };
+    
+    await storage.setAdminConfig('branding-config', updatedConfig);
 
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/branding/upload 200`);
     res.json({
       success: true,
-      url: mockUrl,
+      url: fullPath,
       type,
       filename,
       size: imageData ? Math.floor(imageData.length * 0.75) : 1024,

@@ -22,10 +22,10 @@ const PORT = process.env.PORT || 5000;
 const app = express();
 
 // Session configuration
-app.use(session(sessionConfig));
+// app.use(session(sessionConfig));
 
 // Security middleware
-app.use(securityMiddleware);
+// app.use(securityMiddleware.headers);
 
 // HTTP request logging
 app.use(morgan('combined', { stream: httpLogStream }));

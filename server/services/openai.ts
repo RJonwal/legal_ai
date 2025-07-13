@@ -309,6 +309,51 @@ export class OpenAIService {
       throw new Error("Failed to generate next best action");
     }
   }
+
+  async generateCourtPreparation(request: {
+    caseType: string;
+    hearingType: string;
+    keyArguments: string[];
+    evidence: string[];
+    timeline: string[];
+    caseContext: string;
+  }): Promise<any> {
+    try {
+      const prompt = `Generate a comprehensive court preparation analysis for the following case:
+
+      Case Type: ${request.caseType}
+      Hearing Type: ${request.hearingType}
+      Case Context: ${request.caseContext}
+      Key Arguments: ${JSON.stringify(request.keyArguments)}
+      Evidence: ${JSON.stringify(request.evidence)}
+      Timeline: ${JSON.stringify(request.timeline)}
+
+      Please provide a detailed court preparation analysis including:
+      1. Hearing strategy and key arguments
+      2. Evidence presentation plan
+      3. Timeline and procedural considerations
+      4. Potential challenges and responses
+      5. Recommended next steps
+
+      Format your response as a JSON object with structured recommendations.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are a court preparation specialist. Provide detailed strategic analysis for court hearings and legal proceedings." },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3,
+        max_tokens: 2000,
+      });
+
+      return JSON.parse(response.choices[0].message.content || "{}");
+    } catch (error) {
+      console.error("Court preparation generation error:", error);
+      throw new Error("Failed to generate court preparation");
+    }
+  }
 }
 
 export const openaiService = new OpenAIService();
