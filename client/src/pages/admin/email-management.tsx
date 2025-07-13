@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -125,7 +124,7 @@ interface EmailConfig {
       jurisdictionAdvice: boolean;
       legalFormCompletion: boolean;
       caseStrategyAdvice: boolean;
-      
+
       // Client Management
       clientOnboarding: boolean;
       caseStatusUpdates: boolean;
@@ -134,7 +133,7 @@ interface EmailConfig {
       caseFileAccess: boolean;
       clientCommunication: boolean;
       progressReporting: boolean;
-      
+
       // Business Operations
       billingInquiries: boolean;
       paymentProcessing: boolean;
@@ -142,7 +141,7 @@ interface EmailConfig {
       servicePlanChanges: boolean;
       refundProcessing: boolean;
       invoiceGeneration: boolean;
-      
+
       // Technical Support
       platformNavigation: boolean;
       featureExplanation: boolean;
@@ -150,14 +149,14 @@ interface EmailConfig {
       accountSetup: boolean;
       dataExport: boolean;
       systemIntegration: boolean;
-      
+
       // Administrative
       userAccountManagement: boolean;
       accessPermissions: boolean;
       dataBackup: boolean;
       reportGeneration: boolean;
       auditTrails: boolean;
-      
+
       // Emergency & Escalation
       urgentLegalMatters: boolean;
       escalateToAttorney: boolean;
@@ -172,7 +171,7 @@ interface EmailConfig {
       escalationThreshold: number;
     };
   };
-  
+
   adminTools: {
     canRespond: boolean;
     canIntercept: boolean;
@@ -193,9 +192,9 @@ const defaultConfig: EmailConfig = {
     secure: false,
     user: '',
     password: '',
-    fromName: 'LegalAI Pro',
-    fromEmail: 'noreply@legalai.pro',
-    operationalEmails: ['support@legalai.pro', 'admin@legalai.pro']
+    fromName: 'Wizzered',
+    fromEmail: 'noreply@wizzered.com',
+    operationalEmails: ['support@wizzered.com', 'admin@wizzered.com']
   },
   templates: [],
   emailLogs: [],
@@ -203,7 +202,7 @@ const defaultConfig: EmailConfig = {
     {
       id: '1',
       name: 'Default Support',
-      content: 'Best regards,\nLegalAI Pro Support Team\n\nEmail: support@legalai.pro\nPhone: +1 (555) 123-4567\nWebsite: https://legalai.pro',
+      content: 'Best regards,\nWizzered Support Team\n\nEmail: support@wizzered.com\nPhone: +1 (555) 123-4567\nWebsite: https://wizzered.com',
       isDefault: true,
       department: 'support'
     }
@@ -224,7 +223,7 @@ const defaultConfig: EmailConfig = {
       jurisdictionAdvice: true,
       legalFormCompletion: true,
       caseStrategyAdvice: false, // Requires human oversight
-      
+
       // Client Management - Full autonomy
       clientOnboarding: true,
       caseStatusUpdates: true,
@@ -233,7 +232,7 @@ const defaultConfig: EmailConfig = {
       caseFileAccess: true,
       clientCommunication: true,
       progressReporting: true,
-      
+
       // Business Operations - Selective autonomy
       billingInquiries: true,
       paymentProcessing: true,
@@ -241,7 +240,7 @@ const defaultConfig: EmailConfig = {
       servicePlanChanges: true,
       refundProcessing: false, // Requires human approval
       invoiceGeneration: true,
-      
+
       // Technical Support - Full autonomy
       platformNavigation: true,
       featureExplanation: true,
@@ -249,14 +248,14 @@ const defaultConfig: EmailConfig = {
       accountSetup: true,
       dataExport: true,
       systemIntegration: true,
-      
+
       // Administrative - Limited autonomy
       userAccountManagement: true,
       accessPermissions: false, // Security sensitive
       dataBackup: true,
       reportGeneration: true,
       auditTrails: true,
-      
+
       // Emergency & Escalation - Human oversight required
       urgentLegalMatters: true,
       escalateToAttorney: true,
@@ -266,12 +265,12 @@ const defaultConfig: EmailConfig = {
     responseSettings: {
       maxTokens: 500,
       temperature: 0.7,
-      systemPrompt: 'You are a helpful AI assistant for LegalAI Pro.',
+      systemPrompt: 'You are a helpful AI assistant for Wizzered.',
       autoResponse: true,
       escalationThreshold: 80
     }
   },
-  
+
   adminTools: {
     canRespond: true,
     canIntercept: true,
@@ -288,7 +287,7 @@ const defaultConfig: EmailConfig = {
 export default function EmailManagement() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   const [activeTemplate, setActiveTemplate] = useState<EmailTemplate | null>(null);
   const [testEmail, setTestEmail] = useState("");
   const [newOperationalEmail, setNewOperationalEmail] = useState("");
@@ -417,15 +416,15 @@ export default function EmailManagement() {
     return <div className="p-6">Loading email settings...</div>;
   }
 
-  const handleUpdateConfig = (updates: Partial<EmailConfig>) => {
+  const updateConfig = (updates: Partial<EmailConfig>) => {
     updateConfigMutation.mutate(updates);
   };
 
   const addOperationalEmail = () => {
     if (!newOperationalEmail.trim()) return;
-    
+
     const updatedEmails = [...(currentConfig.smtp.operationalEmails || []), newOperationalEmail.trim()];
-    handleUpdateConfig({
+    updateConfig({
       smtp: {
         ...currentConfig.smtp,
         operationalEmails: updatedEmails
@@ -436,7 +435,7 @@ export default function EmailManagement() {
 
   const removeOperationalEmail = (email: string) => {
     const updatedEmails = currentConfig.smtp.operationalEmails?.filter(e => e !== email) || [];
-    handleUpdateConfig({
+    updateConfig({
       smtp: {
         ...currentConfig.smtp,
         operationalEmails: updatedEmails
@@ -471,17 +470,17 @@ export default function EmailManagement() {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
-    
+
     const updatedSignatures = [...(currentConfig.signatures || []), {
       id: Date.now().toString(),
       ...newSignature,
       isDefault: false
     }];
-    
-    handleUpdateConfig({
+
+    updateConfig({
       signatures: updatedSignatures
     });
-    
+
     setIsCreatingSignature(false);
     setNewSignature({ name: "", content: "", department: "support" });
   };
@@ -509,7 +508,7 @@ export default function EmailManagement() {
         { key: 'filingDeadlines', label: 'Filing Deadlines', icon: Calendar },
         { key: 'courtRequirements', label: 'Court Requirements', icon: Shield },
         { key: 'jurisdictionAdvice', label: 'Jurisdiction Advice', icon: Globe },
-        { key: 'legalFormCompletion', label: 'Legal Form Completion', icon: FileText },
+        { key: 'legalFormCompletion', label: 'Legal FormCompletion', icon: FileText },
         { key: 'caseStrategyAdvice', label: 'Case Strategy Advice', icon: Brain }
       ]
     },
@@ -568,7 +567,7 @@ export default function EmailManagement() {
     }
   ];
 
-  
+
 
   const filteredEmails = currentConfig.emailLogs?.filter(email => {
     if (emailFilters.type !== 'all' && email.type !== emailFilters.type) return false;
@@ -611,7 +610,7 @@ export default function EmailManagement() {
                   <Input
                     id="smtp-host"
                     value={currentConfig.smtp.host}
-                    onChange={(e) => handleUpdateConfig({
+                    onChange={(e) => updateConfig({
                       smtp: { ...currentConfig.smtp, host: e.target.value }
                     })}
                     placeholder="smtp.gmail.com"
@@ -623,7 +622,7 @@ export default function EmailManagement() {
                     id="smtp-port"
                     type="number"
                     value={currentConfig.smtp.port}
-                    onChange={(e) => handleUpdateConfig({
+                    onChange={(e) => updateConfig({
                       smtp: { ...currentConfig.smtp, port: parseInt(e.target.value) }
                     })}
                     placeholder="587"
@@ -637,7 +636,7 @@ export default function EmailManagement() {
                   <Input
                     id="smtp-user"
                     value={currentConfig.smtp.user}
-                    onChange={(e) => handleUpdateConfig({
+                    onChange={(e) => updateConfig({
                       smtp: { ...currentConfig.smtp, user: e.target.value }
                     })}
                     placeholder="your-email@gmail.com"
@@ -649,7 +648,7 @@ export default function EmailManagement() {
                     id="smtp-password"
                     type="password"
                     value={currentConfig.smtp.password}
-                    onChange={(e) => handleUpdateConfig({
+                    onChange={(e) => updateConfig({
                       smtp: { ...currentConfig.smtp, password: e.target.value }
                     })}
                     placeholder="your-app-password"
@@ -663,10 +662,10 @@ export default function EmailManagement() {
                   <Input
                     id="from-name"
                     value={currentConfig.smtp.fromName}
-                    onChange={(e) => handleUpdateConfig({
+                    onChange={(e) => updateConfig({
                       smtp: { ...currentConfig.smtp, fromName: e.target.value }
                     })}
-                    placeholder="LegalAI Pro"
+                    placeholder="Wizzered"
                   />
                 </div>
                 <div>
@@ -674,10 +673,10 @@ export default function EmailManagement() {
                   <Input
                     id="from-email"
                     value={currentConfig.smtp.fromEmail}
-                    onChange={(e) => handleUpdateConfig({
+                    onChange={(e) => updateConfig({
                       smtp: { ...currentConfig.smtp, fromEmail: e.target.value }
                     })}
-                    placeholder="noreply@legalai.pro"
+                    placeholder="noreply@wizzered.com"
                   />
                 </div>
               </div>
@@ -686,7 +685,7 @@ export default function EmailManagement() {
                 <Switch
                   id="secure-connection"
                   checked={currentConfig.smtp.secure}
-                  onCheckedChange={(checked) => handleUpdateConfig({
+                  onCheckedChange={(checked) => updateConfig({
                     smtp: { ...currentConfig.smtp, secure: checked }
                   })}
                 />
@@ -699,7 +698,7 @@ export default function EmailManagement() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Email addresses that will receive operational notifications and AI escalations
                   </p>
-                  
+
                   <div className="space-y-2">
                     {currentConfig.smtp.operationalEmails?.map((email, index) => (
                       <div key={index} className="flex items-center gap-2">
@@ -713,7 +712,7 @@ export default function EmailManagement() {
                         </Button>
                       </div>
                     ))}
-                    
+
                     <div className="flex gap-2">
                       <Input
                         value={newOperationalEmail}
@@ -730,7 +729,7 @@ export default function EmailManagement() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button onClick={() => handleUpdateConfig(currentConfig)}>
+                  <Button onClick={() => updateConfig(currentConfig)}>
                     <Save className="h-4 w-4 mr-2" />
                     Save SMTP Settings
                   </Button>
@@ -829,7 +828,7 @@ export default function EmailManagement() {
                   <Input
                     value={newTemplate.subject}
                     onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })}
-                    placeholder="Welcome to LegalAI Pro!"
+                    placeholder="Welcome to Wizzered!"
                   />
                 </div>
                 <div>
@@ -957,423 +956,4 @@ export default function EmailManagement() {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="sent">Sent</SelectItem>
                   <SelectItem value="received">Received</SelectItem>
-                  <SelectItem value="forwarded">Forwarded</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={emailFilters.status} onValueChange={(value) => setEmailFilters({ ...emailFilters, status: value })}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="success">Success</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {filteredEmails.map((email) => (
-              <Card key={email.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        {email.type === 'sent' && <Send className="h-4 w-4 text-blue-500" />}
-                        {email.type === 'received' && <Mail className="h-4 w-4 text-green-500" />}
-                        {email.type === 'forwarded' && <Forward className="h-4 w-4 text-orange-500" />}
-                        <div>
-                          <p className="font-medium">{email.subject}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {email.type === 'sent' ? `To: ${email.to}` : `From: ${email.from}`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={email.status === 'success' ? 'default' : email.status === 'failed' ? 'destructive' : 'secondary'}>
-                        {email.status}
-                      </Badge>
-                      <Badge variant={email.priority === 'high' ? 'destructive' : email.priority === 'medium' ? 'secondary' : 'outline'}>
-                        {email.priority}
-                      </Badge>
-                      {email.aiProcessed && <Badge variant="outline"><Bot className="h-3 w-3 mr-1" />AI</Badge>}
-                      {email.humanCorrected && <Badge variant="outline"><User className="h-3 w-3 mr-1" />Human</Badge>}
-                      <Button size="sm" variant="outline" onClick={() => setSelectedEmail(email)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      {email.type === 'received' && (
-                        <Button size="sm" onClick={() => handleRespondToEmail(email)}>
-                          <Reply className="h-4 w-4 mr-2" />
-                          Respond
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {new Date(email.timestamp).toLocaleString()}
-                    </span>
-                    {email.tags.length > 0 && (
-                      <div className="flex gap-1">
-                        {email.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-2 text-sm line-clamp-2">{email.content}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Email Response Dialog */}
-          <Dialog open={isRespondingToEmail} onOpenChange={setIsRespondingToEmail}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Respond to Email</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                {selectedEmail && (
-                  <div className="p-4 border rounded bg-muted">
-                    <p className="font-medium">{selectedEmail.subject}</p>
-                    <p className="text-sm text-muted-foreground">From: {selectedEmail.from}</p>
-                    <p className="text-sm mt-2">{selectedEmail.content}</p>
-                  </div>
-                )}
-                <div>
-                  <Label>Response</Label>
-                  <Textarea
-                    value={responseContent}
-                    onChange={(e) => setResponseContent(e.target.value)}
-                    placeholder="Type your response..."
-                    rows={8}
-                  />
-                </div>
-                <div>
-                  <Label>Signature</Label>
-                  <Select value={selectedSignature} onValueChange={setSelectedSignature}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select signature" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currentConfig.signatures?.filter(signature => signature.id && signature.id.trim() !== '').map((signature) => (
-                        <SelectItem key={signature.id} value={signature.id}>
-                          {signature.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={() => selectedEmail && sendResponseMutation.mutate({
-                    emailId: selectedEmail.id,
-                    content: responseContent,
-                    signature: selectedSignature
-                  })}>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Response
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsRespondingToEmail(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-
-        <TabsContent value="ai-assistant" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bot className="h-5 w-5" />
-                AI Email Assistant
-              </CardTitle>
-              <CardDescription>Configure AI-powered email responses and automation</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="ai-enabled">Enable AI Assistant</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically process and respond to incoming emails
-                  </p>
-                </div>
-                <Switch
-                  id="ai-enabled"
-                  checked={currentConfig.aiAssistant.enabled}
-                  onCheckedChange={(checked) => handleUpdateConfig({
-                    aiAssistant: { ...currentConfig.aiAssistant, enabled: checked }
-                  })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>AI Provider</Label>
-                  <Select 
-                    value={currentConfig.aiAssistant.provider}
-                    onValueChange={(value) => handleUpdateConfig({
-                      aiAssistant: { ...currentConfig.aiAssistant, provider: value }
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="openai">OpenAI</SelectItem>
-                      <SelectItem value="anthropic">Anthropic</SelectItem>
-                      <SelectItem value="deepseek">Deepseek</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Model</Label>
-                  <Select 
-                    value={currentConfig.aiAssistant.model}
-                    onValueChange={(value) => handleUpdateConfig({
-                      aiAssistant: { ...currentConfig.aiAssistant, model: value }
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gpt-4">GPT-4</SelectItem>
-                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                      <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                      <SelectItem value="deepseek-chat">Deepseek Chat</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label>AI Response Settings</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm">Max Tokens</Label>
-                    <Input
-                      type="number"
-                      value={currentConfig.aiAssistant.responseSettings.maxTokens}
-                      onChange={(e) => handleUpdateConfig({
-                        aiAssistant: {
-                          ...currentConfig.aiAssistant,
-                          responseSettings: {
-                            ...currentConfig.aiAssistant.responseSettings,
-                            maxTokens: parseInt(e.target.value)
-                          }
-                        }
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Temperature</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="2"
-                      value={currentConfig.aiAssistant.responseSettings.temperature}
-                      onChange={(e) => handleUpdateConfig({
-                        aiAssistant: {
-                          ...currentConfig.aiAssistant,
-                          responseSettings: {
-                            ...currentConfig.aiAssistant.responseSettings,
-                            temperature: parseFloat(e.target.value)
-                          }
-                        }
-                      })}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-sm">System Prompt</Label>
-                  <Textarea
-                    value={currentConfig.aiAssistant.responseSettings.systemPrompt}
-                    onChange={(e) => handleUpdateConfig({
-                      aiAssistant: {
-                        ...currentConfig.aiAssistant,
-                        responseSettings: {
-                          ...currentConfig.aiAssistant.responseSettings,
-                          systemPrompt: e.target.value
-                        }
-                      }
-                    })}
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label>AI Permissions</Label>
-                <p className="text-sm text-muted-foreground">
-                  Configure what actions the AI can perform based on your business model
-                </p>
-                {aiPermissionCategories.map((category) => (
-                  <div key={category.title} className="space-y-2">
-                    <h4 className="font-medium text-sm">{category.title}</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {category.permissions.map((permission) => (
-                        <div key={permission.key} className="flex items-center space-x-2">
-                          <Switch
-                            id={permission.key}
-                            checked={currentConfig.aiAssistant.permissions[permission.key as keyof typeof currentConfig.aiAssistant.permissions]}
-                            onCheckedChange={(checked) => handleUpdateConfig({
-                              aiAssistant: {
-                                ...currentConfig.aiAssistant,
-                                permissions: {
-                                  ...currentConfig.aiAssistant.permissions,
-                                  [permission.key]: checked
-                                }
-                              }
-                            })}
-                          />
-                          <Label htmlFor={permission.key} className="text-sm flex items-center gap-1">
-                            <permission.icon className="h-3 w-3" />
-                            {permission.label}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        
-
-        <TabsContent value="admin-tools" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Admin Response Tools
-              </CardTitle>
-              <CardDescription>Configure admin capabilities for email management and intervention</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h4 className="font-medium">Admin Capabilities</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="admin-respond"
-                      checked={currentConfig.adminTools.canRespond}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        adminTools: { ...currentConfig.adminTools, canRespond: checked }
-                      })}
-                    />
-                    <Label htmlFor="admin-respond">Admin Can Respond to Emails</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="admin-intercept"
-                      checked={currentConfig.adminTools.canIntercept}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        adminTools: { ...currentConfig.adminTools, canIntercept: checked }
-                      })}
-                    />
-                    <Label htmlFor="admin-intercept">Admin Can Intercept AI Responses</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="admin-view-all"
-                      checked={currentConfig.adminTools.canViewAll}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        adminTools: { ...currentConfig.adminTools, canViewAll: checked }
-                      })}
-                    />
-                    <Label htmlFor="admin-view-all">Admin Can View All Conversations</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="admin-edit"
-                      checked={currentConfig.adminTools.canEditResponses}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        adminTools: { ...currentConfig.adminTools, canEditResponses: checked }
-                      })}
-                    />
-                    <Label htmlFor="admin-edit">Admin Can Edit AI Responses</Label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-medium">Notification Settings</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="notify-new-emails"
-                      checked={currentConfig.adminTools.notificationSettings.newEmails}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        adminTools: {
-                          ...currentConfig.adminTools,
-                          notificationSettings: {
-                            ...currentConfig.adminTools.notificationSettings,
-                            newEmails: checked
-                          }
-                        }
-                      })}
-                    />
-                    <Label htmlFor="notify-new-emails">Notify on New Emails</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="notify-escalations"
-                      checked={currentConfig.adminTools.notificationSettings.escalations}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        adminTools: {
-                          ...currentConfig.adminTools,
-                          notificationSettings: {
-                            ...currentConfig.adminTools.notificationSettings,
-                            escalations: checked
-                          }
-                        }
-                      })}
-                    />
-                    <Label htmlFor="notify-escalations">Notify on Escalations</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="notify-failures"
-                      checked={currentConfig.adminTools.notificationSettings.failedDeliveries}
-                      onCheckedChange={(checked) => handleUpdateConfig({
-                        adminTools: {
-                          ...currentConfig.adminTools,
-                          notificationSettings: {
-                            ...currentConfig.adminTools.notificationSettings,
-                            failedDeliveries: checked
-                          }
-                        }
-                      })}
-                    />
-                    <Label htmlFor="notify-failures">Notify on Failed Deliveries</Label>
-                  </div>
-                </div>
-              </div>
-
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Admin tools are fully integrated with all email endpoints. Real-time monitoring and intervention capabilities are active when enabled.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
+                  <SelectItem value="forwarded">Forwarded</
