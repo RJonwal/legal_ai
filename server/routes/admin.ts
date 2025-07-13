@@ -29,9 +29,9 @@ let users = [
 router.post("/auth/login", (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    
+
     const user = users.find(u => u.email === email && u.password === password);
-    
+
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -42,7 +42,7 @@ router.post("/auth/login", (req: Request, res: Response) => {
 
     // Generate mock JWT token
     const token = `mock_jwt_${user.id}_${Date.now()}`;
-    
+
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/login 200`);
     res.json({
       success: true,
@@ -63,7 +63,7 @@ router.post("/auth/login", (req: Request, res: Response) => {
 router.post("/auth/signup", (req: Request, res: Response) => {
   try {
     const { username, email, password, userType } = req.body;
-    
+
     // Check if user already exists
     const existingUser = users.find(u => u.email === email || u.username === username);
     if (existingUser) {
@@ -82,7 +82,7 @@ router.post("/auth/signup", (req: Request, res: Response) => {
     };
 
     users.push(newUser);
-    
+
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/signup 201`);
     res.status(201).json({
       success: true,
@@ -97,7 +97,7 @@ router.post("/auth/signup", (req: Request, res: Response) => {
 router.post("/auth/forgot-password", (req: Request, res: Response) => {
   try {
     const { email } = req.body;
-    
+
     const user = users.find(u => u.email === email);
     if (!user) {
       // Don't reveal if email exists or not for security
@@ -106,7 +106,7 @@ router.post("/auth/forgot-password", (req: Request, res: Response) => {
 
     // In production, send actual email with reset link
     console.log(`Password reset requested for: ${email}`);
-    
+
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/forgot-password 200`);
     res.json({
       success: true,
@@ -121,7 +121,7 @@ router.post("/auth/forgot-password", (req: Request, res: Response) => {
 router.get("/auth/verify-token", (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    
+
     if (!token || !token.startsWith('mock_jwt_')) {
       return res.status(401).json({ error: "Invalid token" });
     }
@@ -129,7 +129,7 @@ router.get("/auth/verify-token", (req: Request, res: Response) => {
     // Extract user ID from mock token
     const userId = parseInt(token.split('_')[2]);
     const user = users.find(u => u.id === userId);
-    
+
     if (!user) {
       return res.status(401).json({ error: "User not found" });
     }

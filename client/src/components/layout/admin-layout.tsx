@@ -33,10 +33,12 @@ import {
   FileText,
   Scale,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  LogOut
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Link, useLocation, useNavigate } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface NavigationItem {
@@ -55,6 +57,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
   const [showFeatureToggle, setShowFeatureToggle] = useState(false);
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
+    navigate('/');
+  };
 
   const navigationItems = [
     {
@@ -221,10 +234,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton>
-                <User2 />
-                <span>Admin User</span>
-                <ChevronUp className="ml-auto" />
+              <SidebarMenuButton onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                <LogOut />
+                <span>Logout</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

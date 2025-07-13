@@ -25,7 +25,8 @@ import {
   Users,
   User,
   FolderOpen,
-  Bell
+  Bell,
+  LogOut
 } from "lucide-react";
 interface CaseSidebarProps {
   currentCaseId?: number;
@@ -88,6 +89,12 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleLogout = () => {
+    // Implement your logout logic here, e.g., clear cookies, local storage, etc.
+    // After logout, redirect to the login page
+    setLocation('/login');
   };
 
   return (
@@ -223,6 +230,14 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
           >
             <Settings className="h-4 w-4 mr-2" />
             Settings
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
           </Button>
         </div>
       </div>

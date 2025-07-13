@@ -16,6 +16,11 @@ import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
+// Import auth pages
+import Login from "@/pages/auth/login";
+import Signup from "@/pages/auth/signup";
+import ForgotPassword from "@/pages/auth/forgot-password";
+
 // Import admin pages
 import AdminDashboard from "@/pages/admin/index";
 import AdminUsers from "@/pages/admin/users";
@@ -92,6 +97,11 @@ function App() {
             <Switch>
               {/* Landing page */}
               <Route path="/" component={LandingPage} />
+
+              {/* Auth routes */}
+              <Route path="/login" component={Login} />
+              <Route path="/signup" component={Signup} />
+              <Route path="/forgot-password" component={ForgotPassword} />
 
               {/* Admin routes with layout */}
               <Route path="/admin">

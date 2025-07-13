@@ -2,6 +2,18 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 // import { NotificationService } from "@/lib/notification-service";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ChatInput } from "./chat-input";
+import { MessageList } from "./message-list";
+import { FunctionButtons } from "./function-buttons";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { notificationService } from "@/lib/notification-service";
+import { Bot, User, Sparkles, AlertCircle } from "lucide-react";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +33,11 @@ interface ChatInterfaceProps {
   onDocumentGenerate: (document: any) => void;
 }
 
-export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: ChatInterfaceProps) {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+export default function ChatInterface({
+  caseId,
+  onFunctionClick,
+  onDocumentGenerate
+}: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentCaseData, setCurrentCaseData] = useState<any>(null);
   const messagesRef = useRef(messages);
@@ -97,6 +111,28 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
       }
     };
   }, [caseId]);
+
+  // Get user data for avatar
+  const getUserData = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      return userData ? JSON.parse(userData) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const user = getUserData();
+
+  const getInitials = (firstName?: string, lastName?: string, username?: string) => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (username) {
+      return username.slice(0, 2).toUpperCase();
+    }
+    return "U";
+  };
 
 
   const sendMessageMutation = useMutation({

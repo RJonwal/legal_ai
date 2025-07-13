@@ -16,6 +16,25 @@ interface MessageListProps {
   currentCase?: any;
 }
 
+const getUserData = () => {
+  try {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  } catch {
+    return null;
+  }
+};
+
+const getInitials = (firstName?: string, lastName?: string, username?: string) => {
+  if (firstName && lastName) {
+    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+  }
+  if (username) {
+    return username.slice(0, 2).toUpperCase();
+  }
+  return "U";
+};
+
 export function MessageList({ messages, isLoading, currentCase }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -423,6 +442,7 @@ export function MessageList({ messages, isLoading, currentCase }: MessageListPro
   };
 
   const caseMessage = generateCaseSpecificMessage();
+  const user = getUserData();
 
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 max-h-full">
