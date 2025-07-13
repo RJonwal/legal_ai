@@ -18,9 +18,17 @@ import {
   ChevronDown,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Sparkles,
+  Play,
+  CheckCircle,
+  Globe,
+  Lock,
+  Brain,
+  MessageSquare
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { SiFacebook, SiX, SiLinkedin } from "react-icons/si";
+import { Link, useLocation } from "wouter";
 import { Logo } from "@/components/ui/logo";
 import ChatWidget from "@/components/chat/chat-widget";
 
@@ -412,9 +420,9 @@ export default function Landing() {
                 The future of legal practice is here. Empower your firm with AI-driven insights and automation.
               </p>
               <div className="flex space-x-4">
-                <Twitter className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
-                <Linkedin className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
-                <Facebook className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
+                <SiX className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
+                <SiLinkedin className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
+                <SiFacebook className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
               </div>
             </div>
 
