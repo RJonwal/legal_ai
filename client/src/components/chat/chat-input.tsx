@@ -108,7 +108,7 @@ export function ChatInput({ onSendMessage, onFunctionClick, disabled }: ChatInpu
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
             {showCaseActions && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-white border rounded-md shadow-lg z-50">
+              <div className="absolute right-0 bottom-full mb-1 w-56 bg-white border rounded-md shadow-lg z-50">
                 {caseActions.map((action) => {
                   const Icon = action.icon;
                   return (

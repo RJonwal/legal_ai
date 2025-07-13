@@ -45,6 +45,7 @@ const EnhancedLiveChat = ({
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isConnectedToAdmin, setIsConnectedToAdmin] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -172,64 +173,88 @@ const EnhancedLiveChat = ({
           text: `Shared an image: ${file.name}`,
           sender: 'user',
           timestamp: new Date(),
-          imageUrl: imageUrl,
-          fileName: file.name
+          imageUrl: imageUrl
         };
         
         setMessages(prev => [...prev, imageMessage]);
         
-        // Reset image input
-        if (imageInputRef.current) {
-          imageInputRef.current.value = '';
-        }
+        // Auto-respond to image upload
+        setTimeout(() => {
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            text: "I can see your image. A support agent will review it and get back to you shortly. In the meantime, please describe the issue you're experiencing.",
+            sender: 'ai',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, aiResponse]);
+        }, 1000);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleScreenShare = async () => {
-    if (!isScreenSharing) {
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true
-        });
+  const startScreenShare = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true
+      });
+      
+      setScreenStream(stream);
+      setIsScreenSharing(true);
+      
+      const screenMessage: Message = {
+        id: Date.now().toString(),
+        text: "Started screen sharing session",
+        sender: 'user',
+        timestamp: new Date(),
+        isScreenShare: true
+      };
+      
+      setMessages(prev => [...prev, screenMessage]);
+      
+      // Handle stream end
+      stream.getVideoTracks()[0].onended = () => {
+        setIsScreenSharing(false);
+        setScreenStream(null);
         
-        setIsScreenSharing(true);
-        
-        const screenShareMessage: Message = {
+        const endMessage: Message = {
           id: Date.now().toString(),
-          text: 'Started screen sharing',
-          sender: 'user',
-          timestamp: new Date(),
-          isScreenShare: true
+          text: "Screen sharing session ended",
+          sender: 'system',
+          timestamp: new Date()
         };
         
-        setMessages(prev => [...prev, screenShareMessage]);
-        
-        // Stop screen sharing when stream ends
-        stream.getVideoTracks()[0].addEventListener('ended', () => {
-          setIsScreenSharing(false);
-          const endMessage: Message = {
-            id: Date.now().toString(),
-            text: 'Screen sharing ended',
-            sender: 'user',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, endMessage]);
-        });
-        
-      } catch (error) {
-        console.error('Error starting screen share:', error);
-        const errorMessage: Message = {
-          id: Date.now().toString(),
-          text: 'Screen sharing failed to start. Please check your browser permissions.',
+        setMessages(prev => [...prev, endMessage]);
+      };
+      
+      // Auto-respond to screen share
+      setTimeout(() => {
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: "Screen sharing is now active. A support agent can see your screen and will assist you shortly.",
           sender: 'ai',
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, errorMessage]);
-      }
-    } else {
+        setMessages(prev => [...prev, aiResponse]);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Screen share error:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: "Screen sharing failed. Please ensure you grant permission and try again.",
+        sender: 'system',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const stopScreenShare = () => {
+    if (screenStream) {
+      screenStream.getTracks().forEach(track => track.stop());
+      setScreenStream(null);
       setIsScreenSharing(false);
     }
   };
