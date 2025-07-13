@@ -24,7 +24,7 @@ import {
   Database,
   RefreshCw,
   Save
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface AppSettings {
   notifications: {

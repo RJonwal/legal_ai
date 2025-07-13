@@ -33,7 +33,7 @@ import {
   BarChart3,
   PieChart,
   Activity
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface SubscriptionPlan {
   id: string;

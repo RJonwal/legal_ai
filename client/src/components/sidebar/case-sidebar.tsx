@@ -27,7 +27,7 @@ import {
   FolderOpen,
   Bell,
   LogOut
-} from "lucide-react";
+} from "@/lib/icons";
 interface CaseSidebarProps {
   currentCaseId?: number;
   onCaseSelect: (caseId: number) => void;

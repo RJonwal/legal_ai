@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, User, FileText, AlertCircle, Calendar, Scale, Upload, X, File } from "lucide-react";
+import { Plus, User, FileText, AlertCircle, Calendar, Scale, Upload, X, File } from "@/lib/icons";
 
 const newCaseSchema = z.object({
   title: z.string().min(1, "Case title is required"),

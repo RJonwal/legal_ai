@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, X, Send, Bot, User, Minimize2, Maximize2, Image, Monitor, StopCircle, Camera, Paperclip } from "lucide-react";
+import { MessageSquare, X, Send, Bot, User, Minimize2, Maximize2, Image, Monitor, StopCircle, Camera, Paperclip } from "@/lib/icons";
 
 interface Message {
   id: string;

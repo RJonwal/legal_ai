@@ -18,7 +18,7 @@ import {
   Copy,
   CheckCircle,
   Zap
-} from "lucide-react";
+} from "@/lib/icons";
 import { Link } from "wouter";
 
 const Documentation = () => {

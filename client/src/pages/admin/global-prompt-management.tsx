@@ -23,7 +23,7 @@ import {
   Eye,
   Plus,
   Edit
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface GlobalPrompt {
   id: string;

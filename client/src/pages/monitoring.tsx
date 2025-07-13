@@ -18,7 +18,7 @@ import {
   HardDrive,
   Cpu,
   MemoryStick
-} from 'lucide-react';
+} from '@/lib/icons';
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 Bytes';

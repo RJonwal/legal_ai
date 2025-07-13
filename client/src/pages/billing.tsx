@@ -18,7 +18,7 @@ import {
   AlertCircle,
   CheckCircle,
   Clock
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface BillingHistory {
   id: string;

@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Settings as SettingsIcon, Bell, Shield, Database, Palette } from "lucide-react";
+import { ArrowLeft, Settings as SettingsIcon, Bell, Shield, Database, Palette } from "@/lib/icons";
 
 interface AppSettings {
   notifications: {

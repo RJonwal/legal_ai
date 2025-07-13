@@ -58,7 +58,7 @@ import {
   Paperclip,
   Image,
   FileSignature
-} from 'lucide-react';
+} from '@/lib/icons';
 
 interface EmailTemplate {
   id: string;

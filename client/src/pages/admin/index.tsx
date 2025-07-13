@@ -10,7 +10,7 @@ import {
   UserCheck,
   Eye,
   ArrowRight
-} from "lucide-react";
+} from "@/lib/icons";
 import { useLocation } from "wouter";
 
 export default function AdminDashboard() {

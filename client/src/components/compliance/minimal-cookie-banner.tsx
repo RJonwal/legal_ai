@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Settings } from 'lucide-react';
+import { X, Settings } from '@/lib/icons';
 
 interface CookiePreferences {
   necessary: boolean;

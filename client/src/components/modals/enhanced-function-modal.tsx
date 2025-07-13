@@ -14,7 +14,7 @@ import {
   FileText, Upload, FolderPlus, Calendar, Scale, Brain, FileCheck, BarChart3, Users, Gavel, 
   History, Search, Lightbulb, FolderOpen, UserCheck, CloudUpload, AlertTriangle, AlertCircle, Info,
   Clock, TrendingUp, DollarSign, CheckCircle, Target
-} from "lucide-react";
+} from "@/lib/icons";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { 

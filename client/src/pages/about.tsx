@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
-import { ArrowLeft, Scale } from "lucide-react";
+import { ArrowLeft, Scale } from "@/lib/icons";
 import { useQuery } from "@tanstack/react-query";
 
 export default function About() {

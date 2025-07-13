@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { X, Cookie, Shield, Settings, ExternalLink } from "lucide-react";
+import { X, Cookie, Shield, Settings, ExternalLink } from "@/lib/icons";
 
 interface CookiePreferences {
   necessary: boolean;

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Cookie, Settings, Shield, BarChart, Target, CheckCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Cookie, Settings, Shield, BarChart, Target, CheckCircle, AlertTriangle } from "@/lib/icons";
 import { Link } from "wouter";
 
 export default function CookiePolicy() {

@@ -12,7 +12,7 @@ import { MessageList } from "./message-list";
 import { FunctionButtons } from "./function-buttons";
 import { useToast } from "@/hooks/use-toast";
 import { notificationService } from "@/lib/notification-service";
-import { Bot, User, Sparkles, AlertCircle, FileText, Brain, AlertTriangle, Clock, CheckCircle, Share2, Bookmark } from "lucide-react";
+import { Bot, User, Sparkles, AlertCircle, FileText, Brain, AlertTriangle, Clock, CheckCircle, Share2, Bookmark } from "@/lib/icons";
 import { ChatMessage } from "@/lib/types";
 import { QueryErrorBoundary } from "@/components/query-error-boundary";
 

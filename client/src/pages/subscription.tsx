@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Check, Crown, Zap } from "lucide-react";
+import { Check, Crown, Zap } from "@/lib/icons";
 
 // Lazy load Stripe only when needed
 const getStripePromise = () => {

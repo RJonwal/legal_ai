@@ -26,7 +26,7 @@ import {
   AlertTriangle,
   Clock,
   Eye
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface User {
   id: string;

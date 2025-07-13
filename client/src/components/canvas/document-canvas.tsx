@@ -27,7 +27,7 @@ import {
   ChevronDown,
   Type,
   Palette
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface DocumentCanvasProps {
   caseId: number;

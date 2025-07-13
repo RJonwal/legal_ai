@@ -46,7 +46,7 @@ import {
   Eye,
   Check,
   ChevronsUpDown
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface AttorneyProfile {
   id: string;

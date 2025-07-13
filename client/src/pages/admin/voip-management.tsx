@@ -41,7 +41,7 @@ import {
   Eye,
   Download,
   Scale
-} from "lucide-react";
+} from "@/lib/icons";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 

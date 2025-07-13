@@ -22,7 +22,7 @@ import {
   X,
   ExternalLink,
   Archive
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface Notification {
   id: string;

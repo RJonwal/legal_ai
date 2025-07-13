@@ -28,7 +28,7 @@ import {
   FileText,
   Clock,
   AlertCircle
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface SystemConfig {
   security: {

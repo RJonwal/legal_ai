@@ -9,7 +9,7 @@ import {
   BarChart3, 
   UserCheck, 
   Gavel 
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface FunctionButtonsProps {
   onFunctionClick: (functionId: string) => void;

@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Shield, Lock, Eye, Database, Users, AlertTriangle, CheckCircle, Mail, Phone, MapPin, Clock } from "lucide-react";
+import { ArrowLeft, Shield, Lock, Eye, Database, Users, AlertTriangle, CheckCircle, Mail, Phone, MapPin, Clock } from "@/lib/icons";
 import { Link } from "wouter";
 
 export default function Privacy() {

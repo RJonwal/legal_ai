@@ -26,7 +26,7 @@ import {
   Clock,
   Target,
   Settings
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface Page {
   id: string;

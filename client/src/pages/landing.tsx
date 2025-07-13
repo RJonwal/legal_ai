@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Scale, FileText, Users, ArrowRight, Check, Shield, Clock, Brain, Star, Zap, Building, MessageSquare, Phone, Mail, MapPin, ChevronRight, Globe, Award, Target, Cpu, BookOpen, Gavel, Search, Lock } from "lucide-react";
+import { Scale, FileText, Users, ArrowRight, Check, Shield, Clock, Brain, Star, Zap, Building, MessageSquare, Phone, Mail, MapPin, ChevronRight, Globe, Award, Target, Cpu, BookOpen, Gavel, Search, Lock } from "@/lib/icons";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { BrandingProvider, useBranding } from "@/components/ui/branding-provider";

@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { AlertTriangle, RefreshCw, Wifi, WifiOff } from "@/lib/icons";
 
 interface QueryErrorBoundaryProps {
   children: React.ReactNode;

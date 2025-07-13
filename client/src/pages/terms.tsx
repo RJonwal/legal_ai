@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Scale, Shield, AlertTriangle, FileText, Clock, Users, Mail } from "lucide-react";
+import { ArrowLeft, Scale, Shield, AlertTriangle, FileText, Clock, Users, Mail } from "@/lib/icons";
 import { Link } from "wouter";
 
 export default function Terms() {

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Send, User, Bot, Minimize2, Maximize2 } from "lucide-react";
+import { MessageCircle, X, Send, User, Bot, Minimize2, Maximize2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 interface ChatMessage {

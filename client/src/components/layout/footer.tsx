@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { Scale, Phone, Mail, MapPin, Lock, Globe, Shield, Cookie } from "lucide-react";
+import { Scale, Phone, Mail, MapPin, Lock, Globe, Shield, Cookie } from "@/lib/icons";
 import { SiFacebook, SiX, SiLinkedin, SiInstagram, SiYoutube } from "react-icons/si";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";

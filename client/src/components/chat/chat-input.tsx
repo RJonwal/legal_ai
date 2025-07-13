@@ -15,7 +15,7 @@ import {
   UserCheck, 
   Gavel,
   Brain
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;

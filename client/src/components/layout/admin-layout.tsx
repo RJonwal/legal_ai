@@ -36,7 +36,7 @@ import {
   ToggleRight,
   LogOut,
   Brain
-} from "lucide-react";
+} from "@/lib/icons";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";

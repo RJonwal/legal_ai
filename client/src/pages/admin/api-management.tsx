@@ -33,7 +33,7 @@ import {
   Activity,
   RefreshCw,
   Download
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface APIProvider {
   id: string;

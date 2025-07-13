@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Scale, FileText, Users, ArrowRight, Check, Shield, Clock, Brain } from "lucide-react";
+import { Scale, FileText, Users, ArrowRight, Check, Shield, Clock, Brain } from "@/lib/icons";
 import { Link } from "wouter";
 
 export default function SimpleLanding() {

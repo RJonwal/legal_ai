@@ -4,7 +4,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { usePWA } from '@/hooks/use-pwa';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Download, RefreshCw } from 'lucide-react';
+import { Menu, Download, RefreshCw } from '@/lib/icons';
 import { useToast } from '@/hooks/use-toast';
 
 interface MobileLayoutProps {

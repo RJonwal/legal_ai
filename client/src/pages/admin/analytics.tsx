@@ -21,7 +21,7 @@ import {
   Calculator,
   Filter,
   Search
-} from "lucide-react";
+} from "@/lib/icons";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 

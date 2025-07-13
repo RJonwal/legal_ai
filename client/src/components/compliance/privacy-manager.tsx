@@ -24,7 +24,7 @@ import {
   Clock,
   Globe,
   Lock
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface PrivacyRequest {
   id: string;

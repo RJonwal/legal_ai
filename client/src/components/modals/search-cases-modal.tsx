@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, ArrowRight, Calendar, User, AlertCircle, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Search, ArrowRight, Calendar, User, AlertCircle, CheckCircle, Clock, XCircle } from "@/lib/icons";
 
 interface Case {
   id: number;

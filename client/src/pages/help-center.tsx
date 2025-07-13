@@ -16,7 +16,7 @@ import {
   ArrowRight,
   ExternalLink,
   CheckCircle
-} from "lucide-react";
+} from "@/lib/icons";
 import { Link } from "wouter";
 
 const HelpCenter = () => {

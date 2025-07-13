@@ -35,7 +35,7 @@ import {
   Download,
   Eye,
   X
-} from "lucide-react";
+} from "@/lib/icons";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 

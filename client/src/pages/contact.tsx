@@ -20,7 +20,7 @@ import {
   CreditCard,
   Shield,
   Settings
-} from "lucide-react";
+} from "@/lib/icons";
 import { Link } from "wouter";
 
 const Contact = () => {

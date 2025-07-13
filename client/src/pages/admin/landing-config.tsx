@@ -32,7 +32,7 @@ import {
   Link,
   Hash,
   Download
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface AdminConfig {
   hero: {

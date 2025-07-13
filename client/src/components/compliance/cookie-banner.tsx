@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Cookie, Shield, Settings, ExternalLink } from "lucide-react";
+import { Cookie, Shield, Settings, ExternalLink } from "@/lib/icons";
 import { Link } from "wouter";
 
 interface CookiePreferences {

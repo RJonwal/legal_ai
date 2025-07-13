@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, User, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, User, Edit2, Save, X } from "@/lib/icons";
 
 interface UserProfile {
   id: number;

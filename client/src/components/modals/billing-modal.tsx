@@ -29,7 +29,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface BillingModalProps {
   isOpen: boolean;
