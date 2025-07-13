@@ -2428,89 +2428,219 @@ app.get("/api/admin/impersonation/history", (req, res) => {
   });
 
   // VoIP Management endpoints
+  let voipConfig = {
+    enabled: false,
+    provider: 'twilio',
+    credentials: {
+      accountSid: '',
+      authToken: '',
+      phoneNumber: '',
+      apiKey: '',
+      username: '',
+      password: '',
+      customEndpoint: ''
+    },
+    voiceSettings: {
+      voice: 'Polly.Joanna',
+      language: 'en-US',
+      speed: 1.0,
+      pitch: 1.0,
+      volume: 1.0,
+      engine: 'neural'
+    },
+    callFlow: {
+      welcomeMessage: 'Thank you for calling LegalAI Pro. How can I assist you today?',
+      businessHours: {
+        enabled: true,
+        timezone: 'UTC',
+        schedule: {
+          monday: { start: '09:00', end: '17:00', active: true },
+          tuesday: { start: '09:00', end: '17:00', active: true },
+          wednesday: { start: '09:00', end: '17:00', active: true },
+          thursday: { start: '09:00', end: '17:00', active: true },
+          friday: { start: '09:00', end: '17:00', active: true },
+          saturday: { start: '10:00', end: '14:00', active: false },
+          sunday: { start: '10:00', end: '14:00', active: false }
+        }
+      },
+      afterHoursMessage: 'Thank you for calling. We are currently closed. Please leave a message or call back during business hours.',
+      maxCallDuration: 30,
+      recordCalls: true,
+      transcriptionEnabled: true
+    },
+    humanHandoff: {
+      enabled: true,
+      triggerKeywords: ['human', 'agent', 'lawyer', 'attorney', 'speak to someone', 'urgent', 'emergency'],
+      escalationThreshold: 3,
+      forwardNumbers: ['+1234567890'],
+      autoEscalateTime: 10,
+      ringTimeout: 30,
+      failoverNumbers: []
+    },
+    aiAssistant: {
+      enabled: true,
+      model: 'gpt-4',
+      maxTokens: 300,
+      temperature: 0.7,
+      systemPrompt: 'You are a professional AI assistant for LegalAI Pro. Provide helpful, accurate information about legal services while maintaining confidentiality.',
+      permissions: {
+        // Core Legal Services
+        legalConsultation: true,
+        caseAnalysis: true,
+        procedureGuidance: true,
+        legalResearch: true,
+        courtDeadlines: true,
+        filingRequirements: true,
+        jurisdictionAdvice: true,
+        documentGuidance: true,
+        caseStrategy: false,
+        
+        // Client Management
+        clientIntake: true,
+        appointmentScheduling: true,
+        caseStatusInquiry: true,
+        documentCollection: true,
+        progressUpdates: true,
+        caseFileAccess: true,
+        
+        // Business Operations
+        serviceQuotes: true,
+        pricingInformation: true,
+        billingInquiries: true,
+        paymentProcessing: true,
+        subscriptionManagement: true,
+        refundRequests: false,
+        
+        // Technical Support
+        platformNavigation: true,
+        featureGuidance: true,
+        troubleshooting: true,
+        accountSupport: true,
+        integrationHelp: true,
+        
+        // Call Management
+        transferToAttorney: true,
+        transferToSpecialist: true,
+        takeDetailedMessages: true,
+        scheduleCallbacks: true,
+        escalateUrgent: true,
+        recordCalls: true,
+        
+        // Emergency Handling
+        urgentLegalMatters: true,
+        emergencyEscalation: true,
+        afterHoursSupport: true,
+        crisisManagement: true,
+        
+        // Sales & Marketing
+        productDemos: true,
+        leadQualification: true,
+        salesPresentations: true,
+        pricingNegotiation: false,
+        contractDiscussion: false,
+        
+        // Customer Service
+        complaintHandling: true,
+        serviceIssues: true,
+        accountModifications: true,
+        passwordResets: true,
+        dataExport: false,
+        
+        // Operational Tasks
+        dataEntry: true,
+        reportGeneration: true,
+        systemUpdates: false,
+        userProvisioning: false,
+        backupOperations: false
+      }
+    },
+    analytics: {
+      trackCalls: true,
+      recordMetrics: true,
+      generateReports: true,
+      enableRealTimeMonitoring: true
+    }
+  };
+
   app.get("/api/admin/voip/config", (req, res) => {
     console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/voip/config 200');
+    res.json(voipConfig);
+  });
+
+  app.put("/api/admin/voip/config", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] PUT /api/admin/voip/config 200');
+    console.log('Updating VoIP config:', req.body);
     
-    const defaultVoipConfig = {
-      enabled: false,
-      provider: 'twilio',
-      credentials: {
-        accountSid: '',
-        authToken: '',
-        phoneNumber: '',
-        apiKey: '',
-        username: '',
-        password: '',
-        customEndpoint: ''
+    // Merge the incoming config with the existing config
+    voipConfig = { ...voipConfig, ...req.body };
+    
+    res.json({
+      success: true,
+      message: 'VoIP configuration updated successfully',
+      config: voipConfig,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  app.post("/api/admin/voip/test-voice", (req, res) => {
+    const { voice, language, speed, pitch, volume, text } = req.body;
+    console.log(new Date().toLocaleTimeString() + ' [express] POST /api/admin/voip/test-voice 200');
+    console.log('Testing voice settings:', { voice, language, speed, pitch, volume });
+    
+    // Simulate voice test
+    const success = Math.random() > 0.05; // 95% success rate
+    
+    if (success) {
+      res.json({
+        success: true,
+        message: 'Voice test completed successfully',
+        audioUrl: `data:audio/mp3;base64,test_audio_${Date.now()}`,
+        settings: { voice, language, speed, pitch, volume },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Voice test failed',
+        error: 'Voice engine unavailable',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  app.get("/api/admin/voip/active-calls", (req, res) => {
+    console.log(new Date().toLocaleTimeString() + ' [express] GET /api/admin/voip/active-calls 200');
+    
+    // Simulate active calls data
+    const activeCalls = [
+      {
+        id: 'call_001',
+        caller: '+1-555-0123',
+        duration: Math.floor(Math.random() * 600) + 60, // 1-10 minutes
+        status: Math.random() > 0.7 ? 'Human Agent' : 'AI Handling',
+        topic: ['Legal consultation', 'Billing inquiry', 'Account support', 'Case status'][Math.floor(Math.random() * 4)],
+        confidence: Math.floor(Math.random() * 40) + 60, // 60-100%
+        startTime: new Date(Date.now() - Math.random() * 600000).toISOString()
       },
-      voiceSettings: {
-        voice: 'Polly.Joanna',
-        language: 'en-US',
-        speed: 1.0,
-        pitch: 1.0,
-        volume: 1.0,
-        engine: 'neural'
-      },
-      callFlow: {
-        welcomeMessage: 'Thank you for calling LegalAI Pro. How can I assist you today?',
-        businessHours: {
-          enabled: true,
-          timezone: 'UTC',
-          schedule: {
-            monday: { start: '09:00', end: '17:00', active: true },
-            tuesday: { start: '09:00', end: '17:00', active: true },
-            wednesday: { start: '09:00', end: '17:00', active: true },
-            thursday: { start: '09:00', end: '17:00', active: true },
-            friday: { start: '09:00', end: '17:00', active: true },
-            saturday: { start: '10:00', end: '14:00', active: false },
-            sunday: { start: '10:00', end: '14:00', active: false }
-          }
-        },
-        afterHoursMessage: 'Thank you for calling. We are currently closed. Please leave a message or call back during business hours.',
-        maxCallDuration: 30,
-        recordCalls: true,
-        transcriptionEnabled: true
-      },
-      humanHandoff: {
-        enabled: true,
-        triggerKeywords: ['human', 'agent', 'lawyer', 'attorney', 'speak to someone', 'urgent', 'emergency'],
-        escalationThreshold: 3,
-        forwardNumbers: ['+1234567890'],
-        autoEscalateTime: 10,
-        ringTimeout: 30,
-        failoverNumbers: []
-      },
-      aiAssistant: {
-        enabled: true,
-        model: 'gpt-4',
-        maxTokens: 300,
-        temperature: 0.7,
-        systemPrompt: 'You are a professional AI assistant for LegalAI Pro. Provide helpful, accurate information about legal services while maintaining confidentiality.',
-        permissions: {
-          legalConsultation: true,
-          caseAnalysis: true,
-          procedureGuidance: true,
-          legalResearch: true,
-          courtDeadlines: true,
-          filingRequirements: true,
-          jurisdictionAdvice: true,
-          documentGuidance: true,
-          caseStrategy: false,
-          clientIntake: true,
-          appointmentScheduling: true,
-          caseStatusInquiry: true,
-          documentCollection: true,
-          progressUpdates: true,
-          caseFileAccess: true,
-          serviceQuotes: true,
-          pricingInformation: true,
-          billingInquiries: true,
-          paymentProcessing: true,
-          subscriptionManagement: true,
-          refundRequests: false,
-          platformNavigation: true,
-          featureGuidance: true,
-          troubleshooting: true,
+      {
+        id: 'call_002',
+        caller: '+1-555-0456',
+        duration: Math.floor(Math.random() * 600) + 60,
+        status: Math.random() > 0.7 ? 'Human Agent' : 'AI Handling',
+        topic: ['Document request', 'Emergency legal matter', 'Appointment scheduling', 'Payment processing'][Math.floor(Math.random() * 4)],
+        confidence: Math.floor(Math.random() * 40) + 60,
+        startTime: new Date(Date.now() - Math.random() * 600000).toISOString()
+      }
+    ];
+    
+    res.json({
+      calls: activeCalls,
+      totalActive: activeCalls.length,
+      totalToday: Math.floor(Math.random() * 50) + 10,
+      averageDuration: '4.5 minutes',
+      aiResolutionRate: '92%'
+    });
+  });
           accountSupport: true,
           integrationHelp: true,
           transferToAttorney: true,

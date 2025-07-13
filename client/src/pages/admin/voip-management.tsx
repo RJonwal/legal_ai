@@ -42,6 +42,130 @@ import {
   Download
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+// Call Monitor Modal Component
+function CallMonitorModal({ activeCallsData, isEnabled }: { activeCallsData?: any; isEnabled: boolean }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className="w-full" disabled={!isEnabled}>
+          <Activity className="h-4 w-4 mr-2" />
+          Open Call Monitor
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <PhoneCall className="h-5 w-5" />
+            Live Call Monitor
+            <Badge variant="outline" className="ml-2">
+              <Activity className="h-3 w-3 mr-1" />
+              Live
+            </Badge>
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          {/* Real-time metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="p-4">
+              <div className="text-2xl font-bold text-green-600">
+                {activeCallsData?.calls?.length || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Active Calls</div>
+            </Card>
+            <Card className="p-4">
+              <div className="text-2xl font-bold text-blue-600">
+                {activeCallsData?.totalToday || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Calls Today</div>
+            </Card>
+            <Card className="p-4">
+              <div className="text-2xl font-bold text-orange-600">
+                {activeCallsData?.aiResolutionRate || '0%'}
+              </div>
+              <div className="text-sm text-muted-foreground">AI Resolution</div>
+            </Card>
+            <Card className="p-4">
+              <div className="text-2xl font-bold text-purple-600">
+                {activeCallsData?.averageDuration || '0min'}
+              </div>
+              <div className="text-sm text-muted-foreground">Avg Duration</div>
+            </Card>
+          </div>
+
+          {/* Active calls list */}
+          <div>
+            <h4 className="font-medium mb-4">Currently Active Calls</h4>
+            <div className="space-y-3">
+              {activeCallsData?.calls?.length > 0 ? (
+                activeCallsData.calls.map((call: any) => (
+                  <div key={call.id} className="flex items-center justify-between p-4 border rounded-lg bg-white">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <PhoneCall className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <div className="font-medium">{call.caller}</div>
+                        <div className="text-sm text-muted-foreground">{call.topic}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">
+                        {Math.floor(call.duration / 60)}:{(call.duration % 60).toString().padStart(2, '0')}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={call.status === 'AI Handling' ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {call.status}
+                        </Badge>
+                        {call.status === 'AI Handling' && (
+                          <span className="text-xs text-muted-foreground">
+                            {call.confidence}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <UserCheck className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No active calls at the moment
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export Call Logs
+            </Button>
+            <Button size="sm" variant="outline">
+              <Settings className="h-4 w-4 mr-2" />
+              Monitor Settings
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 interface VoIPConfig {
   enabled: boolean;
@@ -410,6 +534,36 @@ export default function VoipManagement() {
     { value: 'Google.WaveNet', label: 'WaveNet (Premium)' }
   ];
 
+  // Test voice mutation
+  const testVoiceMutation = useMutation({
+    mutationFn: async (data: { voice: string; language: string; speed: number; pitch: number; volume: number; text?: string }) => {
+      const response = await fetch('/api/admin/voip/test-voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, text: 'Hello, this is a test of your voice settings for LegalAI Pro.' }),
+      });
+      if (!response.ok) throw new Error('Failed to test voice');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Voice test completed successfully" });
+    },
+    onError: () => {
+      toast({ title: "Voice test failed", variant: "destructive" });
+    },
+  });
+
+  // Active calls query
+  const { data: activeCallsData } = useQuery({
+    queryKey: ['admin-voip-active-calls'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/voip/active-calls');
+      if (!response.ok) throw new Error('Failed to fetch active calls');
+      return response.json();
+    },
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -616,12 +770,15 @@ export default function VoipManagement() {
                 <Label>VoIP Provider</Label>
                 <Select 
                   value={currentConfig.provider}
-                  onValueChange={(provider) =>
-                    handleUpdateConfig({ provider: provider as any })
-                  }
+                  onValueChange={(provider) => {
+                    console.log('Provider selected:', provider);
+                    handleUpdateConfig({ provider: provider as any });
+                  }}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select a VoIP provider">
+                      {voipProviders.find(p => p.value === currentConfig.provider)?.label || 'Select provider'}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {voipProviders.map((provider) => (
@@ -641,6 +798,14 @@ export default function VoipManagement() {
                     ))}
                   </SelectContent>
                 </Select>
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    <strong>Selected:</strong> {voipProviders.find(p => p.value === currentConfig.provider)?.label}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    {voipProviders.find(p => p.value === currentConfig.provider)?.description}
+                  </p>
+                </div>
               </div>
 
               {currentConfig.provider === 'twilio' && (
@@ -695,13 +860,14 @@ export default function VoipManagement() {
                 </div>
               )}
 
-              {(currentConfig.provider === 'voipms' || currentConfig.provider === 'localphone') && (
+              {currentConfig.provider === 'voipms' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label>Username</Label>
+                    <Label>Account Email</Label>
                     <Input 
                       value={currentConfig.credentials.username || ''}
-                      placeholder="Your username"
+                      placeholder="account@example.com"
+                      type="email"
                       onChange={(e) =>
                         handleUpdateConfig({
                           credentials: {
@@ -713,16 +879,66 @@ export default function VoipManagement() {
                     />
                   </div>
                   <div>
-                    <Label>Password</Label>
+                    <Label>API Password</Label>
                     <Input 
                       type="password"
                       value={currentConfig.credentials.password || ''}
-                      placeholder="Your password"
+                      placeholder="Your API password"
                       onChange={(e) =>
                         handleUpdateConfig({
                           credentials: {
                             ...currentConfig.credentials,
                             password: e.target.value
+                          }
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>DID Number</Label>
+                    <Input 
+                      value={currentConfig.credentials.phoneNumber || ''}
+                      placeholder="15551234567"
+                      onChange={(e) =>
+                        handleUpdateConfig({
+                          credentials: {
+                            ...currentConfig.credentials,
+                            phoneNumber: e.target.value
+                          }
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Server IP (Optional)</Label>
+                    <Input 
+                      value={currentConfig.credentials.customEndpoint || ''}
+                      placeholder="server.voip.ms"
+                      onChange={(e) =>
+                        handleUpdateConfig({
+                          credentials: {
+                            ...currentConfig.credentials,
+                            customEndpoint: e.target.value
+                          }
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              {currentConfig.provider === 'localphone' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Account ID</Label>
+                    <Input 
+                      value={currentConfig.credentials.username || ''}
+                      placeholder="Your account ID"
+                      onChange={(e) =>
+                        handleUpdateConfig({
+                          credentials: {
+                            ...currentConfig.credentials,
+                            username: e.target.value
                           }
                         })
                       }
@@ -745,7 +961,7 @@ export default function VoipManagement() {
                     />
                   </div>
                   <div>
-                    <Label>Phone Number</Label>
+                    <Label>Local Phone Number</Label>
                     <Input 
                       value={currentConfig.credentials.phoneNumber || ''}
                       placeholder="+1234567890"
@@ -754,6 +970,21 @@ export default function VoipManagement() {
                           credentials: {
                             ...currentConfig.credentials,
                             phoneNumber: e.target.value
+                          }
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Region Code</Label>
+                    <Input 
+                      value={currentConfig.credentials.password || ''}
+                      placeholder="US, UK, CA, etc."
+                      onChange={(e) =>
+                        handleUpdateConfig({
+                          credentials: {
+                            ...currentConfig.credentials,
+                            password: e.target.value
                           }
                         })
                       }
@@ -945,9 +1176,19 @@ export default function VoipManagement() {
                     />
                   </div>
 
-                  <Button className="w-full">
+                  <Button 
+                    className="w-full"
+                    onClick={() => testVoiceMutation.mutate({
+                      voice: currentConfig.voiceSettings.voice,
+                      language: currentConfig.voiceSettings.language,
+                      speed: currentConfig.voiceSettings.speed,
+                      pitch: currentConfig.voiceSettings.pitch,
+                      volume: currentConfig.voiceSettings.volume
+                    })}
+                    disabled={testVoiceMutation.isPending}
+                  >
                     <Volume2 className="h-4 w-4 mr-2" />
-                    Test Voice Settings
+                    {testVoiceMutation.isPending ? 'Testing...' : 'Test Voice Settings'}
                   </Button>
                 </div>
               </div>
@@ -1211,7 +1452,10 @@ export default function VoipManagement() {
                     </p>
                     <div className="space-y-6">
                       <div>
-                        <h5 className="font-medium text-sm mb-2">Core Legal Services</h5>
+                        <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
+                          <Scale className="h-4 w-4" />
+                          Core Legal Services
+                        </h5>
                         <div className="grid grid-cols-2 gap-2">
                           {['legalConsultation', 'caseAnalysis', 'procedureGuidance', 'legalResearch', 'courtDeadlines', 'filingRequirements', 'jurisdictionAdvice', 'documentGuidance', 'caseStrategy'].map((key) => (
                             <div key={key} className="flex items-center space-x-2">
@@ -1238,7 +1482,10 @@ export default function VoipManagement() {
                       </div>
                       
                       <div>
-                        <h5 className="font-medium text-sm mb-2">Client Management</h5>
+                        <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Client Management
+                        </h5>
                         <div className="grid grid-cols-2 gap-2">
                           {['clientIntake', 'appointmentScheduling', 'caseStatusInquiry', 'documentCollection', 'progressUpdates', 'caseFileAccess'].map((key) => (
                             <div key={key} className="flex items-center space-x-2">
@@ -1265,7 +1512,10 @@ export default function VoipManagement() {
                       </div>
                       
                       <div>
-                        <h5 className="font-medium text-sm mb-2">Business Operations</h5>
+                        <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          Business Operations
+                        </h5>
                         <div className="grid grid-cols-2 gap-2">
                           {['serviceQuotes', 'pricingInformation', 'billingInquiries', 'paymentProcessing', 'subscriptionManagement', 'refundRequests'].map((key) => (
                             <div key={key} className="flex items-center space-x-2">
@@ -1290,9 +1540,102 @@ export default function VoipManagement() {
                           ))}
                         </div>
                       </div>
+
+                      <div>
+                        <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
+                          <Zap className="h-4 w-4" />
+                          Sales & Marketing
+                        </h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['productDemos', 'leadQualification', 'salesPresentations', 'pricingNegotiation', 'contractDiscussion'].map((key) => (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentConfig.aiAssistant.permissions[key as keyof typeof currentConfig.aiAssistant.permissions]}
+                                onCheckedChange={(checked) => {
+                                  handleUpdateConfig({
+                                    aiAssistant: {
+                                      ...currentConfig.aiAssistant,
+                                      permissions: {
+                                        ...currentConfig.aiAssistant.permissions,
+                                        [key]: checked
+                                      }
+                                    }
+                                  });
+                                }}
+                              />
+                              <Label className="text-sm">
+                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          Customer Service
+                        </h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['complaintHandling', 'serviceIssues', 'accountModifications', 'passwordResets', 'dataExport'].map((key) => (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentConfig.aiAssistant.permissions[key as keyof typeof currentConfig.aiAssistant.permissions]}
+                                onCheckedChange={(checked) => {
+                                  handleUpdateConfig({
+                                    aiAssistant: {
+                                      ...currentConfig.aiAssistant,
+                                      permissions: {
+                                        ...currentConfig.aiAssistant.permissions,
+                                        [key]: checked
+                                      }
+                                    }
+                                  });
+                                }}
+                              />
+                              <Label className="text-sm">
+                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
+                          <Settings className="h-4 w-4" />
+                          Operational Tasks
+                        </h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['dataEntry', 'reportGeneration', 'systemUpdates', 'userProvisioning', 'backupOperations'].map((key) => (
+                            <div key={key} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentConfig.aiAssistant.permissions[key as keyof typeof currentConfig.aiAssistant.permissions]}
+                                onCheckedChange={(checked) => {
+                                  handleUpdateConfig({
+                                    aiAssistant: {
+                                      ...currentConfig.aiAssistant,
+                                      permissions: {
+                                        ...currentConfig.aiAssistant.permissions,
+                                        [key]: checked
+                                      }
+                                    }
+                                  });
+                                }}
+                              />
+                              <Label className="text-sm">
+                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                       
                       <div>
-                        <h5 className="font-medium text-sm mb-2">Emergency & Escalation</h5>
+                        <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4" />
+                          Emergency & Escalation
+                        </h5>
                         <div className="grid grid-cols-2 gap-2">
                           {['urgentLegalMatters', 'emergencyEscalation', 'afterHoursSupport', 'crisisManagement'].map((key) => (
                             <div key={key} className="flex items-center space-x-2">
@@ -1431,19 +1774,10 @@ export default function VoipManagement() {
                       </div>
                     </Card>
                   </div>
-                  <Button 
-                    className="w-full"
-                    onClick={() => {
-                      // In a real implementation, this would open a real-time call monitoring interface
-                      toast({ 
-                        title: "Call Monitor", 
-                        description: "Real-time call monitoring interface would open here" 
-                      });
-                    }}
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    Open Call Monitor
-                  </Button>
+                  <CallMonitorModal 
+                    activeCallsData={activeCallsData}
+                    isEnabled={currentConfig.analytics.enableRealTimeMonitoring}
+                  />
                 </div>
               </div>
 
