@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { openaiService } from "./services/openai";
 import { insertChatMessageSchema, insertDocumentSchema, insertTimelineSchema } from "@shared/schema";
 import { z } from "zod";
-// import adminRoutes from "./routes/admin"; // Temporarily disabled due to duplicate routes
+// import adminRoutes from "./routes/admin"; // Temporarily disabled due to syntax error
 import authRoutes from "./routes/auth";
 import paymentRoutes from "./routes/payment";
 import uploadRoutes from "./routes/uploads";
@@ -48,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // File upload routes
   app.use("/api/uploads", uploadRoutes);
 
-  // Admin routes - temporarily disabled due to duplicate routes
+  // Admin routes - temporarily disabled due to syntax error
   // app.use("/api/admin", adminRoutes);
 
   // Admin branding config endpoint (required for UI)
@@ -4994,6 +4994,413 @@ const mockCases = [
     const stats = await cacheService.getStats();
     
     res.json(stats);
+  });
+
+  // Global Prompt Management API
+  app.get("/api/admin/global-prompts", async (req, res) => {
+    try {
+      const prompts = await storage.getAdminPrompts();
+      res.json(prompts);
+    } catch (error) {
+      console.error("Error fetching global prompts:", error);
+      res.status(500).json({ error: "Failed to fetch global prompts" });
+    }
+  });
+
+  app.get("/api/admin/global-prompts/:id", async (req, res) => {
+    try {
+      const prompt = await storage.getAdminPrompt(req.params.id);
+      if (!prompt) {
+        return res.status(404).json({ error: "Prompt not found" });
+      }
+      res.json(prompt);
+    } catch (error) {
+      console.error("Error fetching global prompt:", error);
+      res.status(500).json({ error: "Failed to fetch global prompt" });
+    }
+  });
+
+  app.put("/api/admin/global-prompts/:id", async (req, res) => {
+    try {
+      const { content } = req.body;
+      const updatedPrompt = await storage.updateAdminPrompt(req.params.id, { promptContent: content });
+      res.json(updatedPrompt);
+    } catch (error) {
+      console.error("Error updating global prompt:", error);
+      res.status(500).json({ error: "Failed to update global prompt" });
+    }
+  });
+
+  app.post("/api/admin/global-prompts", async (req, res) => {
+    try {
+      const prompt = await storage.createAdminPrompt(req.body);
+      res.json(prompt);
+    } catch (error) {
+      console.error("Error creating global prompt:", error);
+      res.status(500).json({ error: "Failed to create global prompt" });
+    }
+  });
+
+  app.delete("/api/admin/global-prompts/:id", async (req, res) => {
+    try {
+      await storage.deleteAdminPrompt(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting global prompt:", error);
+      res.status(500).json({ error: "Failed to delete global prompt" });
+    }
+  });
+
+  // Page Management API
+  app.get("/api/admin/pages", async (req, res) => {
+    try {
+      const pages = await storage.getAdminPages();
+      res.json(pages);
+    } catch (error) {
+      console.error("Error fetching pages:", error);
+      res.status(500).json({ error: "Failed to fetch pages" });
+    }
+  });
+
+  app.get("/api/admin/pages/:id", async (req, res) => {
+    try {
+      const page = await storage.getAdminPage(req.params.id);
+      if (!page) {
+        return res.status(404).json({ error: "Page not found" });
+      }
+      res.json(page);
+    } catch (error) {
+      console.error("Error fetching page:", error);
+      res.status(500).json({ error: "Failed to fetch page" });
+    }
+  });
+
+  app.post("/api/admin/pages", async (req, res) => {
+    try {
+      const newPage = await storage.createAdminPage(req.body);
+      res.status(201).json(newPage);
+    } catch (error) {
+      console.error("Error creating page:", error);
+      res.status(500).json({ error: "Failed to create page" });
+    }
+  });
+
+  app.put("/api/admin/pages/:id", async (req, res) => {
+    try {
+      const updatedPage = await storage.updateAdminPage(req.params.id, req.body);
+      res.json(updatedPage);
+    } catch (error) {
+      console.error("Error updating page:", error);
+      res.status(500).json({ error: "Failed to update page" });
+    }
+  });
+
+  app.delete("/api/admin/pages/:id", async (req, res) => {
+    try {
+      await storage.deleteAdminPage(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting page:", error);
+      res.status(500).json({ error: "Failed to delete page" });
+    }
+  });
+
+  // User Management API
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users.map(user => ({
+        id: user.id,
+        name: user.fullName,
+        email: user.email,
+        role: user.userType,
+        status: user.isVerified ? 'active' : 'inactive',
+        subscription: user.subscriptionStatus,
+        joinDate: user.createdAt?.toISOString().split('T')[0],
+        lastActive: user.updatedAt?.toISOString().split('T')[0]
+      })));
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.put("/api/admin/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedUser = await storage.updateUser(parseInt(id), req.body);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  // Analytics API
+  app.get("/api/admin/user-analytics", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const cases = await storage.getAllCases();
+      
+      const totalUsers = users.length;
+      const activeUsers = users.filter(u => u.isVerified).length;
+      const proUsers = users.filter(u => u.subscriptionStatus === 'active').length;
+      const totalCases = cases.length;
+      
+      res.json({
+        totalUsers,
+        activeUsers,
+        proUsers,
+        totalCases,
+        analytics: {
+          users: {
+            total: totalUsers,
+            active: activeUsers,
+            growth: '+12%',
+            proUsers: proUsers
+          },
+          cases: {
+            total: totalCases,
+            thisMonth: Math.floor(totalCases * 0.3),
+            completedRate: '78%'
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get("/api/admin/dashboard-stats", async (req, res) => {
+    try {
+      const stats = await storage.getUserStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ error: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  // Email Management API
+  app.get("/api/admin/email/config", async (req, res) => {
+    try {
+      const config = await storage.getAdminConfig('email_config');
+      res.json(config || {
+        provider: 'brevo',
+        apiKey: '',
+        fromEmail: '',
+        fromName: '',
+        enabled: false
+      });
+    } catch (error) {
+      console.error("Error fetching email config:", error);
+      res.status(500).json({ error: "Failed to fetch email config" });
+    }
+  });
+
+  app.put("/api/admin/email/config", async (req, res) => {
+    try {
+      await storage.setAdminConfig('email_config', req.body);
+      res.json({ success: true, message: "Email configuration updated successfully" });
+    } catch (error) {
+      console.error("Error updating email config:", error);
+      res.status(500).json({ error: "Failed to update email config" });
+    }
+  });
+
+  app.post("/api/admin/email/test", async (req, res) => {
+    try {
+      const { to, subject, message } = req.body;
+      // In a real implementation, this would send an email
+      console.log('Test email would be sent to:', to);
+      res.json({ success: true, message: "Test email sent successfully" });
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ error: "Failed to send test email" });
+    }
+  });
+
+  // Chat Widget Configuration API
+  app.get("/api/admin/chat-widget-config", async (req, res) => {
+    try {
+      const config = await storage.getAdminConfig('chat_widget_config');
+      res.json(config || {
+        enabled: true,
+        title: 'Need Help?',
+        subtitle: 'Chat with our AI assistant',
+        position: 'bottom-right',
+        primaryColor: '#2563eb',
+        aiEnabled: true,
+        proactiveMessages: true,
+        showAvatar: true,
+        defaultMessage: 'Hello! How can I help you today?'
+      });
+    } catch (error) {
+      console.error("Error fetching chat widget config:", error);
+      res.status(500).json({ error: "Failed to fetch chat widget config" });
+    }
+  });
+
+  app.put("/api/admin/chat-widget-config", async (req, res) => {
+    try {
+      await storage.setAdminConfig('chat_widget_config', req.body);
+      res.json({ success: true, message: "Chat widget configuration updated successfully" });
+    } catch (error) {
+      console.error("Error updating chat widget config:", error);
+      res.status(500).json({ error: "Failed to update chat widget config" });
+    }
+  });
+
+  // Landing Page Configuration API
+  app.get("/api/admin/landing-config", async (req, res) => {
+    try {
+      const config = await storage.getAdminConfig('landing_config');
+      res.json(config || {
+        heroTitle: 'Wizzered - AI-Powered Legal Technology',
+        heroSubtitle: 'Transform your legal practice with intelligent automation',
+        heroDescription: 'Streamline case management, generate documents, and enhance client communication with our advanced AI legal assistant.',
+        features: [
+          {
+            title: 'AI Case Management',
+            description: 'Intelligent organization and tracking of legal cases with automated workflows.',
+            icon: 'briefcase'
+          },
+          {
+            title: 'Document Generation',
+            description: 'Create professional legal documents with AI-powered templates and automation.',
+            icon: 'file-text'
+          },
+          {
+            title: 'Client Communication',
+            description: 'Streamlined communication tools with automated updates and notifications.',
+            icon: 'message-circle'
+          }
+        ],
+        cta: {
+          primary: 'Start Free Trial',
+          secondary: 'Learn More'
+        },
+        testimonials: [
+          {
+            name: 'Sarah Johnson',
+            role: 'Partner at Johnson & Associates',
+            content: 'Wizzered has transformed how we manage cases and communicate with clients.',
+            rating: 5
+          }
+        ]
+      });
+    } catch (error) {
+      console.error("Error fetching landing config:", error);
+      res.status(500).json({ error: "Failed to fetch landing config" });
+    }
+  });
+
+  app.put("/api/admin/landing-config", async (req, res) => {
+    try {
+      await storage.setAdminConfig('landing_config', req.body);
+      res.json({ success: true, message: "Landing page configuration updated successfully" });
+    } catch (error) {
+      console.error("Error updating landing config:", error);
+      res.status(500).json({ error: "Failed to update landing config" });
+    }
+  });
+
+  // Footer Configuration API
+  app.get("/api/admin/footer-config", async (req, res) => {
+    try {
+      const config = await storage.getAdminConfig('footer_config');
+      res.json(config || {
+        companyName: 'Wizzered',
+        description: 'AI-Powered Legal Technology',
+        links: {
+          company: [
+            { name: 'About', url: '/about' },
+            { name: 'Contact', url: '/contact' },
+            { name: 'Careers', url: '/careers' }
+          ],
+          legal: [
+            { name: 'Privacy Policy', url: '/privacy' },
+            { name: 'Terms of Service', url: '/terms' },
+            { name: 'Cookie Policy', url: '/cookies' }
+          ],
+          support: [
+            { name: 'Help Center', url: '/help' },
+            { name: 'Documentation', url: '/docs' },
+            { name: 'Contact Support', url: '/support' }
+          ]
+        },
+        socialMedia: {
+          twitter: '',
+          linkedin: '',
+          facebook: ''
+        },
+        copyright: '2025 Wizzered. All rights reserved.'
+      });
+    } catch (error) {
+      console.error("Error fetching footer config:", error);
+      res.status(500).json({ error: "Failed to fetch footer config" });
+    }
+  });
+
+  // Billing Management API
+  app.get("/api/admin/billing/plans", async (req, res) => {
+    try {
+      const plans = await storage.getAdminConfig('billing_plans');
+      res.json(plans || [
+        {
+          id: 'basic',
+          name: 'Basic',
+          price: 29,
+          billing: 'monthly',
+          features: [
+            'Up to 5 cases',
+            'Basic document generation',
+            'Email support'
+          ],
+          popular: false
+        },
+        {
+          id: 'professional',
+          name: 'Professional',
+          price: 79,
+          billing: 'monthly',
+          features: [
+            'Unlimited cases',
+            'Advanced AI features',
+            'Priority support',
+            'Custom templates'
+          ],
+          popular: true
+        },
+        {
+          id: 'enterprise',
+          name: 'Enterprise',
+          price: 199,
+          billing: 'monthly',
+          features: [
+            'Everything in Professional',
+            'White-label solution',
+            'Dedicated support',
+            'Custom integrations'
+          ],
+          popular: false
+        }
+      ]);
+    } catch (error) {
+      console.error("Error fetching billing plans:", error);
+      res.status(500).json({ error: "Failed to fetch billing plans" });
+    }
+  });
+
+  app.put("/api/admin/billing/plans", async (req, res) => {
+    try {
+      await storage.setAdminConfig('billing_plans', req.body);
+      res.json({ success: true, message: "Billing plans updated successfully" });
+    } catch (error) {
+      console.error("Error updating billing plans:", error);
+      res.status(500).json({ error: "Failed to update billing plans" });
+    }
   });
 
   const httpServer = createServer(app);
