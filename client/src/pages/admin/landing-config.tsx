@@ -875,14 +875,44 @@ export default function LandingConfig() {
                         {brandingConfig.favicon.png16 ? (
                           <div className="space-y-2">
                             <img src={brandingConfig.favicon.png16} alt="Favicon 16x16" className="mx-auto h-4 w-4" />
-                            <Button variant="outline" size="sm">Replace</Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => document.getElementById('favicon-16-upload')?.click()}
+                            >
+                              Replace
+                            </Button>
                           </div>
                         ) : (
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => document.getElementById('favicon-16-upload')?.click()}
+                          >
                             <Upload className="mr-2 h-4 w-4" />
                             Upload 16x16
                           </Button>
                         )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="favicon-16-upload"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              try {
+                                const url = await handleImageUpload('favicon-16', file);
+                                setBrandingConfig(prev => ({ 
+                                  ...prev, 
+                                  favicon: { ...prev.favicon, png16: url } 
+                                }));
+                              } catch (error) {
+                                alert('Failed to upload favicon');
+                              }
+                            }
+                          }}
+                        />
                       </div>
                     </div>
                     
@@ -892,14 +922,44 @@ export default function LandingConfig() {
                         {brandingConfig.favicon.png32 ? (
                           <div className="space-y-2">
                             <img src={brandingConfig.favicon.png32} alt="Favicon 32x32" className="mx-auto h-8 w-8" />
-                            <Button variant="outline" size="sm">Replace</Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => document.getElementById('favicon-32-upload')?.click()}
+                            >
+                              Replace
+                            </Button>
                           </div>
                         ) : (
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => document.getElementById('favicon-32-upload')?.click()}
+                          >
                             <Upload className="mr-2 h-4 w-4" />
                             Upload 32x32
                           </Button>
                         )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="favicon-32-upload"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              try {
+                                const url = await handleImageUpload('favicon-32', file);
+                                setBrandingConfig(prev => ({ 
+                                  ...prev, 
+                                  favicon: { ...prev.favicon, png32: url } 
+                                }));
+                              } catch (error) {
+                                alert('Failed to upload favicon');
+                              }
+                            }
+                          }}
+                        />
                       </div>
                     </div>
 
@@ -909,14 +969,44 @@ export default function LandingConfig() {
                         {brandingConfig.favicon.appleTouchIcon ? (
                           <div className="space-y-2">
                             <img src={brandingConfig.favicon.appleTouchIcon} alt="Apple Touch Icon" className="mx-auto h-12 w-12 rounded-lg" />
-                            <Button variant="outline" size="sm">Replace</Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => document.getElementById('apple-touch-icon-upload')?.click()}
+                            >
+                              Replace
+                            </Button>
                           </div>
                         ) : (
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => document.getElementById('apple-touch-icon-upload')?.click()}
+                          >
                             <Upload className="mr-2 h-4 w-4" />
                             Upload 180x180
                           </Button>
                         )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="apple-touch-icon-upload"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              try {
+                                const url = await handleImageUpload('apple-touch-icon', file);
+                                setBrandingConfig(prev => ({ 
+                                  ...prev, 
+                                  favicon: { ...prev.favicon, appleTouchIcon: url } 
+                                }));
+                              } catch (error) {
+                                alert('Failed to upload Apple Touch Icon');
+                              }
+                            }
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -932,14 +1022,44 @@ export default function LandingConfig() {
                           {brandingConfig.appIcons.webAppIcon192 ? (
                             <div className="space-y-2">
                               <img src={brandingConfig.appIcons.webAppIcon192} alt="App Icon 192" className="mx-auto h-16 w-16 rounded-lg" />
-                              <Button variant="outline" size="sm">Replace</Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => document.getElementById('app-icon-192-upload')?.click()}
+                              >
+                                Replace
+                              </Button>
                             </div>
                           ) : (
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => document.getElementById('app-icon-192-upload')?.click()}
+                            >
                               <Upload className="mr-2 h-4 w-4" />
                               Upload 192x192
                             </Button>
                           )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id="app-icon-192-upload"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                try {
+                                  const url = await handleImageUpload('app-icon-192', file);
+                                  setBrandingConfig(prev => ({ 
+                                    ...prev, 
+                                    appIcons: { ...prev.appIcons, webAppIcon192: url } 
+                                  }));
+                                } catch (error) {
+                                  alert('Failed to upload app icon');
+                                }
+                              }
+                            }}
+                          />
                         </div>
                       </div>
                       
@@ -949,14 +1069,44 @@ export default function LandingConfig() {
                           {brandingConfig.appIcons.webAppIcon512 ? (
                             <div className="space-y-2">
                               <img src={brandingConfig.appIcons.webAppIcon512} alt="App Icon 512" className="mx-auto h-16 w-16 rounded-lg" />
-                              <Button variant="outline" size="sm">Replace</Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => document.getElementById('app-icon-512-upload')?.click()}
+                              >
+                                Replace
+                              </Button>
                             </div>
                           ) : (
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => document.getElementById('app-icon-512-upload')?.click()}
+                            >
                               <Upload className="mr-2 h-4 w-4" />
                               Upload 512x512
                             </Button>
                           )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id="app-icon-512-upload"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                try {
+                                  const url = await handleImageUpload('app-icon-512', file);
+                                  setBrandingConfig(prev => ({ 
+                                    ...prev, 
+                                    appIcons: { ...prev.appIcons, webAppIcon512: url } 
+                                  }));
+                                } catch (error) {
+                                  alert('Failed to upload app icon');
+                                }
+                              }
+                            }}
+                          />
                         </div>
                       </div>
                     </div>
