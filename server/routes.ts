@@ -2450,7 +2450,30 @@ app.get("/api/admin/impersonation/history", (req, res) => {
       username: '',
       password: '',
       additionalHeaders: '',
-      features: []
+      features: [],
+      // SIP Configuration
+      sipServer: '',
+      sipPort: '5060',
+      sipTransport: 'UDP',
+      sipUsername: '',
+      sipPassword: '',
+      sipDomain: '',
+      outboundProxy: '',
+      // RTP & Media
+      rtpPortMin: '10000',
+      rtpPortMax: '20000',
+      mediaServer: '',
+      supportedCodecs: ['G.711 (PCMU)', 'G.711 (PCMA)'],
+      dtmfMethod: 'RFC2833',
+      // Telephony
+      didNumbers: '',
+      callerIdName: '',
+      maxConcurrentCalls: '10',
+      callTimeout: '30',
+      registrationInterval: '3600',
+      // Additional Webhooks
+      statusCallbackUrl: '',
+      fallbackUrl: ''
     },
     voiceSettings: {
       voice: 'Polly.Joanna',

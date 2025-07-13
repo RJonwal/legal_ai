@@ -453,7 +453,30 @@ export default function VoipManagement() {
     username: '',
     password: '',
     additionalHeaders: '',
-    features: [] as string[]
+    features: [] as string[],
+    // SIP Configuration
+    sipServer: '',
+    sipPort: '5060',
+    sipTransport: 'UDP',
+    sipUsername: '',
+    sipPassword: '',
+    sipDomain: '',
+    outboundProxy: '',
+    // RTP & Media
+    rtpPortMin: '10000',
+    rtpPortMax: '20000',
+    mediaServer: '',
+    supportedCodecs: ['G.711 (PCMU)', 'G.711 (PCMA)'] as string[],
+    dtmfMethod: 'RFC2833',
+    // Telephony
+    didNumbers: '',
+    callerIdName: '',
+    maxConcurrentCalls: '10',
+    callTimeout: '30',
+    registrationInterval: '3600',
+    // Additional Webhooks
+    statusCallbackUrl: '',
+    fallbackUrl: ''
   });
 
   // Fetch VoIP configuration
@@ -1205,6 +1228,267 @@ export default function VoipManagement() {
                     </div>
                   </div>
 
+                  <Separator />
+                  <h5 className="font-medium text-sm">SIP Configuration</h5>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>SIP Server/Proxy</Label>
+                      <Input 
+                        value={customProviderConfig.sipServer || ''}
+                        placeholder="sip.yourprovider.com"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          sipServer: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>SIP Port</Label>
+                      <Input 
+                        type="number"
+                        value={customProviderConfig.sipPort || '5060'}
+                        placeholder="5060"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          sipPort: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>SIP Transport</Label>
+                      <Select
+                        value={customProviderConfig.sipTransport || 'UDP'}
+                        onValueChange={(value) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          sipTransport: value
+                        })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="UDP">UDP</SelectItem>
+                          <SelectItem value="TCP">TCP</SelectItem>
+                          <SelectItem value="TLS">TLS</SelectItem>
+                          <SelectItem value="WSS">WebSocket Secure (WSS)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>SIP Username</Label>
+                      <Input 
+                        value={customProviderConfig.sipUsername || ''}
+                        placeholder="SIP username/account ID"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          sipUsername: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>SIP Password</Label>
+                      <Input 
+                        type="password"
+                        value={customProviderConfig.sipPassword || ''}
+                        placeholder="SIP password"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          sipPassword: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>SIP Domain/Realm</Label>
+                      <Input 
+                        value={customProviderConfig.sipDomain || ''}
+                        placeholder="Domain or realm for authentication"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          sipDomain: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Outbound Proxy (Optional)</Label>
+                      <Input 
+                        value={customProviderConfig.outboundProxy || ''}
+                        placeholder="proxy.yourprovider.com:5060"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          outboundProxy: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+                  <h5 className="font-medium text-sm">RTP & Media Configuration</h5>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>RTP Port Range Start</Label>
+                      <Input 
+                        type="number"
+                        value={customProviderConfig.rtpPortMin || '10000'}
+                        placeholder="10000"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          rtpPortMin: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>RTP Port Range End</Label>
+                      <Input 
+                        type="number"
+                        value={customProviderConfig.rtpPortMax || '20000'}
+                        placeholder="20000"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          rtpPortMax: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Media Server</Label>
+                      <Input 
+                        value={customProviderConfig.mediaServer || ''}
+                        placeholder="media.yourprovider.com"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          mediaServer: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Supported Codecs</Label>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {['G.711 (PCMU)', 'G.711 (PCMA)', 'G.722', 'G.729', 'GSM', 'iLBC', 'Opus'].map((codec) => (
+                          <div key={codec} className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={customProviderConfig.supportedCodecs?.includes(codec) || false}
+                              onCheckedChange={(checked) => {
+                                const currentCodecs = customProviderConfig.supportedCodecs || [];
+                                if (checked) {
+                                  setCustomProviderConfig({
+                                    ...customProviderConfig,
+                                    supportedCodecs: [...currentCodecs, codec]
+                                  });
+                                } else {
+                                  setCustomProviderConfig({
+                                    ...customProviderConfig,
+                                    supportedCodecs: currentCodecs.filter(c => c !== codec)
+                                  });
+                                }
+                              }}
+                            />
+                            <Label className="text-sm">{codec}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>DTMF Method</Label>
+                      <Select
+                        value={customProviderConfig.dtmfMethod || 'RFC2833'}
+                        onValueChange={(value) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          dtmfMethod: value
+                        })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="RFC2833">RFC2833 (Recommended)</SelectItem>
+                          <SelectItem value="SIP-INFO">SIP INFO</SelectItem>
+                          <SelectItem value="Inband">Inband Audio</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Separator />
+                  <h5 className="font-medium text-sm">Telephony Configuration</h5>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>DID Numbers (Comma-separated)</Label>
+                      <Textarea
+                        value={customProviderConfig.didNumbers || ''}
+                        placeholder="+15551234567, +15559876543"
+                        rows={2}
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          didNumbers: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Caller ID Name</Label>
+                      <Input 
+                        value={customProviderConfig.callerIdName || ''}
+                        placeholder="LegalAI Pro"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          callerIdName: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Max Concurrent Calls</Label>
+                      <Input 
+                        type="number"
+                        value={customProviderConfig.maxConcurrentCalls || '10'}
+                        placeholder="10"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          maxConcurrentCalls: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Call Timeout (seconds)</Label>
+                      <Input 
+                        type="number"
+                        value={customProviderConfig.callTimeout || '30'}
+                        placeholder="30"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          callTimeout: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Registration Interval (seconds)</Label>
+                      <Input 
+                        type="number"
+                        value={customProviderConfig.registrationInterval || '3600'}
+                        placeholder="3600"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          registrationInterval: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+                  <h5 className="font-medium text-sm">API & Webhook Configuration</h5>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label>API Endpoint</Label>
@@ -1225,6 +1509,31 @@ export default function VoipManagement() {
                         onChange={(e) => setCustomProviderConfig({
                           ...customProviderConfig,
                           webhookUrl: e.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Status Callback URL</Label>
+                      <Input 
+                        value={customProviderConfig.statusCallbackUrl || ''}
+                        placeholder="https://yourdomain.com/status"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          statusCallbackUrl: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Fallback URL</Label>
+                      <Input 
+                        value={customProviderConfig.fallbackUrl || ''}
+                        placeholder="https://yourdomain.com/fallback"
+                        onChange={(e) => setCustomProviderConfig({
+                          ...customProviderConfig,
+                          fallbackUrl: e.target.value
                         })}
                       />
                     </div>
@@ -1371,9 +1680,16 @@ export default function VoipManagement() {
                             customEndpoint: customProviderConfig.webhookUrl,
                             apiKey: customProviderConfig.apiKey,
                             username: customProviderConfig.username,
-                            password: customProviderConfig.password
+                            password: customProviderConfig.password,
+                            sipServer: customProviderConfig.sipServer,
+                            sipUsername: customProviderConfig.sipUsername,
+                            sipPassword: customProviderConfig.sipPassword
                           },
                           customProvider: customProviderConfig
+                        });
+                        toast({ 
+                          title: "Custom Provider Configured", 
+                          description: `${customProviderConfig.name} has been configured with SIP settings` 
                         });
                       }}
                     >
