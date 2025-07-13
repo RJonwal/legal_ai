@@ -14,17 +14,23 @@ import rateLimit from "express-rate-limit";
 import express from "express";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Rate limiting - more permissive for development
+  // Rate limiting - optimized for production with better performance
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 1000, // increased limit for development
-    message: "Too many requests from this IP, please try again later"
+    message: "Too many requests from this IP, please try again later",
+    standardHeaders: true, // Return rate limit info in the headers
+    legacyHeaders: false, // Disable legacy headers for better performance
+    store: new rateLimit.MemoryStore(), // Use memory store for better performance
   });
 
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 20, // increased limit for development testing
-    message: "Too many authentication attempts, please try again later"
+    message: "Too many authentication attempts, please try again later",
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: new rateLimit.MemoryStore(),
   });
 
   // Apply rate limiting only to auth routes to avoid blocking admin access

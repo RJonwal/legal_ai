@@ -53,9 +53,14 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes (updated from cacheTime)
+      refetchInterval: false, // Disable automatic refetching
+      refetchOnMount: true, // Only refetch when component mounts
     },
     mutations: {
       retry: 1,
+      onError: (error) => {
+        console.error('Mutation error:', error);
+      },
     },
   },
 });

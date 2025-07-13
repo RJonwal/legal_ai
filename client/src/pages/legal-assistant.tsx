@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { CaseSidebar } from "@/components/sidebar/case-sidebar";
@@ -19,18 +19,20 @@ export default function LegalAssistant() {
   const [canvasSize, setCanvasSize] = useState<number>(25);
   const [liveChatOpen, setLiveChatOpen] = useState<boolean>(false);
 
-  // Handle URL parameters for case selection
-  useEffect(() => {
+  // Memoize URL parameters parsing for performance
+  const caseIdFromUrl = useMemo(() => {
     const urlParams = new URLSearchParams(location.split('?')[1] || '');
     const caseParam = urlParams.get('case');
-    if (caseParam) {
-      const caseId = parseInt(caseParam);
-      if (!isNaN(caseId)) {
-        setCurrentCaseId(caseId);
-        setCurrentDocument(null); // Reset document when switching cases
-      }
-    }
+    return caseParam ? parseInt(caseParam) : null;
   }, [location]);
+
+  // Handle URL parameters for case selection
+  useEffect(() => {
+    if (caseIdFromUrl && !isNaN(caseIdFromUrl)) {
+      setCurrentCaseId(caseIdFromUrl);
+      setCurrentDocument(null); // Reset document when switching cases
+    }
+  }, [caseIdFromUrl]);
 
   const handleCaseSelect = useCallback(async (caseId: number) => {
     console.log('Case selected in LegalAssistant:', caseId);
@@ -44,22 +46,20 @@ export default function LegalAssistant() {
         const caseData = await response.json();
         console.log('Case data loaded:', caseData);
 
-        // Update chat context with case information after a brief delay to ensure DOM is ready
-        setTimeout(() => {
-          const chatInterface = document.querySelector('[data-chat-interface="true"]');
-          if (chatInterface) {
-            const event = new CustomEvent('caseSelected', { 
-              detail: { 
-                caseId, 
-                caseData 
-              } 
-            });
-            chatInterface.dispatchEvent(event);
-            console.log('Dispatched caseSelected event to chat interface');
-          } else {
-            console.log('Chat interface not found');
-          }
-        }, 100);
+        // Update chat context with case information using React Query cache
+        queryClient.setQueryData(['case', caseId], caseData);
+        
+        // Dispatch case selection event more efficiently
+        const chatInterface = document.querySelector('[data-chat-interface="true"]');
+        if (chatInterface) {
+          const event = new CustomEvent('caseSelected', { 
+            detail: { caseId, caseData } 
+          });
+          chatInterface.dispatchEvent(event);
+          console.log('Dispatched caseSelected event to chat interface');
+        } else {
+          console.log('Chat interface not found');
+        }
       }
     } catch (error) {
       console.error('Error loading case data:', error);
