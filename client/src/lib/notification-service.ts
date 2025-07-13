@@ -161,3 +161,6 @@ export class NotificationService {
       )
   };
 }
+
+// Export a default instance
+export const notificationService = NotificationService;

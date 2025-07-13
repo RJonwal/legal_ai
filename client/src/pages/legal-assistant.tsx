@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { CaseSidebar } from "@/components/sidebar/case-sidebar";
-import { ChatInterface } from "@/components/chat/chat-interface";
+import ChatInterface from "@/components/chat/chat-interface";
 import { DocumentCanvas } from "@/components/canvas/document-canvas";
 import { EnhancedFunctionModal } from "@/components/modals/enhanced-function-modal";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
