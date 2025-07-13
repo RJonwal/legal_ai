@@ -33,6 +33,7 @@ import EmailManagement from "@/pages/admin/email-management";
 import LiveChatManagement from "@/pages/admin/livechat-management";
 import VoipManagement from "@/pages/admin/voip-management";
 import PageManagement from "@/pages/admin/page-management";
+import GlobalPromptManagement from "@/pages/admin/global-prompt-management";
 
 import "./index.css";
 import ErrorBoundary from "./components/error-boundary";
@@ -161,6 +162,12 @@ function App() {
               <Route path="/admin/page-management">
                 <AdminLayout>
                   <PageManagement />
+                </AdminLayout>
+              </Route>
+
+              <Route path="/admin/global-prompt-management">
+                <AdminLayout>
+                  <GlobalPromptManagement />
                 </AdminLayout>
               </Route>
 

@@ -164,7 +164,6 @@ export default function Signup() {
                   <SelectContent>
                     <SelectItem value="pro_se">Pro Se (Self-Represented)</SelectItem>
                     <SelectItem value="attorney">Attorney</SelectItem>
-                    <SelectItem value="general">General User</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

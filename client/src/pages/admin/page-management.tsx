@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
   Edit, 
@@ -19,7 +21,11 @@ import {
   Shield, 
   Users, 
   Globe,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle,
+  Clock,
+  Target,
+  Settings
 } from "lucide-react";
 
 interface Page {
@@ -32,16 +38,62 @@ interface Page {
   showInFooter: boolean;
   footerCategory: string;
   lastModified: string;
-  type: 'terms' | 'privacy' | 'about' | 'support' | 'custom';
+  type: 'terms' | 'privacy' | 'about' | 'support' | 'custom' | 'disclaimer';
+}
+
+interface DisclaimerConfig {
+  id: string;
+  title: string;
+  content: string;
+  targetAudience: 'pro_se' | 'attorney' | 'all';
+  displayType: 'popup' | 'banner' | 'notification';
+  displayTrigger: 'login' | 'dashboard_access' | 'document_generation' | 'case_creation';
+  displayDuration: number; // in seconds
+  displayFrequency: 'once' | 'daily' | 'weekly' | 'always';
+  isActive: boolean;
+  position: 'top' | 'bottom' | 'center';
+  dismissible: boolean;
+  lastModified: string;
 }
 
 export default function PageManagement() {
+  const [disclaimers, setDisclaimers] = useState<DisclaimerConfig[]>([
+    {
+      id: "1",
+      title: "Pro Se Legal Disclaimer",
+      content: "🛡️ **Important Notice for Pro Se Users**\n\nThis AI assistant is a helpful tool designed to support your legal research and document preparation. However, please remember:\n\n• **This is not legal advice** - The information provided is for educational purposes only\n• **No attorney-client relationship** is created through this service\n• **Consider consulting an attorney** for complex legal matters or if you're unsure about any aspect of your case\n• **You remain responsible** for all legal decisions and filings\n\nWe're here to empower you with information and tools, but the final legal decisions are always yours to make. Use this service as a starting point for your legal journey, not as a replacement for professional legal counsel when needed.",
+      targetAudience: 'pro_se',
+      displayType: 'popup',
+      displayTrigger: 'login',
+      displayDuration: 0, // 0 = until dismissed
+      displayFrequency: 'once',
+      isActive: true,
+      position: 'center',
+      dismissible: true,
+      lastModified: "2024-01-15"
+    },
+    {
+      id: "2", 
+      title: "Dashboard Legal Notice",
+      content: "⚖️ **Legal Notice**: This AI assistant provides information and tools for legal research and document preparation. It does not provide legal advice or create an attorney-client relationship. For complex legal matters, consult with a licensed attorney.",
+      targetAudience: 'all',
+      displayType: 'banner',
+      displayTrigger: 'dashboard_access',
+      displayDuration: 10,
+      displayFrequency: 'weekly',
+      isActive: true,
+      position: 'top',
+      dismissible: true,
+      lastModified: "2024-01-15"
+    }
+  ]);
+
   const [pages, setPages] = useState<Page[]>([
     {
       id: "1",
       title: "Terms and Conditions",
       slug: "terms-and-conditions",
-      content: "# Terms and Conditions\n\nLast updated: [DATE]\n\n## 1. Acceptance of Terms\n\nBy accessing and using this website, you accept and agree to be bound by the terms and provision of this agreement.\n\n## 2. Use License\n\na) Permission is granted to temporarily download one copy of the materials on LegalAI Pro's website for personal, non-commercial transitory viewing only.\n\n## 3. Disclaimer\n\nThe materials on LegalAI Pro's website are provided on an 'as is' basis. LegalAI Pro makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.\n\n## 4. Limitations\n\nIn no event shall LegalAI Pro or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on LegalAI Pro's website.\n\n## 5. Privacy Policy\n\nYour privacy is important to us. Please review our Privacy Policy, which also governs your use of the Site.\n\n## 6. Contact Information\n\nIf you have any questions about these Terms and Conditions, please contact us at legal@legalai.com.",
+      content: "# Terms and Conditions\n\nLast updated: January 15, 2024\n\n## 1. ACCEPTANCE OF TERMS\n\nBy accessing or using the LegalAI Pro platform (\"Service\"), you agree to be bound by these Terms and Conditions (\"Terms\"). If you do not agree to these Terms, do not use the Service.\n\n## 2. IMPORTANT LEGAL DISCLAIMERS\n\n### 2.1 NO ATTORNEY-CLIENT RELATIONSHIP\n**THE SERVICE DOES NOT CREATE AN ATTORNEY-CLIENT RELATIONSHIP.** No attorney-client relationship is formed between you and LegalAI Pro, its employees, or any third parties through your use of the Service.\n\n### 2.2 NOT LEGAL ADVICE\n**THE SERVICE IS NOT A SUBSTITUTE FOR LEGAL ADVICE FROM A LICENSED ATTORNEY.** All information, suggestions, documents, and content provided through the Service are for informational purposes only and should not be construed as legal advice. You should consult with a qualified attorney regarding your specific legal matters.\n\n### 2.3 NO GUARANTEE OF ACCURACY\nWhile we strive for accuracy, we make no representations or warranties regarding the accuracy, completeness, or reliability of any information or documents generated by the Service.\n\n## 3. USE OF SERVICE\n\n### 3.1 Eligibility\nYou must be at least 18 years old to use the Service. By using the Service, you represent that you meet this requirement.\n\n### 3.2 Prohibited Uses\nYou may not use the Service to:\n- Engage in any illegal activity\n- Generate documents for fraudulent purposes\n- Circumvent legal requirements or procedures\n- Harm others or violate their rights\n\n## 4. LIMITATION OF LIABILITY\n\n**TO THE MAXIMUM EXTENT PERMITTED BY LAW, LEGALAI PRO SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM YOUR USE OF THE SERVICE.**\n\n## 5. INDEMNIFICATION\n\nYou agree to indemnify, defend, and hold harmless LegalAI Pro from any claims, damages, or expenses arising from your use of the Service or violation of these Terms.\n\n## 6. MODIFICATIONS\n\nWe reserve the right to modify these Terms at any time. Your continued use of the Service after changes constitutes acceptance of the modified Terms.\n\n## 7. GOVERNING LAW\n\nThese Terms are governed by the laws of [State/Country], without regard to conflict of law principles.\n\n## 8. CONTACT INFORMATION\n\nFor questions about these Terms, contact us at legal@legalai.com.",
       metaDescription: "Terms and conditions for using LegalAI Pro platform and services.",
       isPublished: true,
       showInFooter: true,
@@ -53,7 +105,7 @@ export default function PageManagement() {
       id: "2",
       title: "Privacy Policy",
       slug: "privacy-policy",
-      content: "# Privacy Policy\n\nLast updated: [DATE]\n\n## Information We Collect\n\nWe collect information you provide directly to us, such as when you create an account, use our services, or contact us for support.\n\n### Personal Information\n- Name and contact information\n- Account credentials\n- Payment information\n- Communication preferences\n\n### Usage Information\n- How you interact with our services\n- Device and browser information\n- IP address and location data\n- Cookies and similar technologies\n\n## How We Use Your Information\n\nWe use the information we collect to:\n- Provide, maintain, and improve our services\n- Process transactions and send related information\n- Send technical notices and support messages\n- Respond to comments and questions\n- Protect against fraud and abuse\n\n## Information Sharing\n\nWe do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy.\n\n## Data Security\n\nWe implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.\n\n## Your Rights\n\nYou have the right to:\n- Access your personal information\n- Correct inaccurate information\n- Delete your information\n- Object to processing\n- Data portability\n\n## Contact Us\n\nIf you have questions about this Privacy Policy, please contact us at privacy@legalai.com.",
+      content: "# Privacy Policy\n\nLast updated: January 15, 2024\n\n## IMPORTANT DISCLAIMER\n\n**THE LEGALAI PRO SERVICE IS PROVIDED 'AS IS' WITHOUT ANY WARRANTIES. BY USING THIS SERVICE, YOU ACKNOWLEDGE THAT IT IS NOT A SUBSTITUTE FOR LEGAL ADVICE FROM A LICENSED ATTORNEY. NO ATTORNEY-CLIENT RELATIONSHIP IS CREATED THROUGH YOUR USE OF THIS SERVICE.**\n\n## 1. INFORMATION WE COLLECT\n\n### 1.1 Personal Information\n- Account registration information (name, email, username)\n- User type (Pro Se or Attorney)\n- Payment and billing information\n- Communication preferences and support interactions\n\n### 1.2 Usage and Technical Information\n- Service usage patterns and interactions\n- Device information and browser data\n- IP address and approximate location\n- Cookies and similar tracking technologies\n- Case data and documents you create or upload\n\n### 1.3 AI Interaction Data\n- All conversations and interactions with the AI system\n- Document generation requests and outputs\n- User feedback and ratings\n\n## 2. HOW WE USE YOUR INFORMATION\n\nWe use collected information to:\n- Provide and maintain the Service\n- Process transactions and billing\n- Improve our AI algorithms and responses\n- Send service-related communications\n- Ensure security and prevent fraud\n- Comply with legal obligations\n\n## 3. INFORMATION SHARING AND DISCLOSURE\n\n### 3.1 No Sale of Personal Data\nWe do not sell, rent, or trade your personal information to third parties for marketing purposes.\n\n### 3.2 Service Providers\nWe may share information with trusted service providers who assist in operating our Service, subject to confidentiality obligations.\n\n### 3.3 Legal Requirements\nWe may disclose information when required by law, court order, or to protect our rights and safety.\n\n## 4. DATA SECURITY\n\nWe implement industry-standard security measures to protect your information. However, no method of transmission over the internet is 100% secure.\n\n## 5. DATA RETENTION\n\nWe retain your information as long as necessary to provide the Service and comply with legal obligations.\n\n## 6. YOUR RIGHTS\n\nDepending on your location, you may have rights to:\n- Access and correct your information\n- Delete your account and data\n- Object to processing\n- Data portability\n- Withdraw consent\n\n## 7. LIABILITY LIMITATIONS\n\n**TO THE MAXIMUM EXTENT PERMITTED BY LAW, LEGALAI PRO DISCLAIMS ALL LIABILITY FOR ANY MISUSE OF INFORMATION, SECURITY BREACHES, OR UNAUTHORIZED ACCESS TO YOUR DATA.**\n\n## 8. CHANGES TO THIS POLICY\n\nWe may update this Privacy Policy periodically. Continued use of the Service after changes constitutes acceptance.\n\n## 9. CONTACT INFORMATION\n\nFor privacy-related questions, contact us at privacy@legalai.com.",
       metaDescription: "Privacy policy explaining how LegalAI Pro collects, uses, and protects your personal information.",
       isPublished: true,
       showInFooter: true,
@@ -78,6 +130,9 @@ export default function PageManagement() {
   const [editingPage, setEditingPage] = useState<Page | null>(null);
   const [newPageDialogOpen, setNewPageDialogOpen] = useState(false);
   const [previewPage, setPreviewPage] = useState<Page | null>(null);
+  const [editingDisclaimer, setEditingDisclaimer] = useState<DisclaimerConfig | null>(null);
+  const [newDisclaimerDialogOpen, setNewDisclaimerDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const createNewPage = () => {
     const newPage: Page = {
@@ -128,6 +183,240 @@ export default function PageManagement() {
       .trim();
   };
 
+  const createNewDisclaimer = () => {
+    const newDisclaimer: DisclaimerConfig = {
+      id: Date.now().toString(),
+      title: "New Disclaimer",
+      content: "Enter your disclaimer content here...",
+      targetAudience: 'all',
+      displayType: 'popup',
+      displayTrigger: 'login',
+      displayDuration: 0,
+      displayFrequency: 'once',
+      isActive: true,
+      position: 'center',
+      dismissible: true,
+      lastModified: new Date().toISOString().split('T')[0]
+    };
+    setDisclaimers(prev => [...prev, newDisclaimer]);
+    setEditingDisclaimer(newDisclaimer);
+    setNewDisclaimerDialogOpen(false);
+  };
+
+  const updateDisclaimer = (updatedDisclaimer: DisclaimerConfig) => {
+    setDisclaimers(prev => prev.map(disclaimer => 
+      disclaimer.id === updatedDisclaimer.id 
+        ? { ...updatedDisclaimer, lastModified: new Date().toISOString().split('T')[0] }
+        : disclaimer
+    ));
+    setEditingDisclaimer(null);
+    toast({
+      title: "Disclaimer Updated",
+      description: "The disclaimer configuration has been saved successfully.",
+    });
+  };
+
+  const deleteDisclaimer = (disclaimerId: string) => {
+    setDisclaimers(prev => prev.filter(disclaimer => disclaimer.id !== disclaimerId));
+    toast({
+      title: "Disclaimer Deleted",
+      description: "The disclaimer has been removed.",
+    });
+  };
+
+  // Disclaimer Editor Component
+  const DisclaimerEditor = ({ disclaimer, onSave, onCancel, onDelete }: {
+    disclaimer: DisclaimerConfig;
+    onSave: (disclaimer: DisclaimerConfig) => void;
+    onCancel: () => void;
+    onDelete: () => void;
+  }) => {
+    const [editedDisclaimer, setEditedDisclaimer] = useState<DisclaimerConfig>(disclaimer);
+
+    const handleSave = () => {
+      onSave(editedDisclaimer);
+    };
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Edit Disclaimer</CardTitle>
+              <CardDescription>Configure disclaimer settings and content</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="disclaimer-title">Title</Label>
+              <Input
+                id="disclaimer-title"
+                value={editedDisclaimer.title}
+                onChange={(e) => setEditedDisclaimer(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter disclaimer title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="disclaimer-audience">Target Audience</Label>
+              <Select
+                value={editedDisclaimer.targetAudience}
+                onValueChange={(value: 'pro_se' | 'attorney' | 'all') => 
+                  setEditedDisclaimer(prev => ({ ...prev, targetAudience: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select audience" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pro_se">Pro Se Users</SelectItem>
+                  <SelectItem value="attorney">Attorneys</SelectItem>
+                  <SelectItem value="all">All Users</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="disclaimer-content">Content</Label>
+            <Textarea
+              id="disclaimer-content"
+              value={editedDisclaimer.content}
+              onChange={(e) => setEditedDisclaimer(prev => ({ ...prev, content: e.target.value }))}
+              placeholder="Enter disclaimer content..."
+              className="min-h-32"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="disclaimer-type">Display Type</Label>
+              <Select
+                value={editedDisclaimer.displayType}
+                onValueChange={(value: 'popup' | 'banner' | 'notification') => 
+                  setEditedDisclaimer(prev => ({ ...prev, displayType: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select display type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="popup">Popup Modal</SelectItem>
+                  <SelectItem value="banner">Banner</SelectItem>
+                  <SelectItem value="notification">Notification</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="disclaimer-trigger">Display Trigger</Label>
+              <Select
+                value={editedDisclaimer.displayTrigger}
+                onValueChange={(value: 'login' | 'dashboard_access' | 'document_generation' | 'case_creation') => 
+                  setEditedDisclaimer(prev => ({ ...prev, displayTrigger: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select trigger" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="login">Login</SelectItem>
+                  <SelectItem value="dashboard_access">Dashboard Access</SelectItem>
+                  <SelectItem value="document_generation">Document Generation</SelectItem>
+                  <SelectItem value="case_creation">Case Creation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="disclaimer-position">Position</Label>
+              <Select
+                value={editedDisclaimer.position}
+                onValueChange={(value: 'top' | 'bottom' | 'center') => 
+                  setEditedDisclaimer(prev => ({ ...prev, position: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="top">Top</SelectItem>
+                  <SelectItem value="bottom">Bottom</SelectItem>
+                  <SelectItem value="center">Center</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="disclaimer-frequency">Display Frequency</Label>
+              <Select
+                value={editedDisclaimer.displayFrequency}
+                onValueChange={(value: 'once' | 'daily' | 'weekly' | 'always') => 
+                  setEditedDisclaimer(prev => ({ ...prev, displayFrequency: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="once">Once</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="always">Always</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="disclaimer-duration">Duration (seconds)</Label>
+              <Input
+                id="disclaimer-duration"
+                type="number"
+                value={editedDisclaimer.displayDuration}
+                onChange={(e) => setEditedDisclaimer(prev => ({ ...prev, displayDuration: parseInt(e.target.value) || 0 }))}
+                placeholder="0 = until dismissed"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="disclaimer-active"
+                  checked={editedDisclaimer.isActive}
+                  onCheckedChange={(checked) => setEditedDisclaimer(prev => ({ ...prev, isActive: checked }))}
+                />
+                <Label htmlFor="disclaimer-active">Active</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="disclaimer-dismissible"
+                  checked={editedDisclaimer.dismissible}
+                  onCheckedChange={(checked) => setEditedDisclaimer(prev => ({ ...prev, dismissible: checked }))}
+                />
+                <Label htmlFor="disclaimer-dismissible">Dismissible</Label>
+              </div>
+            </div>
+            <Button variant="destructive" onClick={onDelete}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-6">
@@ -168,10 +457,17 @@ export default function PageManagement() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Pages List */}
-          <div className="lg:col-span-1">
-            <Card>
+        <Tabs defaultValue="pages" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="pages">Pages</TabsTrigger>
+            <TabsTrigger value="disclaimers">Disclaimers</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pages">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Pages List */}
+              <div className="lg:col-span-1">
+                <Card>
               <CardHeader>
                 <CardTitle>All Pages</CardTitle>
                 <CardDescription>Click a page to edit its content</CardDescription>
@@ -370,6 +666,87 @@ export default function PageManagement() {
             )}
           </div>
         </div>
+      </TabsContent>
+
+      <TabsContent value="disclaimers">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Disclaimers List */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Legal Disclaimers</CardTitle>
+                <CardDescription>Configure disclaimer settings for Pro Se users</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {disclaimers.map((disclaimer) => (
+                    <div
+                      key={disclaimer.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        editingDisclaimer?.id === disclaimer.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => setEditingDisclaimer(disclaimer)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4" />
+                          <span className="font-medium text-sm">{disclaimer.title}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {disclaimer.isActive ? (
+                            <Badge className="bg-green-100 text-green-800 text-xs">Active</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">Inactive</Badge>
+                          )}
+                          <Badge variant="outline" className="text-xs">{disclaimer.targetAudience}</Badge>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1">{disclaimer.displayType} • {disclaimer.displayTrigger}</p>
+                      <p className="text-xs text-gray-500">Modified: {disclaimer.lastModified}</p>
+                    </div>
+                  ))}
+                </div>
+                <Button 
+                  className="w-full mt-4" 
+                  variant="outline"
+                  onClick={() => setNewDisclaimerDialogOpen(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Disclaimer
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Disclaimer Editor */}
+          <div className="lg:col-span-2">
+            {editingDisclaimer ? (
+              <DisclaimerEditor 
+                disclaimer={editingDisclaimer}
+                onSave={updateDisclaimer}
+                onCancel={() => setEditingDisclaimer(null)}
+                onDelete={() => {
+                  deleteDisclaimer(editingDisclaimer.id);
+                  setEditingDisclaimer(null);
+                }}
+              />
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-lg font-semibold mb-2">Select a Disclaimer to Edit</h3>
+                  <p className="text-gray-600 mb-4">Choose a disclaimer from the list to configure its settings and content.</p>
+                  <Button onClick={() => setNewDisclaimerDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create New Disclaimer
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </TabsContent>
+    </Tabs>
 
         {/* Preview Modal */}
         {previewPage && (

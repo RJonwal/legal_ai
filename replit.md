@@ -142,3 +142,10 @@ Changelog:
 - July 13, 2025. Corrected wouter navigation hooks (useLocation provides navigate function)
 - July 13, 2025. Removed duplicate imports in queryClient.ts and fixed TanStack Query configuration
 - July 13, 2025. Application now running successfully with all critical errors resolved
+- July 13, 2025. Restricted signup to Pro Se and Attorney users only (removed General User option)
+- July 13, 2025. Created comprehensive Terms and Conditions with strong liability protection and legal disclaimers
+- July 13, 2025. Implemented robust Privacy Policy with explicit "not legal advice" disclaimers and liability limitations
+- July 13, 2025. Built Admin Global Prompt Management system for controlling AI behavior across the dashboard
+- July 13, 2025. Added comprehensive Disclaimer Management system for Pro Se users with customizable display options
+- July 13, 2025. Integrated tabbed interface in Page Management for both static pages and dynamic disclaimer configurations
+- July 13, 2025. Added route `/admin/global-prompt-management` for admin access to AI prompt configuration
