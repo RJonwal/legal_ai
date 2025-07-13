@@ -8,7 +8,7 @@ import AdminLayout from "@/components/layout/admin-layout";
 import { lazy, useEffect, Suspense } from 'react';
 
 // Import pages
-import LandingPage from "@/pages/simple-landing";
+import LandingPage from "@/pages/landing";
 import LegalAssistant from "@/pages/legal-assistant";
 import NewCase from "@/pages/new-case";
 import SearchCases from "@/pages/search-cases";

@@ -7,6 +7,7 @@ import { DocumentCanvas } from "@/components/canvas/document-canvas";
 import { EnhancedFunctionModal } from "@/components/modals/enhanced-function-modal";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import ChatWidget from "@/components/chat/chat-widget";
+import LiveChatWidget, { ChatWidgetButton } from "@/components/chat/live-chat-widget";
 
 export default function LegalAssistant() {
   const [location] = useLocation();
@@ -16,6 +17,7 @@ export default function LegalAssistant() {
   const [modalFunction, setModalFunction] = useState<string | null>(null);
   const [chatSize, setChatSize] = useState<number>(75);
   const [canvasSize, setCanvasSize] = useState<number>(25);
+  const [liveChatOpen, setLiveChatOpen] = useState<boolean>(false);
 
   // Handle URL parameters for case selection
   useEffect(() => {
@@ -150,6 +152,20 @@ export default function LegalAssistant() {
       />
 
       <ChatWidget />
+      
+      {/* Live Chat Widget */}
+      <LiveChatWidget 
+        isOpen={liveChatOpen}
+        onToggle={() => setLiveChatOpen(!liveChatOpen)}
+      />
+      
+      {/* Chat Widget Button */}
+      {!liveChatOpen && (
+        <ChatWidgetButton 
+          onClick={() => setLiveChatOpen(true)}
+          hasUnread={false}
+        />
+      )}
     </div>
   );
 }

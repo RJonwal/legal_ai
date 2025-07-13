@@ -214,12 +214,12 @@ let landingConfig = {
   ],
   contact: {
     phone: "+1 (555) 123-LEGAL",
-    email: "contact@legalai.com", 
+    email: "contact@wizzered.com", 
     address: "123 Legal District, Suite 500, New York, NY 10001"
   },
   seo: {
-    title: "LegalAI Pro - Revolutionary AI Legal Assistant",
-    description: "Empowering lawyers and pro se litigants with AI-powered case management, document generation, and strategic legal analysis.",
+    title: "Wizzered - Revolutionary AI Legal Technology",
+    description: "Transforming legal practice with AI-powered case management, document generation, and strategic legal analysis for attorneys and pro se litigants.",
     keywords: ["legal AI", "case management", "document generation", "pro se", "attorney", "legal assistant"]
   }
 };
@@ -250,7 +250,7 @@ let pageManagement = {
       title: "Terms and Conditions",
       slug: "terms-and-conditions",
       content: "# Terms and Conditions\n\nLast updated: [DATE]\n\n## 1. Acceptance of Terms\n\nBy accessing and using this website, you accept and agree to be bound by the terms and provision of this agreement.",
-      metaDescription: "Terms and conditions for using LegalAI Pro platform and services.",
+      metaDescription: "Terms and conditions for using Wizzered platform and services.",
       isPublished: true,
       showInFooter: true,
       footerCategory: "Legal",
@@ -262,7 +262,7 @@ let pageManagement = {
       title: "Privacy Policy",
       slug: "privacy-policy",
       content: "# Privacy Policy\n\nLast updated: [DATE]\n\n## Information We Collect\n\nWe collect information you provide directly to us...",
-      metaDescription: "Privacy policy explaining how LegalAI Pro collects, uses, and protects your personal information.",
+      metaDescription: "Privacy policy explaining how Wizzered collects, uses, and protects your personal information.",
       isPublished: true,
       showInFooter: true,
       footerCategory: "Legal",
@@ -418,10 +418,10 @@ let brandingConfig = {
     maskableIcon: null as string | null
   },
   brand: {
-    companyName: "LegalAI Pro",
-    tagline: "AI-Powered Legal Excellence",
-    description: "Empowering lawyers and pro se litigants with intelligent case management, document generation, and strategic legal analysis",
-    domain: "legalai.pro"
+    companyName: "Wizzered",
+    tagline: "AI-Powered Legal Technology",
+    description: "Revolutionary legal technology platform transforming legal practice with intelligent AI solutions for attorneys and pro se litigants",
+    domain: "wizzered.com"
   },
   colors: {
     primary: "#3b82f6",
