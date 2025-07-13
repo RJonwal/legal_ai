@@ -75,7 +75,7 @@ export default function ChatInterface({
       refetchCase();
       refetchChatMessages();
     }
-  }, [caseId, refetchCase, refetchChatMessages]);
+  }, [caseId]); // Only depend on caseId to prevent infinite re-renders
 
   // Listen for case selection events
   useEffect(() => {
