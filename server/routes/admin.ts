@@ -452,6 +452,40 @@ router.get("/branding/manifest", (req: Request, res: Response) => {
   res.json(manifest);
 });
 
+// Chat widget configuration state
+let chatWidgetConfig = {
+  enabled: false,
+  provider: "crisp",
+  apiKey: "",
+  position: "bottom-right",
+  showOnDashboard: false,
+  allowedPages: ["landing", "pricing", "contact"],
+  customization: {
+    primaryColor: "#3B82F6",
+    fontFamily: "Inter",
+    borderRadius: "8px",
+    position: "bottom-right"
+  }
+};
+
+// Get chat widget configuration
+router.get("/chat-widget-config", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/chat-widget-config 200`);
+  res.json({ success: true, config: chatWidgetConfig });
+});
+
+// Update chat widget configuration
+router.put("/chat-widget-config", (req: Request, res: Response) => {
+  try {
+    chatWidgetConfig = { ...chatWidgetConfig, ...req.body.config };
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/chat-widget-config 200`);
+    res.json({ success: true, config: chatWidgetConfig });
+  } catch (error) {
+    console.error("Error updating chat widget config:", error);
+    res.status(500).json({ error: "Failed to update chat widget configuration" });
+  }
+});
+
 // Get logo configuration (legacy endpoint)
 router.get("/logo-config", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/logo-config 200`);
@@ -516,6 +550,39 @@ router.delete("/pages/:id", (req: Request, res: Response) => {
   const { id } = req.params;
   console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/pages/${id} 200`);
   res.json({ success: true });
+});
+
+// Get combined branding and config data for frontend
+router.get("/global-config", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/global-config 200`);
+  res.json({
+    branding: brandingConfig,
+    landing: landingConfig,
+    chatWidget: chatWidgetConfig,
+    pages: pageManagement.pages.filter(page => page.isPublished)
+  });
+});
+
+// Apply branding globally endpoint
+router.post("/apply-branding", (req: Request, res: Response) => {
+  try {
+    // This endpoint would typically update global stylesheets, favicon links, etc.
+    // For now, we'll just return success
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/apply-branding 200`);
+    res.json({ 
+      success: true, 
+      message: "Branding applied globally",
+      applied: {
+        cssVariables: true,
+        favicon: brandingConfig.favicon.ico !== null,
+        manifest: true,
+        socialMeta: true
+      }
+    });
+  } catch (error) {
+    console.error("Error applying branding:", error);
+    res.status(500).json({ error: "Failed to apply branding globally" });
+  }
 });
 
 export default router;

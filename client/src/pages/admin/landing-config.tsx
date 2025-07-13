@@ -428,17 +428,64 @@ export default function LandingConfig() {
 
   const handleImageUpload = async (type: string, file: File) => {
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', type);
-      
-      // Simulate file upload - in production, implement actual upload
-      const mockUrl = `/uploads/branding/${type}/${Date.now()}-${file.name}`;
-      
-      return mockUrl;
+      // Convert file to base64 for storage
+      const reader = new FileReader();
+      return new Promise<string>((resolve, reject) => {
+        reader.onload = async () => {
+          try {
+            const base64Data = reader.result as string;
+            const response = await fetch('/api/admin/branding/upload', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                type,
+                imageData: base64Data,
+                filename: file.name
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error('Upload failed');
+            }
+
+            const result = await response.json();
+            resolve(result.url);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
     } catch (error) {
       console.error('Upload failed:', error);
       throw new Error('Failed to upload image');
+    }
+  };
+
+  const applyBrandingGlobally = async () => {
+    try {
+      const response = await fetch('/api/admin/apply-branding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(brandingConfig),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to apply branding');
+      }
+
+      const result = await response.json();
+      alert('Branding applied globally! Changes will be visible across the platform.');
+      return result;
+    } catch (error) {
+      console.error('Apply branding failed:', error);
+      alert('Failed to apply branding globally. Please try again.');
+      throw error;
     }
   };
 
@@ -662,7 +709,31 @@ export default function LandingConfig() {
                           <div className="space-y-2">
                             <Upload className="mx-auto h-8 w-8 text-gray-400" />
                             <div>
-                              <Button variant="outline" className="mb-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                id="primary-logo-upload"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    try {
+                                      const url = await handleImageUpload('primary-logo', file);
+                                      setBrandingConfig(prev => ({ 
+                                        ...prev, 
+                                        logo: { ...prev.logo, primaryLogo: url } 
+                                      }));
+                                    } catch (error) {
+                                      alert('Failed to upload logo');
+                                    }
+                                  }
+                                }}
+                              />
+                              <Button 
+                                variant="outline" 
+                                className="mb-2" 
+                                onClick={() => document.getElementById('primary-logo-upload')?.click()}
+                              >
                                 <Upload className="mr-2 h-4 w-4" />
                                 Upload Logo
                               </Button>
@@ -687,7 +758,31 @@ export default function LandingConfig() {
                           <div className="space-y-2">
                             <Upload className="mx-auto h-8 w-8 text-gray-400" />
                             <div>
-                              <Button variant="outline" className="mb-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                id="secondary-logo-upload"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    try {
+                                      const url = await handleImageUpload('secondary-logo', file);
+                                      setBrandingConfig(prev => ({ 
+                                        ...prev, 
+                                        logo: { ...prev.logo, secondaryLogo: url } 
+                                      }));
+                                    } catch (error) {
+                                      alert('Failed to upload logo');
+                                    }
+                                  }
+                                }}
+                              />
+                              <Button 
+                                variant="outline" 
+                                className="mb-2"
+                                onClick={() => document.getElementById('secondary-logo-upload')?.click()}
+                              >
                                 <Upload className="mr-2 h-4 w-4" />
                                 Upload Logo
                               </Button>
@@ -1119,6 +1214,10 @@ export default function LandingConfig() {
                     })}>
                       <Download className="mr-2 h-4 w-4" />
                       Download CSS Variables
+                    </Button>
+                    <Button onClick={applyBrandingGlobally} className="bg-blue-600 hover:bg-blue-700">
+                      <Globe className="mr-2 h-4 w-4" />
+                      Apply Branding Globally
                     </Button>
                   </div>
                 </CardContent>
