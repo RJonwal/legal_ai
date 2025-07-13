@@ -249,6 +249,18 @@ export default function ChatInterface({
     }
   }, [currentCaseData, currentCase]);
 
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([{
+        id: '1',
+        content: 'Hello! I\'m your AI legal assistant. How can I help you today?',
+        sender: 'ai',
+        timestamp: new Date().toISOString(),
+        type: 'text'
+      }]);
+    }
+  }, []);
+
   return (
     <QueryErrorBoundary>
       <div ref={chatInterfaceRef} className="flex-1 flex flex-col bg-white h-full" data-chat-interface="true">
