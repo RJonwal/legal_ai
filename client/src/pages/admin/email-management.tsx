@@ -240,7 +240,7 @@ Thank you for your payment! Your Wizzered subscription is now active.
 
 Payment Details:
 - Plan: {{plan_name}}
-- Amount: ${{amount}}
+- Amount: ${"{{amount}}"}
 - Invoice ID: {{invoice_id}}
 - Next billing date: {{next_billing_date}}
 
