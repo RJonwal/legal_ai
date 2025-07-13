@@ -130,3 +130,8 @@ Changelog:
 - July 13, 2025. Fixed missing React import in AdminLayout component causing useState errors
 - July 13, 2025. Added comprehensive process-level error handling with graceful SIGTERM/SIGINT handling
 - July 13, 2025. Implemented permanent stability fixes for consistent development server operation
+- July 13, 2025. Added comprehensive error handling with ErrorBoundary and QueryErrorBoundary components
+- July 13, 2025. Implemented server-side error handling to prevent crashes and ensure stability
+- July 13, 2025. Fixed TanStack Query configuration with modern API (gcTime instead of cacheTime)
+- July 13, 2025. Added process-level error handling for uncaught exceptions and promise rejections
+- July 13, 2025. Enhanced SelectItem components with proper defensive programming to prevent crashes

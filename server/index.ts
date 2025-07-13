@@ -78,6 +78,23 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
+// Add global error handler as Express middleware
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Express error handler caught:', {
+    error: err.message,
+    stack: err.stack,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Don't crash the server - just return an error response
+  if (!res.headersSent) {
+    res.status(500).json({
+      message: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 (async () => {
   try {
     const server = await registerRoutes(app);

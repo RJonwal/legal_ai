@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { NotificationService } from "@/lib/notification-service";
+// import { NotificationService } from "@/lib/notification-service";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { FileText, Brain, AlertTriangle, Clock, CheckCircle } from "lucide-react
 import { ChatMessage } from "@/lib/types";
 import { Share2, Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { QueryErrorBoundary } from "@/components/query-error-boundary";
 
 interface ChatInterfaceProps {
   caseId: number;
@@ -35,24 +36,30 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
   const { data: currentCase, refetch: refetchCase } = useQuery({
     queryKey: [`/api/cases/${caseId}`],
     enabled: !!caseId,
-    onSuccess: (data) => {
-      setCurrentCaseData(data);
-    }
   });
+
+  useEffect(() => {
+    if (currentCase) {
+      setCurrentCaseData(currentCase);
+    }
+  }, [currentCase]);
 
   const { data: chatMessages = [], refetch: refetchChatMessages } = useQuery({
     queryKey: [`/api/cases/${caseId}/messages`],
     enabled: !!caseId,
-    onSuccess: (data) => {
-      setMessages(data.map((msg: any) => ({
+  });
+
+  useEffect(() => {
+    if (chatMessages) {
+      setMessages(chatMessages.map((msg: any) => ({
         id: msg.id,
         content: msg.content,
         role: msg.role,
         timestamp: new Date(msg.createdAt),
         metadata: msg.metadata,
       })));
-    },
-  });
+    }
+  }, [chatMessages]);
 
   // Handle case selection events and refetch data
   useEffect(() => {
@@ -216,7 +223,8 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
   }, [currentCaseData, currentCase]);
 
   return (
-    <div ref={chatInterfaceRef} className="flex-1 flex flex-col bg-white h-full" data-chat-interface="true">
+    <QueryErrorBoundary>
+      <div ref={chatInterfaceRef} className="flex-1 flex flex-col bg-white h-full" data-chat-interface="true">
       {/* Chat Header */}
       <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
@@ -269,5 +277,6 @@ export function ChatInterface({ caseId, onFunctionClick, onDocumentGenerate }: C
         />
       </div>
     </div>
+    </QueryErrorBoundary>
   );
 }

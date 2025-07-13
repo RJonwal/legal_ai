@@ -30,7 +30,7 @@ import VoipManagement from "@/pages/admin/voip-management";
 import PageManagement from "@/pages/admin/page-management";
 
 import "./index.css";
-import { ErrorBoundary } from "./components/error-boundary";
+import ErrorBoundary from "./components/error-boundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,13 +1,12 @@
-
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error?: Error;
-  errorInfo?: React.ErrorInfo;
+  error: Error | null;
+  errorInfo: any;
 }
 
 interface ErrorBoundaryProps {
@@ -15,51 +14,23 @@ interface ErrorBoundaryProps {
   fallback?: React.ComponentType<{ error: Error; retry: () => void }>;
 }
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private retryTimeoutId: NodeJS.Timeout | null = null;
-
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return {
-      hasError: true,
-      error,
-    };
+    return { hasError: true, error, errorInfo: null };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('React Error Boundary caught an error:', {
-      error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString()
-    });
-
-    this.setState({
-      error,
-      errorInfo,
-    });
-  }
-
-  componentWillUnmount() {
-    if (this.retryTimeoutId) {
-      clearTimeout(this.retryTimeoutId);
-    }
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('Error caught by boundary:', error, errorInfo);
+    this.setState({ error, errorInfo });
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
-    
-    // Auto-retry after 5 seconds if error persists
-    this.retryTimeoutId = setTimeout(() => {
-      if (this.state.hasError) {
-        console.log('Auto-retrying after error...');
-        this.handleRetry();
-      }
-    }, 5000);
+    this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   render() {
@@ -70,38 +41,32 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 h-12 w-12 text-red-500">
-                <AlertTriangle className="h-full w-full" />
-              </div>
-              <CardTitle className="text-red-600">Something went wrong</CardTitle>
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+                Something went wrong
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-gray-600 text-center">
-                An unexpected error occurred. This has been logged and will be investigated.
+              <p className="text-sm text-gray-600">
+                The application encountered an error. Please try refreshing the page or contact support if the issue persists.
               </p>
-              
-              {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-32">
-                  <strong>Error:</strong> {this.state.error.message}
-                </div>
+              {this.state.error && (
+                <details className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                  <summary className="cursor-pointer">Error details</summary>
+                  <pre className="mt-2 overflow-auto">{this.state.error.toString()}</pre>
+                </details>
               )}
-              
-              <div className="flex gap-2 justify-center">
-                <Button onClick={this.handleRetry} size="sm">
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Try Again
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.location.reload()}
-                >
-                  Reload Page
-                </Button>
-              </div>
+              <Button 
+                onClick={this.handleRetry}
+                className="w-full"
+                variant="default"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -112,14 +77,4 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 }
 
-// Hook version for functional components
-export const useErrorHandler = () => {
-  return (error: Error, errorInfo?: React.ErrorInfo) => {
-    console.error('useErrorHandler caught an error:', {
-      error: error.message,
-      stack: error.stack,
-      errorInfo,
-      timestamp: new Date().toISOString()
-    });
-  };
-};
+export default ErrorBoundary;
