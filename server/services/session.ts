@@ -1,4 +1,5 @@
 import session from 'express-session';
+import { cacheService } from './cache';
 
 export function createSessionStore() {
   // For now, use default memory store
