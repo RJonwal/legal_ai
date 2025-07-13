@@ -4,7 +4,9 @@ import { storage } from "../storage";
 import { User } from "@shared/schema";
 import { Request, Response, NextFunction } from "express";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+import { getJWTSecret } from "../utils/jwt";
+
+const JWT_SECRET = getJWTSecret();
 const JWT_EXPIRES_IN = "7d";
 
 export interface AuthRequest extends Request {

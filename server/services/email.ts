@@ -1,6 +1,13 @@
-import { Resend } from "resend";
+// Brevo (formerly Sendinblue) email service
+interface BrevoEmailRequest {
+  sender: { email: string; name?: string };
+  to: Array<{ email: string; name?: string }>;
+  subject: string;
+  htmlContent: string;
+}
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
 export interface EmailTemplate {
   to: string;
@@ -14,18 +21,39 @@ export class EmailService {
 
   static async sendEmail(template: EmailTemplate): Promise<boolean> {
     try {
-      if (!resend) {
-        console.warn("RESEND_API_KEY not configured, skipping email send");
+      if (!BREVO_API_KEY) {
+        console.warn("BREVO_API_KEY not configured, skipping email send");
         return false;
       }
 
-      await resend.emails.send({
-        from: template.from || this.fromEmail,
-        to: template.to,
+      const brevoRequest: BrevoEmailRequest = {
+        sender: { 
+          email: template.from || this.fromEmail,
+          name: "Legal Assistant Platform"
+        },
+        to: [{ email: template.to }],
         subject: template.subject,
-        html: template.html,
+        htmlContent: template.html,
+      };
+
+      const response = await fetch(BREVO_API_URL, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "api-key": BREVO_API_KEY,
+        },
+        body: JSON.stringify(brevoRequest),
       });
 
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Brevo API error:", response.status, errorData);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log("Email sent successfully via Brevo:", result.messageId);
       return true;
     } catch (error) {
       console.error("Email sending error:", error);

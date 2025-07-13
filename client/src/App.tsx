@@ -21,9 +21,11 @@ import CookiePolicyPage from "@/pages/cookie-policy";
 import AboutPage from "@/pages/about";
 
 // Import auth pages
-import Login from "@/pages/auth/login";
-import Signup from "@/pages/auth/signup";
-import ForgotPassword from "@/pages/auth/forgot-password";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
+import Subscription from "@/pages/subscription";
 
 // Import admin pages
 import AdminDashboard from "@/pages/admin/index";
@@ -106,8 +108,12 @@ function App() {
 
               {/* Auth routes */}
               <Route path="/login" component={Login} />
-              <Route path="/signup" component={Signup} />
+              <Route path="/register" component={Register} />
+              <Route path="/signup" component={Register} />
               <Route path="/forgot-password" component={ForgotPassword} />
+              <Route path="/reset-password" component={ResetPassword} />
+              <Route path="/subscription" component={Subscription} />
+              <Route path="/subscribe" component={Subscription} />
 
               {/* Admin routes with layout */}
               <Route path="/admin">
