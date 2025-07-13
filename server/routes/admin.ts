@@ -273,13 +273,49 @@ let pageManagement = {
       id: "3",
       title: "About Us",
       slug: "about",
-      content: "# About LegalAI Pro\n\n## Our Mission\n\nLegalAI Pro is dedicated to democratizing access to legal assistance...",
-      metaDescription: "Learn about LegalAI Pro's mission to democratize legal assistance through AI technology.",
+      content: "# About Wizzered\n\n## Our Mission\n\nWizzered is dedicated to democratizing access to legal assistance through AI technology...",
+      metaDescription: "Learn about Wizzered's mission to democratize legal assistance through AI technology.",
       isPublished: true,
       showInFooter: true,
       footerCategory: "Company",
       lastModified: "2024-01-10",
       type: "about"
+    },
+    {
+      id: "4",
+      title: "Help Center",
+      slug: "help-center",
+      content: "# Help Center\n\n## Getting Started\n\nWelcome to Wizzered's help center. Here you'll find everything you need to get started with our AI-powered legal platform.",
+      metaDescription: "Get help with Wizzered's AI-powered legal platform. Find guides, tutorials, and support resources.",
+      isPublished: true,
+      showInFooter: true,
+      footerCategory: "Support",
+      lastModified: "2024-01-15",
+      type: "support"
+    },
+    {
+      id: "5",
+      title: "Contact Us",
+      slug: "contact",
+      content: "# Contact Us\n\n## Get in Touch\n\nWe're here to help you succeed with Wizzered. Contact our support team for assistance.",
+      metaDescription: "Contact Wizzered's support team. Multiple ways to get help with our AI-powered legal platform.",
+      isPublished: true,
+      showInFooter: true,
+      footerCategory: "Support",
+      lastModified: "2024-01-15",
+      type: "support"
+    },
+    {
+      id: "6",
+      title: "Documentation",
+      slug: "documentation",
+      content: "# Documentation\n\n## Complete Guide\n\nComprehensive documentation for using all features of Wizzered's AI-powered legal platform.",
+      metaDescription: "Complete documentation for Wizzered's AI-powered legal platform. API reference, guides, and tutorials.",
+      isPublished: true,
+      showInFooter: true,
+      footerCategory: "Support",
+      lastModified: "2024-01-15",
+      type: "support"
     }
   ]
 };

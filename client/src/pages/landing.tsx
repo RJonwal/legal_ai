@@ -7,6 +7,8 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { BrandingProvider, useBranding } from "@/components/ui/branding-provider";
 import { Logo } from "@/components/ui/logo";
+import USCookieBanner from "@/components/compliance/us-cookie-banner";
+import EnhancedLiveChat from "@/components/live-chat/enhanced-live-chat";
 
 // Live Chat Widget Component
 const LiveChatWidget = () => {
@@ -384,10 +386,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Support</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Help Center</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Contact Us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Documentation</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">API Reference</a></li>
+              <li><Link href="/help-center" className="text-gray-400 hover:text-white">Help Center</Link></li>
+              <li><Link href="/contact" className="text-gray-400 hover:text-white">Contact Us</Link></li>
+              <li><Link href="/documentation" className="text-gray-400 hover:text-white">Documentation</Link></li>
+              <li><a href="/documentation#api-reference" className="text-gray-400 hover:text-white">API Reference</a></li>
             </ul>
           </div>
         </div>
@@ -417,6 +419,11 @@ const Footer = () => {
 // Main Landing Page Component
 const LandingContent = () => {
   const { brandingConfig } = useBranding();
+  
+  // Fetch admin landing configuration
+  const { data: landingConfig } = useQuery({
+    queryKey: ['/api/admin/landing-config'],
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -428,10 +435,16 @@ const LandingContent = () => {
               <Logo size="md" />
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-blue-600 transition-colors">Features</a>
-              <a href="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">Pricing</a>
-              <a href="#testimonials" className="text-gray-600 hover:text-blue-600 transition-colors">Testimonials</a>
-              <a href="#support" className="text-gray-600 hover:text-blue-600 transition-colors">Support</a>
+              {(landingConfig?.navigation?.links || [
+                { text: "Features", href: "#features" },
+                { text: "Pricing", href: "#pricing" },
+                { text: "Testimonials", href: "#testimonials" },
+                { text: "Support", href: "#support" }
+              ]).map((link, index) => (
+                <a key={index} href={link.href} className="text-gray-600 hover:text-blue-600 transition-colors">
+                  {link.text}
+                </a>
+              ))}
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/login">
@@ -452,21 +465,20 @@ const LandingContent = () => {
             <div className="mb-8">
               <Badge className="bg-blue-100 text-blue-800 px-4 py-2 mb-4">
                 <Zap className="h-4 w-4 mr-2" />
-                AI-Powered Legal Technology
+                {landingConfig?.hero?.badge || "AI-Powered Legal Technology"}
               </Badge>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 tracking-tight">
-              Your AI Legal
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Assistant</span>
+              {landingConfig?.hero?.title?.split(' ').slice(0, -1).join(' ') || "Your AI Legal"}
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> {landingConfig?.hero?.title?.split(' ').slice(-1)[0] || "Assistant"}</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed">
-              Transform your legal practice with cutting-edge AI technology. From case management to document generation, 
-              Wizzered empowers attorneys and pro se litigants with intelligent legal solutions.
+              {landingConfig?.hero?.subtitle || "Transform your legal practice with cutting-edge AI technology. From case management to document generation, Wizzered empowers attorneys and pro se litigants with intelligent legal solutions."}
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <Link href="/register">
                 <Button size="lg" className="bg-blue-600 hover:bg-blue-700 px-8 py-4 text-lg font-semibold">
-                  Start Free Trial
+                  {landingConfig?.hero?.ctaText || "Start Free Trial"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
@@ -476,18 +488,12 @@ const LandingContent = () => {
               </Button>
             </div>
             <div className="flex justify-center items-center gap-8 text-sm text-gray-500 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-500" />
-                <span>No Credit Card Required</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-500" />
-                <span>14-Day Free Trial</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-500" />
-                <span>Cancel Anytime</span>
-              </div>
+              {(landingConfig?.hero?.features || ["No Credit Card Required", "14-Day Free Trial", "Cancel Anytime"]).map((feature, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  <span>{feature}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -571,7 +577,8 @@ const LandingContent = () => {
       </section>
 
       <Footer />
-      <LiveChatWidget />
+      <EnhancedLiveChat onPageLoad={true} />
+      <USCookieBanner />
     </div>
   );
 };

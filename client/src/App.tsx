@@ -41,6 +41,9 @@ import LiveChatManagement from "@/pages/admin/livechat-management";
 import VoipManagement from "@/pages/admin/voip-management";
 import PageManagement from "@/pages/admin/page-management";
 import GlobalPromptManagement from "@/pages/admin/global-prompt-management";
+import HelpCenter from "@/pages/help-center";
+import Contact from "@/pages/contact";
+import Documentation from "@/pages/documentation";
 
 import "./index.css";
 import ErrorBoundary from "./components/error-boundary";
@@ -220,6 +223,11 @@ function App() {
                   <AdminLandingConfig />
                 </AdminLayout>
               </Route>
+
+              {/* Support pages */}
+              <Route path="/help-center" component={HelpCenter} />
+              <Route path="/contact" component={Contact} />
+              <Route path="/documentation" component={Documentation} />
 
               {/* Main app routes */}
               <Route path="/dashboard" component={LegalAssistant} />

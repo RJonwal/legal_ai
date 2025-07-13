@@ -21,7 +21,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     message: "Too many requests from this IP, please try again later",
     standardHeaders: true, // Return rate limit info in the headers
     legacyHeaders: false, // Disable legacy headers for better performance
-    store: new rateLimit.MemoryStore(), // Use memory store for better performance
   });
 
   const authLimiter = rateLimit({
@@ -30,7 +29,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     message: "Too many authentication attempts, please try again later",
     standardHeaders: true,
     legacyHeaders: false,
-    store: new rateLimit.MemoryStore(),
   });
 
   // Apply rate limiting only to auth routes to avoid blocking admin access
@@ -2165,6 +2163,34 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     };
     
     res.json(analytics);
+  });
+
+  // AI Chat Support endpoint
+  app.post("/api/ai/chat-support", async (req, res) => {
+    try {
+      const { message, context, personality } = req.body;
+      
+      // AI service integration would go here
+      // For now, provide intelligent responses based on context
+      let response = "Thank you for your message. How can I help you with Wizzered today?";
+      
+      if (message.toLowerCase().includes('price') || message.toLowerCase().includes('cost')) {
+        response = "Wizzered offers flexible pricing starting at $29/month for Pro Se users and $99/month for attorneys. We also provide a 14-day free trial with no credit card required. Would you like to know more about our features?";
+      } else if (message.toLowerCase().includes('feature') || message.toLowerCase().includes('what')) {
+        response = "Wizzered provides AI-powered legal assistance, case management, document generation, legal research tools, and secure client communication. Which feature would you like to learn more about?";
+      } else if (message.toLowerCase().includes('trial') || message.toLowerCase().includes('free')) {
+        response = "Great! You can start your free 14-day trial right now. Just click 'Get Started' on our homepage to create your account - no credit card needed. The trial includes access to all our core features.";
+      } else if (message.toLowerCase().includes('support') || message.toLowerCase().includes('help')) {
+        response = "I'm here to help! Our support team is available 9 AM - 6 PM EST. You can also browse our help center, documentation, or contact us directly. What specific area do you need assistance with?";
+      } else if (message.toLowerCase().includes('security') || message.toLowerCase().includes('safe')) {
+        response = "Security is our top priority. Wizzered uses enterprise-grade AES-256 encryption, is GDPR/CCPA compliant, and maintains SOC 2 certification. All your legal data is fully protected and encrypted both at rest and in transit.";
+      }
+
+      res.json({ response });
+    } catch (error) {
+      console.error("AI chat error:", error);
+      res.status(500).json({ error: "Failed to process chat request" });
+    }
   });
 
   // Admin routes
