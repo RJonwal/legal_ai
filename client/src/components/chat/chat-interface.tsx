@@ -1,30 +1,19 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-// import { NotificationService } from "@/lib/notification-service";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
 import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
 import { FunctionButtons } from "./function-buttons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { notificationService } from "@/lib/notification-service";
-import { Bot, User, Sparkles, AlertCircle } from "lucide-react";
-import { MessageList } from "./message-list";
-import { ChatInput } from "./chat-input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { FileText, Brain, AlertTriangle, Clock, CheckCircle } from "lucide-react";
+import { Bot, User, Sparkles, AlertCircle, FileText, Brain, AlertTriangle, Clock, CheckCircle, Share2, Bookmark } from "lucide-react";
 import { ChatMessage } from "@/lib/types";
-import { Share2, Bookmark } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { QueryErrorBoundary } from "@/components/query-error-boundary";
 
 interface ChatInterfaceProps {
@@ -122,6 +111,8 @@ export default function ChatInterface({
     }
   };
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const user = getUserData();
 
   const getInitials = (firstName?: string, lastName?: string, username?: string) => {
@@ -246,7 +237,7 @@ export default function ChatInterface({
 
       // Refresh case data
       if (currentCase?.id) {
-        caseQuery.refetch();
+        refetchCase();
       }
     } catch (error) {
       console.error('Error bookmarking case:', error);
