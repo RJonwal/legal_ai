@@ -362,6 +362,277 @@ export default function LandingConfig() {
         const brandingData = await brandingResponse.json();
         if (brandingData) {
           setBrandingConfig(brandingData);
+        }
+      } catch (error) {
+        console.error('Failed to load configs:', error);
+      }
+    };
+
+    loadConfigs();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    
+    try {
+      // Save chat widget config
+      const chatResponse = await fetch('/api/admin/chat-widget-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          config: config.htmlCustomizations.chatWidget
+        }),
+      });
+
+      if (!chatResponse.ok) {
+        throw new Error('Failed to save chat widget config');
+      }
+
+      // Save branding config
+      const brandingResponse = await fetch('/api/admin/branding-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(brandingConfig),
+      });
+
+      if (!brandingResponse.ok) {
+        throw new Error('Failed to save branding config');
+      }
+
+      // Save landing page config
+      const landingResponse = await fetch('/api/admin/landing-config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+
+      if (!landingResponse.ok) {
+        throw new Error('Failed to save landing config');
+      }
+      
+      console.log("Saving configs:", { config, brandingConfig });
+      alert("Configuration saved successfully!");
+    } catch (error) {
+      console.error('Save failed:', error);
+      alert("Failed to save configuration. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (type: string, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+      
+      // Simulate file upload - in production, implement actual upload
+      const mockUrl = `/uploads/branding/${type}/${Date.now()}-${file.name}`;
+      
+      return mockUrl;
+    } catch (error) {
+      console.error('Upload failed:', error);
+      throw new Error('Failed to upload image');
+    }
+  };
+
+  const generateCSSVariables = () => {
+    return fetch('/api/admin/branding/css-variables')
+      .then(response => response.text());
+  };
+
+  const downloadManifest = () => {
+    fetch('/api/admin/branding/manifest')
+      .then(response => response.json())
+      .then(manifest => {
+        const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'manifest.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+  };
+
+  const addFeature = () => {
+    const newFeature = {
+      id: Date.now().toString(),
+      icon: "FileText",
+      title: "New Feature",
+      description: "Feature description",
+      enabled: true
+    };
+    setConfig(prev => ({
+      ...prev,
+      features: [...prev.features, newFeature]
+    }));
+  };
+
+  const removeFeature = (id: string) => {
+    setConfig(prev => ({
+      ...prev,
+      features: prev.features.filter(f => f.id !== id)
+    }));
+  };
+
+  const addTestimonial = () => {
+    const newTestimonial = {
+      id: Date.now().toString(),
+      name: "Client Name",
+      role: "Role",
+      company: "Company",
+      content: "Testimonial content",
+      rating: 5,
+      enabled: true
+    };
+    setConfig(prev => ({
+      ...prev,
+      testimonials: [...prev.testimonials, newTestimonial]
+    }));
+  };
+
+  const removeTestimonial = (id: string) => {
+    setConfig(prev => ({
+      ...prev,
+      testimonials: prev.testimonials.filter(t => t.id !== id)
+    }));
+  };
+
+  const addPricingPlan = () => {
+    const newPlan = {
+      id: Date.now().toString(),
+      name: "New Plan",
+      price: "$0",
+      period: "month",
+      features: ["Feature 1"],
+      popular: false,
+      enabled: true
+    };
+    setConfig(prev => ({
+      ...prev,
+      pricing: [...prev.pricing, newPlan]
+    }));
+  };
+
+  const removePricingPlan = (id: string) => {
+    setConfig(prev => ({
+      ...prev,
+      pricing: prev.pricing.filter(p => p.id !== id)
+    }));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Landing Page Configuration</h1>
+            <p className="text-gray-600 mt-2">Manage your landing page content and appearance</p>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline">
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="hero" className="flex items-center gap-2">
+              <Type className="h-4 w-4" />
+              Hero
+            </TabsTrigger>
+            <TabsTrigger value="branding" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Branding
+            </TabsTrigger>
+            <TabsTrigger value="features" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Features
+            </TabsTrigger>
+            <TabsTrigger value="testimonials" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Testimonials
+            </TabsTrigger>
+            <TabsTrigger value="pricing" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Pricing
+            </TabsTrigger>
+            <TabsTrigger value="contact" className="flex items-center gap-2">
+              <Phone className="h-4 w-4" />
+              Contact
+            </TabsTrigger>
+            <TabsTrigger value="html" className="flex items-center gap-2">
+              <Image className="h-4 w-4" />
+              HTML/Chat
+            </TabsTrigger>
+            <TabsTrigger value="seo" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              SEO
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Hero Section */}
+          <TabsContent value="hero">
+            <Card>
+              <CardHeader>
+                <CardTitle>Hero Section</CardTitle>
+                <CardDescription>Configure the main hero section of your landing page</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label htmlFor="hero-title">Main Title</Label>
+                  <Input
+                    id="hero-title"
+                    value={config.hero.title}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      hero: { ...prev.hero, title: e.target.value }
+                    }))}
+                    placeholder="Enter main title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="hero-subtitle">Subtitle</Label>
+                  <Textarea
+                    id="hero-subtitle"
+                    value={config.hero.subtitle}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      hero: { ...prev.hero, subtitle: e.target.value }
+                    }))}
+                    placeholder="Enter subtitle"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="hero-cta">Call to Action Text</Label>
+                  <Input
+                    id="hero-cta"
+                    value={config.hero.ctaText}
+                    onChange={(e) => setConfig(prev => ({
+                      ...prev,
+                      hero: { ...prev.hero, ctaText: e.target.value }
+                    }))}
+                    placeholder="Enter CTA text"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Branding Section */}
           <TabsContent value="branding">
@@ -853,278 +1124,6 @@ export default function LandingConfig() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-        }
-      } catch (error) {
-        console.error('Failed to load configs:', error);
-      }
-    };
-
-    loadConfigs();
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    
-    try {
-      // Save chat widget config
-      const chatResponse = await fetch('/api/admin/chat-widget-config', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          config: config.htmlCustomizations.chatWidget
-        }),
-      });
-
-      if (!chatResponse.ok) {
-        throw new Error('Failed to save chat widget config');
-      }
-
-      // Save branding config
-      const brandingResponse = await fetch('/api/admin/branding-config', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(brandingConfig),
-      });
-
-      if (!brandingResponse.ok) {
-        throw new Error('Failed to save branding config');
-      }
-
-      // Save landing page config
-      const landingResponse = await fetch('/api/admin/landing-config', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config),
-      });
-
-      if (!landingResponse.ok) {
-        throw new Error('Failed to save landing config');
-      }
-      
-      console.log("Saving configs:", { config, brandingConfig });
-      alert("Configuration saved successfully!");
-    } catch (error) {
-      console.error('Save failed:', error);
-      alert("Failed to save configuration. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleImageUpload = async (type: string, file: File) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', type);
-      
-      // Simulate file upload - in production, implement actual upload
-      const mockUrl = `/uploads/branding/${type}/${Date.now()}-${file.name}`;
-      
-      return mockUrl;
-    } catch (error) {
-      console.error('Upload failed:', error);
-      throw new Error('Failed to upload image');
-    }
-  };
-
-  const generateCSSVariables = () => {
-    return fetch('/api/admin/branding/css-variables')
-      .then(response => response.text());
-  };
-
-  const downloadManifest = () => {
-    fetch('/api/admin/branding/manifest')
-      .then(response => response.json())
-      .then(manifest => {
-        const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'manifest.json';
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-  };
-
-  const addFeature = () => {
-    const newFeature = {
-      id: Date.now().toString(),
-      icon: "FileText",
-      title: "New Feature",
-      description: "Feature description",
-      enabled: true
-    };
-    setConfig(prev => ({
-      ...prev,
-      features: [...prev.features, newFeature]
-    }));
-  };
-
-  const removeFeature = (id: string) => {
-    setConfig(prev => ({
-      ...prev,
-      features: prev.features.filter(f => f.id !== id)
-    }));
-  };
-
-  const addTestimonial = () => {
-    const newTestimonial = {
-      id: Date.now().toString(),
-      name: "Client Name",
-      role: "Role",
-      company: "Company",
-      content: "Testimonial content",
-      rating: 5,
-      enabled: true
-    };
-    setConfig(prev => ({
-      ...prev,
-      testimonials: [...prev.testimonials, newTestimonial]
-    }));
-  };
-
-  const removeTestimonial = (id: string) => {
-    setConfig(prev => ({
-      ...prev,
-      testimonials: prev.testimonials.filter(t => t.id !== id)
-    }));
-  };
-
-  const addPricingPlan = () => {
-    const newPlan = {
-      id: Date.now().toString(),
-      name: "New Plan",
-      price: "$0",
-      period: "month",
-      features: ["Feature 1"],
-      popular: false,
-      enabled: true
-    };
-    setConfig(prev => ({
-      ...prev,
-      pricing: [...prev.pricing, newPlan]
-    }));
-  };
-
-  const removePricingPlan = (id: string) => {
-    setConfig(prev => ({
-      ...prev,
-      pricing: prev.pricing.filter(p => p.id !== id)
-    }));
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Landing Page Configuration</h1>
-            <p className="text-gray-600 mt-2">Manage your landing page content and appearance</p>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline">
-              <Eye className="mr-2 h-4 w-4" />
-              Preview
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="hero" className="flex items-center gap-2">
-              <Type className="h-4 w-4" />
-              Hero
-            </TabsTrigger>
-            <TabsTrigger value="branding" className="flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Branding
-            </TabsTrigger>
-            <TabsTrigger value="features" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Features
-            </TabsTrigger>
-            <TabsTrigger value="testimonials" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Testimonials
-            </TabsTrigger>
-            <TabsTrigger value="pricing" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Pricing
-            </TabsTrigger>
-            <TabsTrigger value="contact" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              Contact
-            </TabsTrigger>
-            <TabsTrigger value="html" className="flex items-center gap-2">
-              <Image className="h-4 w-4" />
-              HTML/Chat
-            </TabsTrigger>
-            <TabsTrigger value="seo" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              SEO
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Hero Section */}
-          <TabsContent value="hero">
-            <Card>
-              <CardHeader>
-                <CardTitle>Hero Section</CardTitle>
-                <CardDescription>Configure the main hero section of your landing page</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="hero-title">Main Title</Label>
-                  <Input
-                    id="hero-title"
-                    value={config.hero.title}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      hero: { ...prev.hero, title: e.target.value }
-                    }))}
-                    placeholder="Enter main title"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="hero-subtitle">Subtitle</Label>
-                  <Textarea
-                    id="hero-subtitle"
-                    value={config.hero.subtitle}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      hero: { ...prev.hero, subtitle: e.target.value }
-                    }))}
-                    placeholder="Enter subtitle"
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="hero-cta">Call to Action Text</Label>
-                  <Input
-                    id="hero-cta"
-                    value={config.hero.ctaText}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      hero: { ...prev.hero, ctaText: e.target.value }
-                    }))}
-                    placeholder="Enter CTA text"
-                  />
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Testimonials Section */}
