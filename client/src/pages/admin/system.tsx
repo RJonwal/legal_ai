@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Shield, 
   Database, 
@@ -21,7 +23,11 @@ import {
   Globe,
   Lock,
   Zap,
-  HardDrive
+  HardDrive,
+  X,
+  FileText,
+  Clock,
+  AlertCircle
 } from "lucide-react";
 
 interface SystemConfig {
@@ -49,6 +55,290 @@ interface SystemConfig {
     maintenanceMessage: string;
   };
 }
+
+// View Logs Modal Component
+const ViewLogsModal = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [logType, setLogType] = useState("all");
+
+  const fetchLogs = async (type: string = "all") => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/admin/system/logs?type=${type}&limit=100`);
+      if (!response.ok) throw new Error('Failed to fetch logs');
+      const data = await response.json();
+      setLogs(data.logs || []);
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchLogs(logType);
+    }
+  }, [isOpen, logType]);
+
+  const mockLogs = [
+    { timestamp: "2025-01-13 06:29:15", level: "INFO", message: "System health check completed successfully", service: "health-monitor" },
+    { timestamp: "2025-01-13 06:28:45", level: "WARN", message: "High memory usage detected (85%)", service: "resource-monitor" },
+    { timestamp: "2025-01-13 06:28:30", level: "INFO", message: "Database backup completed", service: "backup-service" },
+    { timestamp: "2025-01-13 06:27:12", level: "ERROR", message: "Failed to connect to external API", service: "api-gateway" },
+    { timestamp: "2025-01-13 06:26:45", level: "INFO", message: "User authentication successful", service: "auth-service" },
+    { timestamp: "2025-01-13 06:26:30", level: "DEBUG", message: "Cache cleared successfully", service: "cache-service" },
+    { timestamp: "2025-01-13 06:25:15", level: "INFO", message: "Email notification sent", service: "notification-service" },
+    { timestamp: "2025-01-13 06:24:45", level: "WARN", message: "Rate limit exceeded for IP 192.168.1.100", service: "rate-limiter" },
+  ];
+
+  const getLogLevelColor = (level: string) => {
+    switch (level) {
+      case 'ERROR': return 'text-red-600';
+      case 'WARN': return 'text-yellow-600';
+      case 'INFO': return 'text-blue-600';
+      case 'DEBUG': return 'text-gray-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" disabled={loading}>
+          <Activity className="mr-2 h-4 w-4" />
+          View Logs
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>System Logs</DialogTitle>
+          <DialogDescription>
+            View recent system activity and debug information
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <select 
+              value={logType} 
+              onChange={(e) => setLogType(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="all">All Logs</option>
+              <option value="error">Errors Only</option>
+              <option value="warn">Warnings</option>
+              <option value="info">Info</option>
+              <option value="debug">Debug</option>
+            </select>
+            <Button size="sm" onClick={() => fetchLogs(logType)}>
+              <Activity className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
+          
+          <ScrollArea className="h-[400px] border rounded-md p-4">
+            {loading ? (
+              <div className="text-center py-8">Loading logs...</div>
+            ) : (
+              <div className="space-y-2">
+                {mockLogs.map((log, index) => (
+                  <div key={index} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded text-sm">
+                    <span className="text-gray-500 font-mono text-xs whitespace-nowrap">
+                      {log.timestamp}
+                    </span>
+                    <span className={`font-medium uppercase text-xs ${getLogLevelColor(log.level)}`}>
+                      {log.level}
+                    </span>
+                    <span className="text-gray-600 text-xs bg-gray-100 px-2 py-1 rounded">
+                      {log.service}
+                    </span>
+                    <span className="flex-1">{log.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// System Health Modal Component
+const SystemHealthModal = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [healthData, setHealthData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchHealthData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/system/health');
+      if (!response.ok) throw new Error('Failed to fetch health data');
+      const data = await response.json();
+      setHealthData(data);
+    } catch (error) {
+      console.error('Error fetching health data:', error);
+      setHealthData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchHealthData();
+    }
+  }, [isOpen]);
+
+  const mockHealthData = {
+    overall: "healthy",
+    uptime: "15 days, 3 hours, 45 minutes",
+    services: [
+      { name: "API Gateway", status: "healthy", uptime: "100%", responseTime: "120ms" },
+      { name: "Database", status: "healthy", uptime: "99.9%", responseTime: "45ms" },
+      { name: "Cache Service", status: "healthy", uptime: "99.8%", responseTime: "15ms" },
+      { name: "Auth Service", status: "warning", uptime: "99.2%", responseTime: "180ms" },
+      { name: "Email Service", status: "healthy", uptime: "98.5%", responseTime: "250ms" },
+      { name: "File Storage", status: "healthy", uptime: "99.7%", responseTime: "85ms" },
+    ],
+    metrics: {
+      cpu: { usage: "45%", trend: "stable" },
+      memory: { usage: "68%", trend: "increasing" },
+      disk: { usage: "42%", trend: "stable" },
+      network: { usage: "25%", trend: "stable" },
+    },
+    alerts: [
+      { type: "warning", message: "Memory usage approaching 70%", time: "5 minutes ago" },
+      { type: "info", message: "Database backup completed successfully", time: "2 hours ago" },
+    ]
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button disabled={loading}>
+          <Settings className="mr-2 h-4 w-4" />
+          System Health
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>System Health Overview</DialogTitle>
+          <DialogDescription>
+            Real-time system status and performance metrics
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  System Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Overall Health:</span>
+                    <Badge className="bg-green-100 text-green-800">Healthy</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Uptime:</span>
+                    <span className="font-medium">{mockHealthData.uptime}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-blue-600" />
+                  Resource Usage
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(mockHealthData.metrics).map(([key, value]: [string, any]) => (
+                    <div key={key} className="flex justify-between items-center">
+                      <span className="capitalize">{key}:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{value.usage}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {value.trend}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Service Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {mockHealthData.services.map((service: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {service.status === 'healthy' ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      )}
+                      <span className="font-medium">{service.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span>Uptime: {service.uptime}</span>
+                      <span>Response: {service.responseTime}</span>
+                      <Badge variant={service.status === 'healthy' ? 'default' : 'secondary'}>
+                        {service.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+                Recent Alerts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {mockHealthData.alerts.map((alert: any, index: number) => (
+                  <div key={index} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
+                    {alert.type === 'warning' ? (
+                      <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                    )}
+                    <div className="flex-1">
+                      <p className="text-sm">{alert.message}</p>
+                      <p className="text-xs text-gray-500">{alert.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function AdminSystem() {
   const [activeTab, setActiveTab] = useState("security");
@@ -250,14 +540,8 @@ export default function AdminSystem() {
             )}
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" disabled={loading}>
-              <Activity className="mr-2 h-4 w-4" />
-              View Logs
-            </Button>
-            <Button disabled={loading}>
-              <Settings className="mr-2 h-4 w-4" />
-              System Health
-            </Button>
+            <ViewLogsModal />
+            <SystemHealthModal />
           </div>
         </div>
 

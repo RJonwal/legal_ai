@@ -733,4 +733,136 @@ router.post("/apply-branding", (req: Request, res: Response) => {
 
 
 
+// Admin Profile Management
+router.get("/profile", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/profile 200`);
+  res.json({
+    name: "Admin User",
+    email: "admin@legalai.com",
+    role: "System Administrator",
+    avatar: "",
+    phone: "",
+    department: "IT Operations",
+    lastLogin: new Date().toISOString().split('T')[0],
+    permissions: ["Full Access", "User Management", "System Configuration"],
+    preferences: {
+      emailNotifications: true,
+      smsNotifications: false,
+      theme: "light"
+    }
+  });
+});
+
+router.put("/profile", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/profile 200`);
+  res.json({ success: true, message: "Profile updated successfully" });
+});
+
+// System Health and Logs
+router.get("/system/health", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/system/health 200`);
+  res.json({
+    overall: "healthy",
+    uptime: "15 days, 3 hours, 45 minutes",
+    services: [
+      { name: "API Gateway", status: "healthy", uptime: "100%", responseTime: "120ms" },
+      { name: "Database", status: "healthy", uptime: "99.9%", responseTime: "45ms" },
+      { name: "Cache Service", status: "healthy", uptime: "99.8%", responseTime: "15ms" },
+      { name: "Auth Service", status: "warning", uptime: "99.2%", responseTime: "180ms" },
+      { name: "Email Service", status: "healthy", uptime: "98.5%", responseTime: "250ms" },
+      { name: "File Storage", status: "healthy", uptime: "99.7%", responseTime: "85ms" },
+    ],
+    metrics: {
+      cpu: { usage: "45%", trend: "stable" },
+      memory: { usage: "68%", trend: "increasing" },
+      disk: { usage: "42%", trend: "stable" },
+      network: { usage: "25%", trend: "stable" },
+    },
+    alerts: [
+      { type: "warning", message: "Memory usage approaching 70%", time: "5 minutes ago" },
+      { type: "info", message: "Database backup completed successfully", time: "2 hours ago" },
+    ]
+  });
+});
+
+router.get("/system/logs", (req: Request, res: Response) => {
+  const { type = "all", limit = 100 } = req.query;
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/system/logs 200`);
+  
+  const allLogs = [
+    { timestamp: "2025-01-13 06:29:15", level: "INFO", message: "System health check completed successfully", service: "health-monitor" },
+    { timestamp: "2025-01-13 06:28:45", level: "WARN", message: "High memory usage detected (85%)", service: "resource-monitor" },
+    { timestamp: "2025-01-13 06:28:30", level: "INFO", message: "Database backup completed", service: "backup-service" },
+    { timestamp: "2025-01-13 06:27:12", level: "ERROR", message: "Failed to connect to external API", service: "api-gateway" },
+    { timestamp: "2025-01-13 06:26:45", level: "INFO", message: "User authentication successful", service: "auth-service" },
+    { timestamp: "2025-01-13 06:26:30", level: "DEBUG", message: "Cache cleared successfully", service: "cache-service" },
+    { timestamp: "2025-01-13 06:25:15", level: "INFO", message: "Email notification sent", service: "notification-service" },
+    { timestamp: "2025-01-13 06:24:45", level: "WARN", message: "Rate limit exceeded for IP 192.168.1.100", service: "rate-limiter" },
+  ];
+
+  let filteredLogs = allLogs;
+  if (type !== "all") {
+    filteredLogs = allLogs.filter(log => log.level.toLowerCase() === type.toLowerCase());
+  }
+
+  res.json({
+    logs: filteredLogs.slice(0, Number(limit)),
+    totalCount: filteredLogs.length
+  });
+});
+
+router.get("/system/config", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/system/config 200`);
+  res.json({
+    security: {
+      twoFactorAuth: true,
+      sessionTimeout: true,
+      ipAllowlist: false,
+      passwordPolicy: "strong"
+    },
+    database: {
+      autoBackup: true,
+      backupRetention: 30,
+      lastBackup: "2 hours ago",
+      status: "healthy",
+      uptime: "99.9%"
+    },
+    api: {
+      rateLimit: 1000,
+      apiVersioning: true,
+      corsProtection: true,
+      requestTimeout: 30000
+    },
+    maintenance: {
+      maintenanceMode: false,
+      maintenanceMessage: "System is currently undergoing scheduled maintenance. Please check back later."
+    }
+  });
+});
+
+router.put("/system/config", (req: Request, res: Response) => {
+  const { section, config } = req.body;
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/system/config 200`);
+  res.json({ success: true, message: `${section} configuration updated successfully` });
+});
+
+router.post("/system/security/scan", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/system/security/scan 200`);
+  res.json({ success: true, message: "Security scan completed successfully. No threats detected." });
+});
+
+router.post("/system/database/backup", (req: Request, res: Response) => {
+  console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/system/database/backup 200`);
+  res.json({ success: true, message: "Database backup created successfully" });
+});
+
+router.put("/system/maintenance/mode", (req: Request, res: Response) => {
+  const { enabled, message } = req.body;
+  console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/system/maintenance/mode 200`);
+  res.json({ 
+    success: true, 
+    message: enabled ? "Maintenance mode enabled" : "Maintenance mode disabled" 
+  });
+});
+
 export default router;

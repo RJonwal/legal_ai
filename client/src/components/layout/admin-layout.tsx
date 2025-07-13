@@ -34,12 +34,19 @@ import {
   Scale,
   ToggleLeft,
   ToggleRight,
-  LogOut
+  LogOut,
+  Brain
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface NavigationItem {
   title: string;
@@ -52,6 +59,143 @@ interface NavigationItem {
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
+
+// Profile Modal Component
+const ProfileModal = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: "Admin User",
+    email: "admin@legalai.com",
+    role: "System Administrator",
+    avatar: "",
+    phone: "",
+    department: "IT Operations",
+    lastLogin: new Date().toISOString().split('T')[0],
+    permissions: ["Full Access", "User Management", "System Configuration"],
+    preferences: {
+      emailNotifications: true,
+      smsNotifications: false,
+      theme: "light"
+    }
+  });
+
+  const { toast } = useToast();
+
+  const handleSaveProfile = async () => {
+    try {
+      const response = await fetch('/api/admin/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update profile');
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={profileData.avatar} alt={profileData.name} />
+            <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Admin Profile</DialogTitle>
+          <DialogDescription>
+            Manage your admin profile information and preferences
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                value={profileData.name}
+                onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={profileData.email}
+                onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={profileData.phone}
+                onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="department">Department</Label>
+              <Input
+                id="department"
+                value={profileData.department}
+                onChange={(e) => setProfileData(prev => ({ ...prev, department: e.target.value }))}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label>Role & Permissions</Label>
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Role:</span>
+                <Badge variant="outline">{profileData.role}</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Last Login:</span>
+                <span className="text-sm text-gray-600">{profileData.lastLogin}</span>
+              </div>
+              <div>
+                <span className="text-sm font-medium">Permissions:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {profileData.permissions.map((permission, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {permission}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProfile}>
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [location, navigate] = useLocation();
@@ -123,6 +267,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       url: "/admin/page-management",
       icon: FileText,
       isActive: location === "/admin/page-management"
+    },
+    {
+      title: "Global Prompt Management",
+      url: "/admin/global-prompt-management",
+      icon: Brain,
+      isActive: location === "/admin/global-prompt-management"
     },
     {
       title: "System",
@@ -210,25 +360,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <SidebarGroup>
-            <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <Activity />
-                    <span>View Logs</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <Database />
-                    <span>Database Status</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+
         </SidebarContent>
 
         <SidebarFooter>
@@ -245,9 +377,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="h-4 w-px bg-sidebar-border" />
+          <div className="flex items-center justify-between w-full px-4">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1" />
+              <div className="h-4 w-px bg-sidebar-border" />
+            </div>
+            <ProfileModal />
           </div>
         </header>
 
