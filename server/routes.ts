@@ -856,11 +856,11 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       else if (number.startsWith('5')) brand = 'Mastercard';
       else if (number.startsWith('3')) brand = 'American Express';
 
-      // Mock payment method```python
- update
+      // Mock payment method update
       res.json({ 
-        success: true,         message: 'Payment method updated successfully',
-        paymentmethod: {
+        success: true,
+        message: 'Payment method updated successfully',
+        paymentMethod: {
           last4: number.slice(-4),
           brand,
           expiry,
