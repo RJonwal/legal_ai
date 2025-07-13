@@ -204,6 +204,17 @@ export default function AttorneyConnect() {
   const [showAttorneyPreview, setShowAttorneyPreview] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
   const [stateSearchValue, setStateSearchValue] = useState("");
+  
+  // Pro Se search filters
+  const [proSeSearchTerm, setProSeSearchTerm] = useState("");
+  const [proSeStateFilter, setProSeStateFilter] = useState("all");
+  const [proSeNeedsFilter, setProSeNeedsFilter] = useState("all");
+  const [proSeStateOpen, setProSeStateOpen] = useState(false);
+  const [proSeStateSearchValue, setProSeStateSearchValue] = useState("");
+  
+  // Monetization
+  const [showMonetizationModal, setShowMonetizationModal] = useState(false);
+  const [selectedAttorneyForBilling, setSelectedAttorneyForBilling] = useState<AttorneyProfile | null>(null);
 
   // New attorney form state
   const [newAttorneyForm, setNewAttorneyForm] = useState<NewAttorneyForm>({
@@ -252,9 +263,14 @@ export default function AttorneyConnect() {
 
   // Fetch pro se users
   const { data: proSeUsers = [], isLoading: proSeUsersLoading } = useQuery({
-    queryKey: ['pro-se-users'],
+    queryKey: ['pro-se-users', proSeSearchTerm, proSeStateFilter, proSeNeedsFilter],
     queryFn: async () => {
-      const response = await fetch('/api/admin/pro-se-users');
+      const params = new URLSearchParams();
+      if (proSeSearchTerm) params.append('search', proSeSearchTerm);
+      if (proSeStateFilter && proSeStateFilter !== 'all') params.append('state', proSeStateFilter);
+      if (proSeNeedsFilter && proSeNeedsFilter !== 'all') params.append('needsAttorney', proSeNeedsFilter);
+      
+      const response = await fetch(`/api/admin/pro-se-users?${params}`);
       if (!response.ok) throw new Error('Failed to fetch pro se users');
       return response.json();
     },
@@ -362,6 +378,57 @@ export default function AttorneyConnect() {
       toast({
         title: "Status Updated",
         description: "Attorney status has been updated successfully.",
+      });
+    },
+  });
+
+  // Create billing charge mutation
+  const createBillingChargeMutation = useMutation({
+    mutationFn: async ({ attorneyId, amount, description, type }: { 
+      attorneyId: string; 
+      amount: number; 
+      description: string;
+      type: 'monthly' | 'per_connection' | 'one_time';
+    }) => {
+      const response = await fetch('/api/admin/attorney-billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attorneyId, amount, description, type }),
+      });
+      if (!response.ok) throw new Error('Failed to create billing charge');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attorneys'] });
+      toast({
+        title: "Billing Charge Created",
+        description: "Attorney billing charge has been created successfully.",
+      });
+      setShowMonetizationModal(false);
+      setSelectedAttorneyForBilling(null);
+    },
+  });
+
+  // Update attorney subscription mutation
+  const updateAttorneySubscriptionMutation = useMutation({
+    mutationFn: async ({ id, subscription, monthlyFee }: { 
+      id: string; 
+      subscription: string;
+      monthlyFee?: number;
+    }) => {
+      const response = await fetch(`/api/admin/attorneys/${id}/subscription`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription, monthlyFee }),
+      });
+      if (!response.ok) throw new Error('Failed to update attorney subscription');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attorneys'] });
+      toast({
+        title: "Subscription Updated",
+        description: "Attorney subscription has been updated successfully.",
       });
     },
   });
@@ -688,14 +755,27 @@ export default function AttorneyConnect() {
                           {attorney.availableForProSe ? "Available" : "Unavailable"}
                         </Badge>
                         
-                        <Button
-                          size="sm"
-                          onClick={() => setSelectedAttorney(attorney)}
-                          disabled={!attorney.availableForProSe || attorney.currentProSeClients >= attorney.maxProSeClients}
-                        >
-                          <Network className="h-4 w-4 mr-2" />
-                          Connect
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedAttorneyForBilling(attorney);
+                              setShowMonetizationModal(true);
+                            }}
+                          >
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Billing
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => setSelectedAttorney(attorney)}
+                            disabled={!attorney.availableForProSe || attorney.currentProSeClients >= attorney.maxProSeClients}
+                          >
+                            <Network className="h-4 w-4 mr-2" />
+                            Connect
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -706,6 +786,105 @@ export default function AttorneyConnect() {
         </TabsContent>
 
         <TabsContent value="pro-se" className="space-y-4">
+          {/* Pro Se Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Filter Pro Se Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Search</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Search pro se users..."
+                      value={proSeSearchTerm}
+                      onChange={(e) => setProSeSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>State</Label>
+                  <Popover open={proSeStateOpen} onOpenChange={setProSeStateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={proSeStateOpen}
+                        className="w-full justify-between"
+                      >
+                        {getStateLabel(proSeStateFilter)}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search states..." 
+                          value={proSeStateSearchValue}
+                          onValueChange={setProSeStateSearchValue}
+                        />
+                        <CommandEmpty>No state found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="all"
+                            onSelect={() => {
+                              setProSeStateFilter("all");
+                              setProSeStateOpen(false);
+                              setProSeStateSearchValue("");
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                proSeStateFilter === "all" ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            All states
+                          </CommandItem>
+                          {filteredStates.map((state) => (
+                            <CommandItem
+                              key={state.value}
+                              value={state.value}
+                              onSelect={(currentValue) => {
+                                setProSeStateFilter(currentValue);
+                                setProSeStateOpen(false);
+                                setProSeStateSearchValue("");
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  proSeStateFilter === state.value ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              {state.label} ({state.value})
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={proSeNeedsFilter} onValueChange={setProSeNeedsFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All users" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All users</SelectItem>
+                      <SelectItem value="true">Seeking attorney</SelectItem>
+                      <SelectItem value="false">Connected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {proSeUsers.map((user: ProSeUser) => (
               <Card key={user.id} className="hover:shadow-md transition-shadow">
@@ -1238,6 +1417,278 @@ export default function AttorneyConnect() {
               
               <div className="flex justify-end mt-6">
                 <Button variant="outline" onClick={() => setShowAttorneyPreview(false)}>
+                  Close
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Monetization Modal */}
+      {showMonetizationModal && selectedAttorneyForBilling && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-2xl">
+            <CardHeader>
+              <CardTitle>Attorney Billing & Monetization</CardTitle>
+              <CardDescription>
+                Manage billing and subscription for {selectedAttorneyForBilling.fullName}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2">Current Status</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-blue-800">Subscription: <span className="font-medium capitalize">{selectedAttorneyForBilling.subscription}</span></div>
+                    <div className="text-blue-800">Monthly Rate: {formatCurrency(selectedAttorneyForBilling.hourlyRate)}/hour</div>
+                  </div>
+                  <div>
+                    <div className="text-blue-800">Active Clients: {selectedAttorneyForBilling.currentProSeClients}/{selectedAttorneyForBilling.maxProSeClients}</div>
+                    <div className="text-blue-800">Total Connections: {selectedAttorneyForBilling.connections.length}</div>
+                  </div>
+                </div>
+              </div>
+
+              <Tabs defaultValue="subscription" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="subscription">Subscription</TabsTrigger>
+                  <TabsTrigger value="charges">One-time Charges</TabsTrigger>
+                  <TabsTrigger value="pricing">Pricing Tiers</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="subscription" className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Subscription Plan</Label>
+                      <Select
+                        value={selectedAttorneyForBilling.subscription}
+                        onValueChange={(value) => {
+                          const monthlyFees = {
+                            'free': 0,
+                            'basic': 4900, // $49/month
+                            'premium': 9900, // $99/month
+                            'enterprise': 19900 // $199/month
+                          };
+                          updateAttorneySubscriptionMutation.mutate({
+                            id: selectedAttorneyForBilling.id,
+                            subscription: value,
+                            monthlyFee: monthlyFees[value as keyof typeof monthlyFees]
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">Free - $0/month (5 connections max)</SelectItem>
+                          <SelectItem value="basic">Basic - $49/month (15 connections)</SelectItem>
+                          <SelectItem value="premium">Premium - $99/month (50 connections)</SelectItem>
+                          <SelectItem value="enterprise">Enterprise - $199/month (Unlimited)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <h5 className="font-medium mb-2">Monthly Billing Options</h5>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Platform Fee (5% of connections)</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const connectionFee = selectedAttorneyForBilling.connections.length * 2500; // $25 per connection
+                              createBillingChargeMutation.mutate({
+                                attorneyId: selectedAttorneyForBilling.id,
+                                amount: connectionFee,
+                                description: `Platform fee for ${selectedAttorneyForBilling.connections.length} active connections`,
+                                type: 'monthly'
+                              });
+                            }}
+                          >
+                            Charge ${(selectedAttorneyForBilling.connections.length * 25).toFixed(2)}
+                          </Button>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Premium Features</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              createBillingChargeMutation.mutate({
+                                attorneyId: selectedAttorneyForBilling.id,
+                                amount: 2900, // $29
+                                description: 'Premium features monthly fee',
+                                type: 'monthly'
+                              });
+                            }}
+                          >
+                            Charge $29.00
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="charges" className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button
+                        onClick={() => {
+                          createBillingChargeMutation.mutate({
+                            attorneyId: selectedAttorneyForBilling.id,
+                            amount: 9900, // $99
+                            description: 'One-time setup fee',
+                            type: 'one_time'
+                          });
+                        }}
+                        disabled={createBillingChargeMutation.isPending}
+                      >
+                        Setup Fee - $99
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          createBillingChargeMutation.mutate({
+                            attorneyId: selectedAttorneyForBilling.id,
+                            amount: 4900, // $49
+                            description: 'Verification fee',
+                            type: 'one_time'
+                          });
+                        }}
+                        disabled={createBillingChargeMutation.isPending}
+                      >
+                        Verification Fee - $49
+                      </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Custom Charge</Label>
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="Amount (e.g., 25.00)"
+                          type="number"
+                          step="0.01"
+                          id="customAmount"
+                        />
+                        <Input
+                          placeholder="Description"
+                          id="customDescription"
+                        />
+                        <Button
+                          onClick={() => {
+                            const amountInput = document.getElementById('customAmount') as HTMLInputElement;
+                            const descInput = document.getElementById('customDescription') as HTMLInputElement;
+                            const amount = Math.round(parseFloat(amountInput.value) * 100);
+                            if (amount > 0 && descInput.value) {
+                              createBillingChargeMutation.mutate({
+                                attorneyId: selectedAttorneyForBilling.id,
+                                amount,
+                                description: descInput.value,
+                                type: 'one_time'
+                              });
+                              amountInput.value = '';
+                              descInput.value = '';
+                            }
+                          }}
+                          disabled={createBillingChargeMutation.isPending}
+                        >
+                          Charge
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="pricing" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="p-4">
+                      <h5 className="font-medium mb-2">Per-Connection Model</h5>
+                      <p className="text-sm text-gray-600 mb-3">Charge attorneys for each pro se connection</p>
+                      <div className="space-y-2">
+                        <Button 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => {
+                            createBillingChargeMutation.mutate({
+                              attorneyId: selectedAttorneyForBilling.id,
+                              amount: 2500, // $25 per connection
+                              description: 'Per-connection fee',
+                              type: 'per_connection'
+                            });
+                          }}
+                        >
+                          $25 per connection
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => {
+                            createBillingChargeMutation.mutate({
+                              attorneyId: selectedAttorneyForBilling.id,
+                              amount: 5000, // $50 per connection
+                              description: 'Premium per-connection fee',
+                              type: 'per_connection'
+                            });
+                          }}
+                        >
+                          $50 per connection
+                        </Button>
+                      </div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <h5 className="font-medium mb-2">Revenue Share</h5>
+                      <p className="text-sm text-gray-600 mb-3">Percentage of attorney's earnings</p>
+                      <div className="space-y-2">
+                        <Button 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => {
+                            const revenueShare = Math.round(selectedAttorneyForBilling.hourlyRate * 0.05); // 5%
+                            createBillingChargeMutation.mutate({
+                              attorneyId: selectedAttorneyForBilling.id,
+                              amount: revenueShare,
+                              description: '5% revenue share',
+                              type: 'monthly'
+                            });
+                          }}
+                        >
+                          5% Revenue Share
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => {
+                            const revenueShare = Math.round(selectedAttorneyForBilling.hourlyRate * 0.10); // 10%
+                            createBillingChargeMutation.mutate({
+                              attorneyId: selectedAttorneyForBilling.id,
+                              amount: revenueShare,
+                              description: '10% revenue share',
+                              type: 'monthly'
+                            });
+                          }}
+                        >
+                          10% Revenue Share
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowMonetizationModal(false);
+                    setSelectedAttorneyForBilling(null);
+                  }}
+                >
                   Close
                 </Button>
               </div>

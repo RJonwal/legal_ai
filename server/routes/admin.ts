@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import type { Request, Response } from "express";
 
@@ -148,11 +147,11 @@ router.get("/pages", (req: Request, res: Response) => {
 router.get("/pages/:id", (req: Request, res: Response) => {
   const { id } = req.params;
   const page = pageManagement.pages.find(p => p.id === id);
-  
+
   if (!page) {
     return res.status(404).json({ error: "Page not found" });
   }
-  
+
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pages/${id} 200`);
   res.json(page);
 });
@@ -166,7 +165,7 @@ router.post("/pages", (req: Request, res: Response) => {
       lastModified: new Date().toISOString().split('T')[0],
       type: req.body.type || "custom"
     };
-    
+
     pageManagement.pages.push(newPage);
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/pages 201`);
     res.status(201).json(newPage);
@@ -181,17 +180,17 @@ router.put("/pages/:id", (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const pageIndex = pageManagement.pages.findIndex(p => p.id === id);
-    
+
     if (pageIndex === -1) {
       return res.status(404).json({ error: "Page not found" });
     }
-    
+
     pageManagement.pages[pageIndex] = {
       ...pageManagement.pages[pageIndex],
       ...req.body,
       lastModified: new Date().toISOString().split('T')[0]
     };
-    
+
     console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/pages/${id} 200`);
     res.json(pageManagement.pages[pageIndex]);
   } catch (error) {
@@ -205,17 +204,17 @@ router.delete("/pages/:id", (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const pageIndex = pageManagement.pages.findIndex(p => p.id === id);
-    
+
     if (pageIndex === -1) {
       return res.status(404).json({ error: "Page not found" });
     }
-    
+
     // Prevent deletion of core pages
     const page = pageManagement.pages[pageIndex];
     if (page.type === 'terms' || page.type === 'privacy') {
       return res.status(400).json({ error: "Cannot delete core pages" });
     }
-    
+
     pageManagement.pages.splice(pageIndex, 1);
     console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/pages/${id} 200`);
     res.json({ success: true, message: "Page deleted successfully" });
@@ -339,10 +338,10 @@ router.put("/branding-config", (req: Request, res: Response) => {
 router.post("/branding/upload", (req: Request, res: Response) => {
   try {
     const { type, imageData, filename } = req.body;
-    
+
     // Simulate file upload - in production, you'd save to cloud storage
     const mockUrl = `/uploads/branding/${type}/${Date.now()}-${filename}`;
-    
+
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/branding/upload 200`);
     res.json({
       success: true,
@@ -375,16 +374,16 @@ router.get("/branding/css-variables", (req: Request, res: Response) => {
   --brand-text: ${brandingConfig.colors.text};
   --brand-muted: ${brandingConfig.colors.muted};
   --brand-border: ${brandingConfig.colors.border};
-  
+
   /* Typography */
   --brand-font-family: '${brandingConfig.typography.fontFamily}', sans-serif;
   --brand-heading-font: '${brandingConfig.typography.headingFont}', sans-serif;
   --brand-body-font: '${brandingConfig.typography.bodyFont}', sans-serif;
   --brand-font-scale: ${brandingConfig.typography.fontScale};
-  
+
   /* Theme */
   --brand-border-radius: ${brandingConfig.theme.borderRadius};
-  
+
   /* Logo */
   --brand-logo-height: ${brandingConfig.logo.logoHeight}px;
   --brand-logo-width: ${brandingConfig.logo.logoWidth}px;
@@ -502,7 +501,7 @@ router.get("/logo-config", (req: Request, res: Response) => {
 // Page management endpoints
 router.get("/pages", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pages 200`);
-  
+
   const pages = [
     {
       id: "1",
@@ -681,9 +680,9 @@ let attorneyDirectory = {
 // Get all attorneys
 router.get("/attorneys", (req: Request, res: Response) => {
   const { search, state, zipCode, practiceArea, availability } = req.query;
-  
+
   let filteredAttorneys = attorneyDirectory.attorneys;
-  
+
   if (search) {
     const searchTerm = search.toString().toLowerCase();
     filteredAttorneys = filteredAttorneys.filter(attorney => 
@@ -692,27 +691,27 @@ router.get("/attorneys", (req: Request, res: Response) => {
       attorney.practiceAreas.some(area => area.toLowerCase().includes(searchTerm))
     );
   }
-  
+
   if (state) {
     filteredAttorneys = filteredAttorneys.filter(attorney => attorney.state === state);
   }
-  
+
   if (zipCode) {
     filteredAttorneys = filteredAttorneys.filter(attorney => attorney.zipCode === zipCode);
   }
-  
+
   if (practiceArea) {
     filteredAttorneys = filteredAttorneys.filter(attorney => 
       attorney.practiceAreas.includes(practiceArea.toString())
     );
   }
-  
+
   if (availability === 'available') {
     filteredAttorneys = filteredAttorneys.filter(attorney => 
       attorney.availableForProSe && attorney.currentProSeClients < attorney.maxProSeClients
     );
   }
-  
+
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/attorneys 200`);
   res.json(filteredAttorneys);
 });
@@ -730,7 +729,7 @@ router.get("/attorneys/stats", (req: Request, res: Response) => {
     activeConnections: attorneyDirectory.proSeUsers.filter(u => u.connectionStatus === 'active').length,
     seekingConnections: attorneyDirectory.proSeUsers.filter(u => u.connectionStatus === 'seeking').length
   };
-  
+
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/attorneys/stats 200`);
   res.json(stats);
 });
@@ -738,9 +737,9 @@ router.get("/attorneys/stats", (req: Request, res: Response) => {
 // Get all pro se users
 router.get("/pro-se-users", (req: Request, res: Response) => {
   const { search, state, needsAttorney } = req.query;
-  
+
   let filteredUsers = attorneyDirectory.proSeUsers;
-  
+
   if (search) {
     const searchTerm = search.toString().toLowerCase();
     filteredUsers = filteredUsers.filter(user => 
@@ -748,15 +747,15 @@ router.get("/pro-se-users", (req: Request, res: Response) => {
       user.caseType.toLowerCase().includes(searchTerm)
     );
   }
-  
+
   if (state) {
     filteredUsers = filteredUsers.filter(user => user.state === state);
   }
-  
+
   if (needsAttorney === 'true') {
     filteredUsers = filteredUsers.filter(user => user.needsAttorney);
   }
-  
+
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pro-se-users 200`);
   res.json(filteredUsers);
 });
@@ -765,32 +764,32 @@ router.get("/pro-se-users", (req: Request, res: Response) => {
 router.post("/attorney-connections", (req: Request, res: Response) => {
   try {
     const { attorneyId, proSeUserId, connectionType = "consultation" } = req.body;
-    
+
     // Find the attorney and pro se user
     const attorneyIndex = attorneyDirectory.attorneys.findIndex(a => a.id === attorneyId);
     const proSeIndex = attorneyDirectory.proSeUsers.findIndex(u => u.id === proSeUserId);
-    
+
     if (attorneyIndex === -1 || proSeIndex === -1) {
       return res.status(404).json({ error: "Attorney or Pro Se user not found" });
     }
-    
+
     const attorney = attorneyDirectory.attorneys[attorneyIndex];
     const proSeUser = attorneyDirectory.proSeUsers[proSeIndex];
-    
+
     // Check if attorney is available
     if (attorney.currentProSeClients >= attorney.maxProSeClients) {
       return res.status(400).json({ error: "Attorney has reached maximum client capacity" });
     }
-    
+
     // Update connections
     attorney.connections.push(proSeUserId);
     attorney.currentProSeClients += 1;
-    
+
     proSeUser.connectedAttorneyId = attorneyId;
     proSeUser.connectionStatus = "active";
     proSeUser.connectedAt = new Date().toISOString().split('T')[0];
     proSeUser.needsAttorney = false;
-    
+
     const connection = {
       id: Date.now().toString(),
       attorneyId,
@@ -799,7 +798,7 @@ router.post("/attorney-connections", (req: Request, res: Response) => {
       status: "active",
       createdAt: new Date().toISOString()
     };
-    
+
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/attorney-connections 201`);
     res.status(201).json({ success: true, connection });
   } catch (error) {
@@ -826,9 +825,9 @@ router.post("/attorneys", (req: Request, res: Response) => {
       joinedAt: new Date().toISOString().split('T')[0],
       connections: []
     };
-    
+
     attorneyDirectory.attorneys.push(newAttorney);
-    
+
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/attorneys 200`);
     res.status(201).json({ success: true, attorney: newAttorney });
   } catch (error) {
@@ -842,23 +841,144 @@ router.put("/attorneys/:id/status", (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { isActive, availableForProSe } = req.body;
-    
+
     const attorneyIndex = attorneyDirectory.attorneys.findIndex(a => a.id === id);
     if (attorneyIndex === -1) {
       return res.status(404).json({ error: "Attorney not found" });
     }
-    
+
     attorneyDirectory.attorneys[attorneyIndex] = {
       ...attorneyDirectory.attorneys[attorneyIndex],
       isActive: isActive !== undefined ? isActive : attorneyDirectory.attorneys[attorneyIndex].isActive,
       availableForProSe: availableForProSe !== undefined ? availableForProSe : attorneyDirectory.attorneys[attorneyIndex].availableForProSe
     };
-    
+
     console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/attorneys/${id}/status 200`);
     res.json({ success: true, attorney: attorneyDirectory.attorneys[attorneyIndex] });
   } catch (error) {
     console.error("Error updating attorney status:", error);
     res.status(500).json({ error: "Failed to update attorney status" });
+  }
+});
+
+// Update attorney subscription
+router.put("/attorneys/:id/subscription", (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { subscription, monthlyFee } = req.body;
+
+    const attorneyIndex = attorneyDirectory.attorneys.findIndex(a => a.id === id);
+    if (attorneyIndex === -1) {
+      return res.status(404).json({ error: "Attorney not found" });
+    }
+
+    attorneyDirectory.attorneys[attorneyIndex] = {
+      ...attorneyDirectory.attorneys[attorneyIndex],
+      subscription: subscription || attorneyDirectory.attorneys[attorneyIndex].subscription
+    };
+
+    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/attorneys/${id}/subscription 200`);
+    res.json({ success: true, attorney: attorneyDirectory.attorneys[attorneyIndex] });
+  } catch (error) {
+    console.error("Error updating attorney subscription:", error);
+    res.status(500).json({ error: "Failed to update attorney subscription" });
+  }
+});
+
+// Create billing charge for attorney
+router.post("/attorney-billing", (req: Request, res: Response) => {
+  try {
+    const { attorneyId, amount, description, type } = req.body;
+
+    const attorney = attorneyDirectory.attorneys.find(a => a.id === attorneyId);
+    if (!attorney) {
+      return res.status(404).json({ error: "Attorney not found" });
+    }
+
+    // Create billing record (in production, this would integrate with Stripe/payment processor)
+    const billingRecord = {
+      id: Date.now().toString(),
+      attorneyId,
+      attorneyName: attorney.fullName,
+      amount, // amount in cents
+      description,
+      type, // 'monthly', 'per_connection', 'one_time'
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      dueDate: type === 'monthly' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : new Date().toISOString()
+    };
+
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/attorney-billing 201`);
+    res.status(201).json({ 
+      success: true, 
+      billing: billingRecord,
+      message: `Billing charge of $${(amount / 100).toFixed(2)} created for ${attorney.fullName}`,
+      paymentUrl: `https://billing.legalai.pro/pay/${billingRecord.id}` // Mock payment URL
+    });
+  } catch (error) {
+    console.error("Error creating attorney billing:", error);
+    res.status(500).json({ error: "Failed to create billing charge" });
+  }
+});
+
+// Get attorney billing history
+router.get("/attorneys/:id/billing", (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Mock billing history (in production, fetch from billing database)
+    const billingHistory = [
+      {
+        id: "bill_1",
+        amount: 4900,
+        description: "Monthly subscription - Premium",
+        type: "monthly",
+        status: "paid",
+        createdAt: "2024-10-01",
+        paidAt: "2024-10-02"
+      },
+      {
+        id: "bill_2", 
+        amount: 12500,
+        description: "Per-connection fees (5 connections)",
+        type: "per_connection",
+        status: "paid",
+        createdAt: "2024-10-01",
+        paidAt: "2024-10-03"
+      }
+    ];
+
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/attorneys/${id}/billing 200`);
+    res.json(billingHistory);
+  } catch (error) {
+    console.error("Error fetching attorney billing:", error);
+    res.status(500).json({ error: "Failed to fetch billing history" });
+  }
+});
+
+// Get platform revenue analytics
+router.get("/billing/analytics", (req: Request, res: Response) => {
+  try {
+    const analytics = {
+      totalRevenue: 45600, // $456.00 in cents
+      monthlyRecurring: 19800, // $198.00 in cents
+      oneTimeCharges: 25800, // $258.00 in cents
+      activeSubscriptions: attorneyDirectory.attorneys.filter(a => a.subscription !== 'free').length,
+      averageRevenuePerAttorney: 22800, // $228.00 in cents
+      subscriptionBreakdown: {
+        free: attorneyDirectory.attorneys.filter(a => a.subscription === 'free').length,
+        basic: attorneyDirectory.attorneys.filter(a => a.subscription === 'basic').length,
+        premium: attorneyDirectory.attorneys.filter(a => a.subscription === 'premium').length,
+        enterprise: attorneyDirectory.attorneys.filter(a => a.subscription === 'enterprise').length
+      },
+      monthlyGrowth: 12.5 // percentage
+    };
+
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/billing/analytics 200`);
+    res.json(analytics);
+  } catch (error) {
+    console.error("Error fetching billing analytics:", error);
+    res.status(500).json({ error: "Failed to fetch billing analytics" });
   }
 });
 
