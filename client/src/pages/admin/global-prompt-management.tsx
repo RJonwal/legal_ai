@@ -45,6 +45,13 @@ export default function GlobalPromptManagement() {
   // Fetch global prompts from API
   const { data: prompts, isLoading, refetch } = useQuery({
     queryKey: ['/api/admin/global-prompts'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/global-prompts');
+      if (!response.ok) {
+        throw new Error('Failed to fetch prompts');
+      }
+      return response.json();
+    },
     retry: 3,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -52,9 +59,18 @@ export default function GlobalPromptManagement() {
   // Update prompt mutation
   const updatePromptMutation = useMutation({
     mutationFn: async (data: { id: string; content: string }) => {
-      const response = await apiRequest('PUT', `/api/admin/global-prompts/${data.id}`, {
-        content: data.content
+      const response = await fetch(`/api/admin/global-prompts/${data.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: data.content
+        }),
       });
+      if (!response.ok) {
+        throw new Error('Failed to update prompt');
+      }
       return response.json();
     },
     onSuccess: () => {
