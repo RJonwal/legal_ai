@@ -25,7 +25,9 @@ import {
   Globe,
   Lock,
   Brain,
-  MessageSquare
+  MessageSquare,
+  Zap,
+  TrendingUp
 } from "lucide-react";
 import { SiFacebook, SiX, SiLinkedin } from "react-icons/si";
 import { Link, useLocation } from "wouter";
