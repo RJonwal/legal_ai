@@ -39,6 +39,7 @@ export const cases = pgTable("cases", {
   caseNumber: text("case_number").unique(),
   caseType: text("case_type").notNull(),
   status: text("status").notNull().default("active"),
+  priority: text("priority").notNull().default("medium"),
   clientName: text("client_name").notNull(),
   opposingParty: text("opposing_party"),
   assignedAttorney: integer("assigned_attorney").references(() => users.id),

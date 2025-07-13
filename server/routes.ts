@@ -122,6 +122,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new case
+  app.post("/api/cases", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { title, description, clientName, caseType, status, priority } = req.body;
+      const userId = req.user!.id;
+
+      if (!title || !clientName || !caseType) {
+        return res.status(400).json({ 
+          message: "Missing required fields: title, clientName, and caseType are required" 
+        });
+      }
+
+      // Generate case number
+      const caseNumber = `CASE-${Date.now()}`;
+
+      const newCase = await storage.createCase({
+        title,
+        description: description || "",
+        clientName,
+        caseType,
+        status: status || "active",
+        priority: priority || "medium",
+        caseNumber,
+        assignedAttorney: userId,
+        opposingParty: null,
+      });
+
+      res.status(201).json(newCase);
+    } catch (error) {
+      console.error("Create case error:", error);
+      res.status(500).json({ message: "Failed to create case" });
+    }
+  });
+
   // Get single case
   app.get("/api/cases/:id", async (req, res) => {
     try {

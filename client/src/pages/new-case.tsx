@@ -36,10 +36,8 @@ export default function NewCase() {
 
   const createCaseMutation = useMutation({
     mutationFn: async (caseData: NewCaseForm) => {
-      return await apiRequest("/api/cases", {
-        method: "POST",
-        body: JSON.stringify(caseData),
-      });
+      const response = await apiRequest('POST', '/api/cases', caseData);
+      return response.json();
     },
     onSuccess: (newCase) => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases"] });

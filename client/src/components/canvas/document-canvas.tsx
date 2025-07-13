@@ -91,13 +91,13 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
           const caseResponse = await apiRequest('GET', `/api/cases/${caseId}`);
           const caseData = await caseResponse.json();
           
-          await NotificationService.createCaseUpdateNotification(
-            caseId,
-            caseData.title || 'Current Case',
-            'Document Finalized',
-            `Document "${updatedDocument.title}" has been finalized and is ready for review or filing.`,
-            'medium'
-          );
+          // await NotificationService.createCaseUpdateNotification(
+          //   caseId,
+          //   caseData.title || 'Current Case',
+          //   'Document Finalized',
+          //   `Document "${updatedDocument.title}" has been finalized and is ready for review or filing.`,
+          //   'medium'
+          // );
           
           queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
         } catch (error) {
@@ -125,13 +125,13 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
         const caseResponse = await apiRequest('GET', `/api/cases/${caseId}`);
         const caseData = await caseResponse.json();
         
-        await NotificationService.createDocumentNotification(
-          caseId,
-          caseData.title || 'Current Case',
-          newDocument.title,
-          'view_document',
-          { documentId: newDocument.id, documentType: newDocument.type }
-        );
+        // await NotificationService.createDocumentNotification(
+        //   caseId,
+        //   caseData.title || 'Current Case',
+        //   newDocument.title,
+        //   'view_document',
+        //   { documentId: newDocument.id, documentType: newDocument.type }
+        // );
         
         queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       } catch (error) {
