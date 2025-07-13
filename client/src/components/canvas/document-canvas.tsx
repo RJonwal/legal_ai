@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { NotificationService } from "@/lib/notification-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,10 +80,30 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       const response = await apiRequest('PUT', `/api/documents/${document.id}`, updates);
       return response.json();
     },
-    onSuccess: (updatedDocument) => {
+    onSuccess: async (updatedDocument) => {
       setIsEditing(false);
       onDocumentUpdate?.(updatedDocument);
       queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'documents'] });
+      
+      // Create notification for final document save
+      if (updatedDocument.status === 'final') {
+        try {
+          const caseResponse = await apiRequest('GET', `/api/cases/${caseId}`);
+          const caseData = await caseResponse.json();
+          
+          await NotificationService.createCaseUpdateNotification(
+            caseId,
+            caseData.title || 'Current Case',
+            'Document Finalized',
+            `Document "${updatedDocument.title}" has been finalized and is ready for review or filing.`,
+            'medium'
+          );
+          
+          queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+        } catch (error) {
+          console.error('Error creating document finalization notification:', error);
+        }
+      }
     },
   });
 
@@ -94,10 +115,28 @@ export function DocumentCanvas({ caseId, document, onDocumentUpdate }: DocumentC
       });
       return response.json();
     },
-    onSuccess: (newDocument) => {
+    onSuccess: async (newDocument) => {
       setTitle(newDocument.title);
       setContent(newDocument.content);
       onDocumentUpdate?.(newDocument);
+      
+      // Create notification for document generation
+      try {
+        const caseResponse = await apiRequest('GET', `/api/cases/${caseId}`);
+        const caseData = await caseResponse.json();
+        
+        await NotificationService.createDocumentNotification(
+          caseId,
+          caseData.title || 'Current Case',
+          newDocument.title,
+          'view_document',
+          { documentId: newDocument.id, documentType: newDocument.type }
+        );
+        
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      } catch (error) {
+        console.error('Error creating document notification:', error);
+      }
     },
   });
 

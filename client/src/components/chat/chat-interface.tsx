@@ -1,11 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { ChatMessage } from "@/lib/types";
+import { NotificationService } from "@/lib/notification-service";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { FileText, Brain, AlertTriangle, Clock, CheckCircle } from "lucide-react";
+import { ChatMessage } from "@/lib/types";
 import { Share2, Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 

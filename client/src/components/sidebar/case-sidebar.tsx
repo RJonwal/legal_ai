@@ -12,6 +12,7 @@ import { SearchCasesModal } from "@/components/modals/search-cases-modal";
 import { SettingsModal } from "@/components/modals/settings-modal";
 import { UserProfileModal } from "@/components/modals/user-profile-modal";
 import { BillingModal } from "@/components/modals/billing-modal";
+import { NotificationsModal } from "@/components/modals/notifications-modal";
 import { 
   Search, 
   Plus, 
@@ -23,7 +24,8 @@ import {
   FileText,
   Users,
   User,
-  FolderOpen
+  FolderOpen,
+  Bell
 } from "lucide-react";
 interface CaseSidebarProps {
   currentCaseId?: number;
@@ -59,6 +61,7 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [userProfileOpen, setUserProfileOpen] = useState(false);
   const [billingOpen, setBillingOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
@@ -67,6 +70,11 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
   const { data: cases = [] } = useQuery({
     queryKey: ['/api/cases'],
     refetchOnWindowFocus: false,
+  });
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['/api/notifications'],
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const getCaseTypeColor = (caseType: string) => {
@@ -184,6 +192,23 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
 
           <Button
             variant="ghost"
+            className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50 relative"
+            onClick={() => setNotificationsOpen(true)}
+          >
+            <Bell className="h-4 w-4 mr-2" />
+            Notifications
+            {notifications.filter((n: any) => !n.read && !n.archived).length > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full text-xs p-0 flex items-center justify-center"
+              >
+                {notifications.filter((n: any) => !n.read && !n.archived).length}
+              </Badge>
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
             className="w-full justify-start text-sm text-gray-700 hover:bg-gray-50"
             onClick={() => setBillingOpen(true)}
           >
@@ -253,6 +278,18 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
       <BillingModal
         isOpen={billingOpen}
         onClose={() => setBillingOpen(false)}
+      />
+
+      <NotificationsModal
+        isOpen={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+        onTakeAction={(notification) => {
+          // Handle taking action on notifications
+          if (notification.caseId && notification.caseId !== currentCaseId) {
+            onCaseSelect(notification.caseId);
+          }
+          setNotificationsOpen(false);
+        }}
       />
     </div>
   );
