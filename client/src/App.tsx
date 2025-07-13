@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLayout from "@/components/layout/mobile-layout";
 import AdminLayout from "@/components/layout/admin-layout";
-import { lazy } from 'react';
+import { lazy, useEffect } from 'react';
 
 // Import pages
 import LandingPage from "@/pages/landing";
@@ -30,56 +30,105 @@ import VoipManagement from "@/pages/admin/voip-management";
 import PageManagement from "@/pages/admin/page-management";
 
 import "./index.css";
+import { ErrorBoundary } from "./components/error-boundary";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   const isMobile = useIsMobile();
 
+  // Memory cleanup and performance monitoring
+  useEffect(() => {
+    // Monitor memory usage in development
+    if (process.env.NODE_ENV === 'development') {
+      const memoryMonitor = setInterval(() => {
+        if ('memory' in performance) {
+          const memory = (performance as any).memory;
+          if (memory.usedJSHeapSize > 100 * 1024 * 1024) { // 100MB threshold
+            console.warn('High memory usage detected:', {
+              used: Math.round(memory.usedJSHeapSize / 1024 / 1024) + 'MB',
+              total: Math.round(memory.totalJSHeapSize / 1024 / 1024) + 'MB',
+              limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024) + 'MB'
+            });
+          }
+        }
+      }, 30000); // Check every 30 seconds
+
+      return () => clearInterval(memoryMonitor);
+    }
+  }, []);
+
+  // Global error handler for unhandled promises
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      event.preventDefault(); // Prevent default browser behavior
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router>
-          <Switch>
-            {/* Landing page */}
-            <Route path="/" component={LandingPage} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Router>
+            <Switch>
+              {/* Landing page */}
+              <Route path="/" component={LandingPage} />
 
-            {/* Admin routes with layout */}
-            <Route path="/admin">
-              <AdminLayout>
-                <AdminDashboard />
-              </AdminLayout>
-            </Route>
+              {/* Admin routes with layout */}
+              <Route path="/admin">
+                <AdminLayout>
+                  <AdminDashboard />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/users">
-              <AdminLayout>
-                <AdminUsers />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/users">
+                <AdminLayout>
+                  <AdminUsers />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/billing">
-              <AdminLayout>
-                <AdminBilling />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/billing">
+                <AdminLayout>
+                  <AdminBilling />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/api-management">
-              <AdminLayout>
-                <AdminAPIManagement />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/api-management">
+                <AdminLayout>
+                  <AdminAPIManagement />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/analytics">
-              <AdminLayout>
-                <AdminAnalytics />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/analytics">
+                <AdminLayout>
+                  <AdminAnalytics />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/email-management">
-              <AdminLayout>
-                <EmailManagement />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/email-management">
+                <AdminLayout>
+                  <EmailManagement />
+                </AdminLayout>
+              </Route>
 
              <Route path="/admin/email-settings">
               <AdminLayout>
@@ -87,50 +136,51 @@ function App() {
               </AdminLayout>
             </Route>
 
-            <Route path="/admin/livechat-management">
-              <AdminLayout>
-                <LiveChatManagement />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/livechat-management">
+                <AdminLayout>
+                  <LiveChatManagement />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/voip-management">
-              <AdminLayout>
-                <VoipManagement />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/voip-management">
+                <AdminLayout>
+                  <VoipManagement />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/page-management">
-              <AdminLayout>
-                <PageManagement />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/page-management">
+                <AdminLayout>
+                  <PageManagement />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/system">
-              <AdminLayout>
-                <AdminSystem />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/system">
+                <AdminLayout>
+                  <AdminSystem />
+                </AdminLayout>
+              </Route>
 
-            <Route path="/admin/landing-config">
-              <AdminLayout>
-                <AdminLandingConfig />
-              </AdminLayout>
-            </Route>
+              <Route path="/admin/landing-config">
+                <AdminLayout>
+                  <AdminLandingConfig />
+                </AdminLayout>
+              </Route>
 
-            {/* Main app routes */}
-            <Route path="/dashboard" component={LegalAssistant} />
-            <Route path="/new-case" component={NewCase} />
-            <Route path="/search-cases" component={SearchCases} />
-            <Route path="/profile" component={Profile} />
-            <Route path="/settings" component={Settings} />
+              {/* Main app routes */}
+              <Route path="/dashboard" component={LegalAssistant} />
+              <Route path="/new-case" component={NewCase} />
+              <Route path="/search-cases" component={SearchCases} />
+              <Route path="/profile" component={Profile} />
+              <Route path="/settings" component={Settings} />
 
-            {/* 404 page */}
-            <Route component={NotFound} />
-          </Switch>
-        </Router>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+              {/* 404 page */}
+              <Route component={NotFound} />
+            </Switch>
+          </Router>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

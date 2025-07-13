@@ -12,9 +12,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user", async (req, res) => {
     try {
       const user = await storage.getUser(1); // Mock user ID
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
       res.json(user);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get user" });
+      console.error("Error fetching user:", error);
+      res.status(500).json({ 
+        message: "Failed to get user",
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
@@ -95,17 +102,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Send chat message and get AI response
   app.post("/api/cases/:id/messages", async (req, res) => {
+    // Set timeout for long-running AI requests
+    const timeout = setTimeout(() => {
+      if (!res.headersSent) {
+        res.status(408).json({ message: "Request timeout - AI response took too long" });
+      }
+    }, 30000); // 30 second timeout
+
     try {
       const caseId = parseInt(req.params.id);
       const { content, caseContext } = req.body;
 
-      if (!content) {
-        return res.status(400).json({ message: "Message content is required" });
+      if (!content || typeof content !== 'string') {
+        clearTimeout(timeout);
+        return res.status(400).json({ message: "Valid message content is required" });
       }
 
-      // Get case context
+      if (isNaN(caseId) || caseId <= 0) {
+        clearTimeout(timeout);
+        return res.status(400).json({ message: "Valid case ID is required" });
+      }
+
+      // Get case context with error handling
       const case_ = await storage.getCase(caseId);
       if (!case_) {
+        clearTimeout(timeout);
         return res.status(404).json({ message: "Case not found" });
       }
 
@@ -157,14 +178,27 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         },
       });
 
+      clearTimeout(timeout);
       res.json({
         userMessage,
         assistantMessage,
         aiResponse,
       });
     } catch (error) {
-      console.error("Chat message error:", error);
-      res.status(500).json({ message: "Failed to process message" });
+      clearTimeout(timeout);
+      console.error("Chat message error:", {
+        error: error.message,
+        stack: error.stack,
+        caseId: req.params.id,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          message: "Failed to process message",
+          timestamp: new Date().toISOString()
+        });
+      }
     }
   });
 

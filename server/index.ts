@@ -39,12 +39,31 @@ app.use((req, res, next) => {
 // Add comprehensive process-level error handling to prevent crashes
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
+  // Log stack trace for debugging
+  console.error('Stack:', error.stack);
   // Don't exit - just log the error and continue
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Log additional details for debugging
+  if (reason instanceof Error) {
+    console.error('Error stack:', reason.stack);
+  }
   // Don't exit - just log the error and continue
+});
+
+// Handle memory pressure
+process.on('warning', (warning) => {
+  console.warn('Node.js Warning:', warning.name, warning.message);
+  if (warning.name === 'MaxListenersExceededWarning') {
+    console.warn('Potential memory leak detected - too many listeners');
+  }
+});
+
+// Graceful cleanup on exit
+process.on('exit', (code) => {
+  console.log('Process exiting with code:', code);
 });
 
 // Handle SIGTERM gracefully
@@ -67,12 +86,27 @@ process.on('SIGINT', () => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
 
+      // Log detailed error information
+      console.error("Server error:", {
+        message: err.message,
+        stack: err.stack,
+        url: _req.url,
+        method: _req.method,
+        timestamp: new Date().toISOString()
+      });
+
       // Only send response if not already sent
       if (!res.headersSent) {
-        res.status(status).json({ message });
+        try {
+          res.status(status).json({ 
+            message,
+            timestamp: new Date().toISOString(),
+            ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+          });
+        } catch (responseError) {
+          console.error("Error sending error response:", responseError);
+        }
       }
-      console.error("Server error:", err);
-      // Don't throw the error again - just log it
     });
 
     // importantly only setup vite in development and after
