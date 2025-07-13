@@ -1,16 +1,26 @@
-import { Router } from "express";
-import type { Request, Response } from "express";
+import express, { Request, Response } from "express";
 import { storage } from "../storage";
 import { authenticateToken, type AuthRequest } from "../services/auth";
 
-const router = Router();
+const router = express.Router();
+
+// Get all global prompts
+router.get("/global-prompts", async (req: Request, res: Response) => {
+  try {
+    const prompts = await storage.getAdminPrompts();
+    res.json(prompts);
+  } catch (error) {
+    console.error("Error fetching prompts:", error);
+    res.status(500).json({ error: "Failed to fetch prompts" });
+  }
+});
 
 // Admin Users Management
 router.get("/users", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     // Get all users from database
     const users = await storage.getAllUsers();
-    
+
     res.json(users.map(user => ({
       id: user.id,
       name: user.fullName,
@@ -33,7 +43,7 @@ router.get("/user-analytics", authenticateToken, async (req: AuthRequest, res: R
     const totalUsers = users.length;
     const activeUsers = users.filter(u => u.isVerified).length;
     const proUsers = users.filter(u => u.subscriptionStatus === 'active').length;
-    
+
     res.json({
       totalUsers,
       activeUsers,
@@ -52,7 +62,7 @@ router.get("/dashboard-stats", authenticateToken, async (req: AuthRequest, res: 
   try {
     const users = await storage.getAllUsers();
     const cases = await storage.getAllCases();
-    
+
     const stats = {
       totalUsers: users.length,
       activeUsers: users.filter(u => u.isVerified).length,
@@ -61,7 +71,7 @@ router.get("/dashboard-stats", authenticateToken, async (req: AuthRequest, res: 
       monthlyRevenue: 45678, // Would be calculated from Stripe data
       systemHealth: 99.9
     };
-    
+
     res.json(stats);
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
@@ -253,7 +263,7 @@ router.get("/footer-config", async (req: Request, res: Response) => {
   try {
     const pages = await storage.getAdminPages();
     const landingConfig = await storage.getAdminConfig('landing-config');
-    
+
     const footerPages = pages
       .filter(page => page.showInFooter && page.isPublished)
       .reduce((acc, page) => {
@@ -399,7 +409,7 @@ router.post("/branding/upload", authenticateToken, async (req: AuthRequest, res:
         [type]: fullPath
       }
     };
-    
+
     await storage.setAdminConfig('branding-config', updatedConfig);
 
     console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/branding/upload 200`);
@@ -452,9 +462,9 @@ router.get("/branding/css-variables", async (req: Request, res: Response) => {
         logoWidth: 40
       }
     };
-    
+
     const brandingConfig = config || defaultConfig;
-    
+
     const cssVariables = `
 :root {
   /* Brand Colors */
@@ -530,9 +540,9 @@ router.get("/branding/manifest", async (req: Request, res: Response) => {
         maskableIcon: null
       }
     };
-    
+
     const brandingConfig = config || defaultConfig;
-    
+
     const manifest = {
       name: brandingConfig.brand.companyName,
       short_name: brandingConfig.brand.companyName.replace(/\s+/g, ''),
@@ -591,7 +601,7 @@ router.get("/chat-widget-config", async (req: Request, res: Response) => {
         position: "bottom-right"
       }
     };
-    
+
     res.json({ success: true, config: config || defaultConfig });
   } catch (error) {
     console.error("Error fetching chat widget config:", error);
@@ -626,9 +636,9 @@ router.get("/logo-config", async (req: Request, res: Response) => {
         tagline: "AI-Powered Legal Technology"
       }
     };
-    
+
     const brandingConfig = config || defaultConfig;
-    
+
     res.json({
       logoUrl: brandingConfig.logo.primaryLogo,
       brandName: brandingConfig.brand.companyName,
@@ -654,7 +664,7 @@ router.get("/global-config", async (req: Request, res: Response) => {
       storage.getAdminConfig('chat-widget-config'),
       storage.getAdminPages()
     ]);
-    
+
     res.json({
       branding: branding || { brand: { companyName: "Wizzered" } },
       landing: landing || { hero: { title: "AI-Powered Legal Technology" } },
@@ -672,7 +682,7 @@ router.post("/apply-branding", async (req: Request, res: Response) => {
   try {
     const config = await storage.getAdminConfig('branding-config');
     const brandingConfig = config || { favicon: { ico: null } };
-    
+
     res.json({ 
       success: true, 
       message: "Branding applied globally",
@@ -746,7 +756,7 @@ router.get("/system/health", (req: Request, res: Response) => {
 router.get("/system/logs", (req: Request, res: Response) => {
   const { type = "all", limit = 100 } = req.query;
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/system/logs 200`);
-  
+
   const allLogs = [
     { timestamp: "2025-01-13 06:29:15", level: "INFO", message: "System health check completed successfully", service: "health-monitor" },
     { timestamp: "2025-01-13 06:28:45", level: "WARN", message: "High memory usage detected (85%)", service: "resource-monitor" },
@@ -818,13 +828,14 @@ router.put("/system/maintenance/mode", (req: Request, res: Response) => {
   const { enabled, message } = req.body;
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/system/maintenance/mode 200`);
   res.json({ 
-    success: true, 
+    success:```tool_code
+ true, 
     message: enabled ? "Maintenance mode enabled" : "Maintenance mode disabled" 
   });
 });
 
 // Global Prompt Management - now using database
-router.get("/global-prompts", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/global-prompts", async (req: Request, res: Response) => {
   try {
     const prompts = await storage.getAdminPrompts();
     res.json(prompts);
@@ -903,7 +914,7 @@ router.patch("/global-prompts/:id/toggle", authenticateToken, async (req: AuthRe
   try {
     const { id } = req.params;
     const currentPrompt = await storage.getAdminPrompt(id);
-    
+
     if (!currentPrompt) {
       return res.status(404).json({ error: "Prompt not found" });
     }

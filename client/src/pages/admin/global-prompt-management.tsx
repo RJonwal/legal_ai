@@ -884,7 +884,19 @@ Each action should provide immediate, practical assistance tailored to the speci
   // Mutations for CRUD operations
   const updatePromptMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<GlobalPrompt> }) => {
-      return await apiRequest('PUT', `/api/admin/global-prompts/${id}`, data);
+      const response = await fetch(`/api/admin/global-prompts/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update prompt');
+      }
+
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/global-prompts'] });
@@ -895,7 +907,8 @@ Each action should provide immediate, practical assistance tailored to the speci
         description: "Global prompt has been successfully updated.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Update prompt error:', error);
       toast({
         title: "Error",
         description: "Failed to update prompt. Please try again.",
@@ -906,7 +919,18 @@ Each action should provide immediate, practical assistance tailored to the speci
 
   const togglePromptMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest('PATCH', `/api/admin/global-prompts/${id}/toggle`);
+      const response = await fetch(`/api/admin/global-prompts/${id}/toggle`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle prompt status');
+      }
+
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/global-prompts'] });
@@ -915,7 +939,8 @@ Each action should provide immediate, practical assistance tailored to the speci
         description: "Prompt activation status has been changed.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Toggle prompt error:', error);
       toast({
         title: "Error",
         description: "Failed to update prompt status. Please try again.",
@@ -956,6 +981,8 @@ Each action should provide immediate, practical assistance tailored to the speci
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Create prompt error:', errorText);
           throw new Error('Failed to create prompt');
         }
 
@@ -970,6 +997,7 @@ Each action should provide immediate, practical assistance tailored to the speci
           description: "New global prompt has been successfully created.",
         });
       } catch (error) {
+        console.error('Create prompt error:', error);
         toast({
           title: "Error",
           description: "Failed to create prompt. Please try again.",
