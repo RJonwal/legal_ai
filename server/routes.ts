@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { openaiService } from "./services/openai";
 import { insertChatMessageSchema, insertDocumentSchema, insertTimelineSchema } from "@shared/schema";
 import { z } from "zod";
-import adminRoutes from "./routes/admin";
+// import adminRoutes from "./routes/admin"; // Temporarily disabled due to duplicate routes
 import authRoutes from "./routes/auth";
 import paymentRoutes from "./routes/payment";
 import uploadRoutes from "./routes/uploads";
@@ -48,8 +48,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // File upload routes
   app.use("/api/uploads", uploadRoutes);
 
-  // Admin routes
-  app.use("/api/admin", adminRoutes);
+  // Admin routes - temporarily disabled due to duplicate routes
+  // app.use("/api/admin", adminRoutes);
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {
@@ -2228,8 +2228,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  // Admin routes
-  app.use("/api/admin", adminRoutes);
+  // Admin routes - temporarily disabled due to duplicate routes
+  // app.use("/api/admin", adminRoutes);
 
 // Impersonation routes
 app.post("/api/admin/impersonation/start", (req, res) => {
@@ -4220,9 +4220,8 @@ app.post('/api/admin/system/update/check', (req, res) => {
     }
   });
 
-    const router = adminRoutes;
-// Get email configuration
-router.get("/admin/email/config", (req: Request, res: Response) => {
+// Admin email configuration (temporarily relocated to avoid router conflicts)
+app.get("/api/admin/email/config", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/config 200`);
   res.json({
     smtp: {
@@ -4372,13 +4371,13 @@ router.get("/admin/email/config", (req: Request, res: Response) => {
 });
 
 // Update email configuration
-router.put("/admin/email/config", (req: Request, res: Response) => {
+app.put("/api/admin/email/config", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/config 200`);
   res.json({ success: true, message: "Configuration updated successfully" });
 });
 
 // Get email templates
-router.get("/admin/email/templates", (req: Request, res: Response) => {
+app.get("/api/admin/email/templates", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/templates 200`);
   res.json([
     {
@@ -4395,7 +4394,7 @@ router.get("/admin/email/templates", (req: Request, res: Response) => {
 });
 
 // Create email template
-router.post("/admin/email/templates", (req: Request, res: Response) => {
+app.post("/api/admin/email/templates", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/templates 200`);
   const newTemplate = {
     id: Date.now().toString(),
@@ -4407,7 +4406,7 @@ router.post("/admin/email/templates", (req: Request, res: Response) => {
 });
 
 // Update email template
-router.put("/admin/email/templates/:id", (req: Request, res: Response) => {
+app.put("/api/admin/email/templates/:id", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/templates/${req.params.id} 200`);
   const updatedTemplate = {
     id: req.params.id,
@@ -4418,25 +4417,25 @@ router.put("/admin/email/templates/:id", (req: Request, res: Response) => {
 });
 
 // Delete email template
-router.delete("/admin/email/templates/:id", (req: Request, res: Response) => {
+app.delete("/api/admin/email/templates/:id", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/email/templates/${req.params.id} 200`);
   res.json({ success: true, message: "Template deleted successfully" });
 });
 
 // Send test email
-router.post("/admin/email/test", (req: Request, res: Response) => {
+app.post("/api/admin/email/test", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/test 200`);
   res.json({ success: true, message: "Test email sent successfully" });
 });
 
 // Send email response
-router.post("/admin/email/respond", (req: Request, res: Response) => {
+app.post("/api/admin/email/respond", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/respond 200`);
   res.json({ success: true, message: "Response sent successfully" });
 });
 
 // Export email logs
-router.get("/admin/email/logs/export", (req: Request, res: Response) => {
+app.get("/api/admin/email/logs/export", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/logs/export 200`);
   
   const csvData = `ID,Timestamp,Type,To,From,Subject,Status,AI Processed,Priority
@@ -4449,7 +4448,7 @@ router.get("/admin/email/logs/export", (req: Request, res: Response) => {
 });
 
 // Update signature
-router.put("/admin/email/signatures/:id", (req: Request, res: Response) => {
+app.put("/api/admin/email/signatures/:id", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/signatures/${req.params.id} 200`);
   const updatedSignature = {
     id: req.params.id,
@@ -4459,13 +4458,13 @@ router.put("/admin/email/signatures/:id", (req: Request, res: Response) => {
 });
 
 // Delete signature
-router.delete("/admin/email/signatures/:id", (req: Request, res: Response) => {
+app.delete("/api/admin/email/signatures/:id", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/email/signatures/${req.params.id} 200`);
   res.json({ success: true, message: "Signature deleted successfully" });
 });
 
 // Create email template
-router.post("/admin/email/templates", (req: Request, res: Response) => {
+app.post("/api/admin/email/templates", (req: Request, res: Response) => {
   const template = {
     ...req.body,
     id: Date.now().toString(),
@@ -4476,13 +4475,13 @@ router.post("/admin/email/templates", (req: Request, res: Response) => {
 });
 
 // Update email configuration
-router.put("/admin/email/config", (req: Request, res: Response) => {
+app.put("/api/admin/email/config", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/config 200`);
   res.json({ success: true, config: req.body });
 });
 
 // Send test email
-router.post("/admin/email/test", (req: Request, res: Response) => {
+app.post("/api/admin/email/test", (req: Request, res: Response) => {
   const { email, templateId } = req.body;
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/test 200`);
   res.json({ 
@@ -4493,7 +4492,7 @@ router.post("/admin/email/test", (req: Request, res: Response) => {
 });
 
 // Send email response
-router.post("/admin/email/respond", (req: Request, res: Response) => {
+app.post("/api/admin/email/respond", (req: Request, res: Response) => {
   const { emailId, content, signature } = req.body;
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/respond 200`);
   res.json({ 
@@ -4504,7 +4503,7 @@ router.post("/admin/email/respond", (req: Request, res: Response) => {
 });
 
 // Intercept AI email response
-router.post("/admin/email/intercept", (req: Request, res: Response) => {
+app.post("/api/admin/email/intercept", (req: Request, res: Response) => {
   const { emailId, action } = req.body;
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/intercept 200`);
   res.json({ 
@@ -4515,7 +4514,7 @@ router.post("/admin/email/intercept", (req: Request, res: Response) => {
 });
 
 // Get email signatures
-router.get("/admin/email/signatures", (req: Request, res: Response) => {
+app.get("/api/admin/email/signatures", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/signatures 200`);
   res.json([
     {
@@ -4536,7 +4535,7 @@ router.get("/admin/email/signatures", (req: Request, res: Response) => {
 });
 
 // Create email signature
-router.post("/admin/email/signatures", (req: Request, res: Response) => {
+app.post("/api/admin/email/signatures", (req: Request, res: Response) => {
   const signature = {
     ...req.body,
     id: Date.now().toString(),
@@ -4547,21 +4546,21 @@ router.post("/admin/email/signatures", (req: Request, res: Response) => {
 });
 
 // Update email signature
-router.put("/admin/email/signatures/:id", (req: Request, res: Response) => {
+app.put("/api/admin/email/signatures/:id", (req: Request, res: Response) => {
   const { id } = req.params;
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/signatures/${id} 200`);
   res.json({ success: true, signature: { ...req.body, id } });
 });
 
 // Delete email signature
-router.delete("/admin/email/signatures/:id", (req: Request, res: Response) => {
+app.delete("/api/admin/email/signatures/:id", (req: Request, res: Response) => {
   const { id } = req.params;
   console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/email/signatures/${id} 200`);
   res.json({ success: true, message: `Signature ${id} deleted` });
 });
 
 // Create email template
-router.post("/admin/email/templates", (req: Request, res: Response) => {
+app.post("/api/admin/email/templates", (req: Request, res: Response) => {
   const template = {
     ...req.body,
     id: Date.now().toString(),
@@ -4572,13 +4571,13 @@ router.post("/admin/email/templates", (req: Request, res: Response) => {
 });
 
 // Update email configuration
-router.put("/admin/email/config", (req: Request, res: Response) => {
+app.put("/api/admin/email/config", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/config 200`);
   res.json({ success: true, config: req.body });
 });
 
 // Send test email
-router.post("/admin/email/test", (req: Request, res: Response) => {
+app.post("/api/admin/email/test", (req: Request, res: Response) => {
   const { email, templateId } = req.body;
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/test 200`);
   res.json({ 
@@ -4589,7 +4588,7 @@ router.post("/admin/email/test", (req: Request, res: Response) => {
 });
 
 // Send email response
-router.post("/admin/email/respond", (req: Request, res: Response) => {
+app.post("/api/admin/email/respond", (req: Request, res: Response) => {
   const { emailId, content, signature } = req.body;
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/respond 200`);
   res.json({ 
@@ -4600,7 +4599,7 @@ router.post("/admin/email/respond", (req: Request, res: Response) => {
 });
 
 // Intercept AI email response
-router.post("/admin/email/intercept", (req: Request, res: Response) => {
+app.post("/api/admin/email/intercept", (req: Request, res: Response) => {
   const { emailId, action } = req.body;
   console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/email/intercept 200`);
   res.json({ 
@@ -4611,7 +4610,7 @@ router.post("/admin/email/intercept", (req: Request, res: Response) => {
 });
 
 // Get email signatures
-router.get("/admin/email/signatures", (req: Request, res: Response) => {
+app.get("/api/admin/email/signatures", (req: Request, res: Response) => {
   console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/email/signatures 200`);
   res.json([
     {
@@ -4632,7 +4631,7 @@ router.get("/admin/email/signatures", (req: Request, res: Response) => {
 });
 
 // Create email signature
-router.post("/admin/email/signatures", (req: Request, res: Response) => {
+app.post("/api/admin/email/signatures", (req: Request, res: Response) => {
   const signature = {
     ...req.body,
     id: Date.now().toString(),
@@ -4643,14 +4642,14 @@ router.post("/admin/email/signatures", (req: Request, res: Response) => {
 });
 
 // Update email signature
-router.put("/admin/email/signatures/:id", (req: Request, res: Response) => {
+app.put("/api/admin/email/signatures/:id", (req: Request, res: Response) => {
   const { id } = req.params;
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/email/signatures/${id} 200`);
   res.json({ success: true, signature: { ...req.body, id } });
 });
 
 // Delete email signature
-router.delete("/admin/email/signatures/:id", (req: Request, res: Response) => {
+app.delete("/api/admin/email/signatures/:id", (req: Request, res: Response) => {
   const { id } = req.params;
   console.log(`${new Date().toLocaleTimeString()} [express] DELETE /api/admin/email/signatures/${id} 200`);
   res.json({ success: true, message: `Signature ${id} deleted` });
