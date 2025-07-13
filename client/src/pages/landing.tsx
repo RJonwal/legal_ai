@@ -1,35 +1,28 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Scale, 
-  MessageSquare, 
   FileText, 
-  Shield, 
   Users, 
-  Clock, 
-  CheckCircle,
-  Star,
-  ArrowRight,
-  Play,
-  Sparkles,
-  Brain,
-  Zap,
+  Star, 
+  ArrowRight, 
+  Check,
+  Gavel,
+  Shield,
+  Clock,
   Award,
-  Globe,
-  Lock,
-  TrendingUp,
+  ChevronDown,
   Phone,
   Mail,
-  MapPin,
-  Twitter,
-  Linkedin,
-  Facebook
+  MapPin
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Logo } from "@/components/ui/logo";
+import ChatWidget from "@/components/chat/chat-widget";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -479,6 +472,7 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+      <ChatWidget />
     </div>
   );
 }

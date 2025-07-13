@@ -19,7 +19,6 @@ import NotFound from "@/pages/not-found";
 // Import admin pages
 import AdminDashboard from "@/pages/admin/index";
 import AdminUsers from "@/pages/admin/users";
-import AttorneyConnect from "@/pages/admin/attorney-connect";
 import AdminLandingConfig from "@/pages/admin/landing-config";
 import AdminAnalytics from "@/pages/admin/analytics";
 import AdminSystem from "@/pages/admin/system";
@@ -55,12 +54,6 @@ function App() {
             <Route path="/admin/users">
               <AdminLayout>
                 <AdminUsers />
-              </AdminLayout>
-            </Route>
-
-             <Route path="/admin/attorney-connect">
-              <AdminLayout>
-                <AttorneyConnect />
               </AdminLayout>
             </Route>
 

@@ -3,6 +3,153 @@ import type { Request, Response } from "express";
 
 const router = Router();
 
+// Mock user database
+let users = [
+  {
+    id: 1,
+    username: "sarah.johnson",
+    email: "sarah@example.com",
+    password: "password123", // In production, this would be hashed
+    userType: "attorney",
+    isActive: true,
+    createdAt: "2024-01-15"
+  },
+  {
+    id: 2,
+    username: "john.doe",
+    email: "john@example.com", 
+    password: "password123",
+    userType: "pro_se",
+    isActive: true,
+    createdAt: "2024-02-01"
+  }
+];
+
+// Auth endpoints
+router.post("/auth/login", (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    
+    const user = users.find(u => u.email === email && u.password === password);
+    
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({ error: "Account is deactivated" });
+    }
+
+    // Generate mock JWT token
+    const token = `mock_jwt_${user.id}_${Date.now()}`;
+    
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/login 200`);
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        userType: user.userType
+      }
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+router.post("/auth/signup", (req: Request, res: Response) => {
+  try {
+    const { username, email, password, userType } = req.body;
+    
+    // Check if user already exists
+    const existingUser = users.find(u => u.email === email || u.username === username);
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    // Create new user
+    const newUser = {
+      id: users.length + 1,
+      username,
+      email,
+      password, // In production, hash this
+      userType,
+      isActive: true,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    users.push(newUser);
+    
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/signup 201`);
+    res.status(201).json({
+      success: true,
+      message: "Account created successfully"
+    });
+  } catch (error) {
+    console.error("Signup error:", error);
+    res.status(500).json({ error: "Signup failed" });
+  }
+});
+
+router.post("/auth/forgot-password", (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    
+    const user = users.find(u => u.email === email);
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return res.json({ success: true, message: "If the email exists, a reset link has been sent" });
+    }
+
+    // In production, send actual email with reset link
+    console.log(`Password reset requested for: ${email}`);
+    
+    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/auth/forgot-password 200`);
+    res.json({
+      success: true,
+      message: "If the email exists, a reset link has been sent"
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ error: "Failed to process request" });
+  }
+});
+
+router.get("/auth/verify-token", (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token || !token.startsWith('mock_jwt_')) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    // Extract user ID from mock token
+    const userId = parseInt(token.split('_')[2]);
+    const user = users.find(u => u.id === userId);
+    
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/auth/verify-token 200`);
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        userType: user.userType
+      }
+    });
+  } catch (error) {
+    console.error("Token verification error:", error);
+    res.status(401).json({ error: "Invalid token" });
+  }
+});
+
 // Landing page configuration storage
 let landingConfig = {
   hero: {
@@ -584,433 +731,6 @@ router.post("/apply-branding", (req: Request, res: Response) => {
   }
 });
 
-// Attorney Directory Management
-let attorneyDirectory = {
-  attorneys: [
-    {
-      id: "1",
-      userId: 1,
-      fullName: "Sarah Johnson",
-      email: "sarah@johnsonlaw.com",
-      barNumber: "BAR123456",
-      firmName: "Johnson & Associates",
-      practiceAreas: ["Family Law", "Divorce", "Child Custody"],
-      yearsOfExperience: 8,
-      address: "123 Legal St, Suite 200",
-      city: "New York",
-      state: "NY",
-      zipCode: "10001",
-      phone: "(555) 123-4567",
-      website: "www.johnsonlaw.com",
-      bio: "Experienced family law attorney dedicated to protecting clients' rights and interests.",
-      hourlyRate: 35000, // $350.00
-      availableForProSe: true,
-      maxProSeClients: 5,
-      currentProSeClients: 2,
-      isVerified: true,
-      subscription: "premium",
-      rating: 475, // 4.75 stars
-      reviewCount: 23,
-      isActive: true,
-      joinedAt: "2024-01-15",
-      connections: ["3", "7"]
-    },
-    {
-      id: "2",
-      userId: 2,
-      fullName: "Michael Chen",
-      email: "mchen@chenlegal.com",
-      barNumber: "BAR789012",
-      firmName: "Chen Legal Services",
-      practiceAreas: ["Immigration", "Business Law"],
-      yearsOfExperience: 12,
-      address: "456 Business Ave",
-      city: "Los Angeles",
-      state: "CA",
-      zipCode: "90210",
-      phone: "(555) 987-6543",
-      website: "www.chenlegal.com",
-      bio: "Immigration and business law specialist with extensive experience in complex cases.",
-      hourlyRate: 42500, // $425.00
-      availableForProSe: true,
-      maxProSeClients: 3,
-      currentProSeClients: 1,
-      isVerified: true,
-      subscription: "basic",
-      rating: 495, // 4.95 stars
-      reviewCount: 47,
-      isActive: true,
-      joinedAt: "2024-02-01",
-      connections: ["5"]
-    }
-  ],
-  proSeUsers: [
-    {
-      id: "3",
-      userId: 3,
-      fullName: "Robert Smith",
-      email: "robert.smith@email.com",
-      caseType: "Divorce",
-      city: "New York",
-      state: "NY",
-      zipCode: "10002",
-      connectedAttorneyId: "1",
-      connectionStatus: "active",
-      connectedAt: "2024-10-15",
-      needsAttorney: false,
-      preferredPracticeAreas: ["Family Law", "Divorce"]
-    },
-    {
-      id: "4",
-      userId: 4,
-      fullName: "Maria Garcia",
-      email: "maria.garcia@email.com",
-      caseType: "Immigration",
-      city: "Miami",
-      state: "FL",
-      zipCode: "33101",
-      connectedAttorneyId: null,
-      connectionStatus: "seeking",
-      needsAttorney: true,
-      preferredPracticeAreas: ["Immigration", "Citizenship"]
-    }
-  ]
-};
 
-// Get all attorneys
-router.get("/attorneys", (req: Request, res: Response) => {
-  const { search, state, zipCode, practiceArea, availability } = req.query;
-
-  let filteredAttorneys = attorneyDirectory.attorneys;
-
-  if (search) {
-    const searchTerm = search.toString().toLowerCase();
-    filteredAttorneys = filteredAttorneys.filter(attorney => 
-      attorney.fullName.toLowerCase().includes(searchTerm) ||
-      attorney.firmName.toLowerCase().includes(searchTerm) ||
-      attorney.practiceAreas.some(area => area.toLowerCase().includes(searchTerm))
-    );
-  }
-
-  if (state) {
-    filteredAttorneys = filteredAttorneys.filter(attorney => attorney.state === state);
-  }
-
-  if (zipCode) {
-    filteredAttorneys = filteredAttorneys.filter(attorney => attorney.zipCode === zipCode);
-  }
-
-  if (practiceArea) {
-    filteredAttorneys = filteredAttorneys.filter(attorney => 
-      attorney.practiceAreas.includes(practiceArea.toString())
-    );
-  }
-
-  if (availability === 'available') {
-    filteredAttorneys = filteredAttorneys.filter(attorney => 
-      attorney.availableForProSe && attorney.currentProSeClients < attorney.maxProSeClients
-    );
-  }
-
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/attorneys 200`);
-  res.json(filteredAttorneys);
-});
-
-// Get attorney statistics
-router.get("/attorneys/stats", (req: Request, res: Response) => {
-  const stats = {
-    total: attorneyDirectory.attorneys.length,
-    verified: attorneyDirectory.attorneys.filter(a => a.isVerified).length,
-    available: attorneyDirectory.attorneys.filter(a => a.availableForProSe && a.currentProSeClients < a.maxProSeClients).length,
-    premium: attorneyDirectory.attorneys.filter(a => a.subscription === 'premium').length,
-    averageRating: attorneyDirectory.attorneys.reduce((sum, a) => sum + a.rating, 0) / attorneyDirectory.attorneys.length / 100,
-    totalConnections: attorneyDirectory.attorneys.reduce((sum, a) => sum + a.connections.length, 0),
-    totalProSeUsers: attorneyDirectory.proSeUsers.length,
-    activeConnections: attorneyDirectory.proSeUsers.filter(u => u.connectionStatus === 'active').length,
-    seekingConnections: attorneyDirectory.proSeUsers.filter(u => u.connectionStatus === 'seeking').length
-  };
-
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/attorneys/stats 200`);
-  res.json(stats);
-});
-
-// Get all pro se users
-router.get("/pro-se-users", (req: Request, res: Response) => {
-  const { search, state, needsAttorney } = req.query;
-
-  let filteredUsers = attorneyDirectory.proSeUsers;
-
-  if (search) {
-    const searchTerm = search.toString().toLowerCase();
-    filteredUsers = filteredUsers.filter(user => 
-      user.fullName.toLowerCase().includes(searchTerm) ||
-      user.caseType.toLowerCase().includes(searchTerm)
-    );
-  }
-
-  if (state) {
-    filteredUsers = filteredUsers.filter(user => user.state === state);
-  }
-
-  if (needsAttorney === 'true') {
-    filteredUsers = filteredUsers.filter(user => user.needsAttorney);
-  }
-
-  console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/pro-se-users 200`);
-  res.json(filteredUsers);
-});
-
-// Connect attorney to pro se user
-router.post("/attorney-connections", (req: Request, res: Response) => {
-  try {
-    const { attorneyId, proSeUserId, connectionType = "consultation" } = req.body;
-
-    // Find the attorney and pro se user
-    const attorneyIndex = attorneyDirectory.attorneys.findIndex(a => a.id === attorneyId);
-    const proSeIndex = attorneyDirectory.proSeUsers.findIndex(u => u.id === proSeUserId);
-
-    if (attorneyIndex === -1 || proSeIndex === -1) {
-      return res.status(404).json({ error: "Attorney or Pro Se user not found" });
-    }
-
-    const attorney = attorneyDirectory.attorneys[attorneyIndex];
-    const proSeUser = attorneyDirectory.proSeUsers[proSeIndex];
-
-    // Check if attorney is available
-    if (attorney.currentProSeClients >= attorney.maxProSeClients) {
-      return res.status(400).json({ error: "Attorney has reached maximum client capacity" });
-    }
-
-    // Update connections
-    attorney.connections.push(proSeUserId);
-    attorney.currentProSeClients += 1;
-
-    proSeUser.connectedAttorneyId = attorneyId;
-    proSeUser.connectionStatus = "active";
-    proSeUser.connectedAt = new Date().toISOString().split('T')[0];
-    proSeUser.needsAttorney = false;
-
-    const connection = {
-      id: Date.now().toString(),
-      attorneyId,
-      proSeUserId,
-      connectionType,
-      status: "active",
-      createdAt: new Date().toISOString()
-    };
-
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/attorney-connections 201`);
-    res.status(201).json({ success: true, connection });
-  } catch (error) {
-    console.error("Error creating attorney connection:", error);
-    res.status(500).json({ error: "Failed to create connection" });
-  }
-});
-
-// Add new attorney
-router.post("/attorneys", (req: Request, res: Response) => {
-  try {
-    const newAttorney = {
-      id: Date.now().toString(),
-      userId: Date.now(),
-      ...req.body,
-      hourlyRate: req.body.hourlyRate || 0,
-      availableForProSe: true,
-      currentProSeClients: 0,
-      isVerified: false,
-      subscription: "basic",
-      rating: 0,
-      reviewCount: 0,
-      isActive: true,
-      joinedAt: new Date().toISOString().split('T')[0],
-      connections: []
-    };
-
-    attorneyDirectory.attorneys.push(newAttorney);
-
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/attorneys 200`);
-    res.status(201).json({ success: true, attorney: newAttorney });
-  } catch (error) {
-    console.error("Error adding attorney:", error);
-    res.status(500).json({ error: "Failed to add attorney" });
-  }
-});
-
-// Update attorney status
-router.put("/attorneys/:id/status", (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { isActive, availableForProSe } = req.body;
-
-    const attorneyIndex = attorneyDirectory.attorneys.findIndex(a => a.id === id);
-    if (attorneyIndex === -1) {
-      return res.status(404).json({ error: "Attorney not found" });
-    }
-
-    attorneyDirectory.attorneys[attorneyIndex] = {
-      ...attorneyDirectory.attorneys[attorneyIndex],
-      isActive: isActive !== undefined ? isActive : attorneyDirectory.attorneys[attorneyIndex].isActive,
-      availableForProSe: availableForProSe !== undefined ? availableForProSe : attorneyDirectory.attorneys[attorneyIndex].availableForProSe
-    };
-
-    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/attorneys/${id}/status 200`);
-    res.json({ success: true, attorney: attorneyDirectory.attorneys[attorneyIndex] });
-  } catch (error) {
-    console.error("Error updating attorney status:", error);
-    res.status(500).json({ error: "Failed to update attorney status" });
-  }
-});
-
-// Update attorney subscription
-router.put("/attorneys/:id/subscription", (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { subscription, monthlyFee } = req.body;
-
-    const attorneyIndex = attorneyDirectory.attorneys.findIndex(a => a.id === id);
-    if (attorneyIndex === -1) {
-      return res.status(404).json({ error: "Attorney not found" });
-    }
-
-    attorneyDirectory.attorneys[attorneyIndex] = {
-      ...attorneyDirectory.attorneys[attorneyIndex],
-      subscription: subscription || attorneyDirectory.attorneys[attorneyIndex].subscription
-    };
-
-    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/attorneys/${id}/subscription 200`);
-    res.json({ success: true, attorney: attorneyDirectory.attorneys[attorneyIndex] });
-  } catch (error) {
-    console.error("Error updating attorney subscription:", error);
-    res.status(500).json({ error: "Failed to update attorney subscription" });
-  }
-});
-
-// Create billing charge for attorney
-router.post("/attorney-billing", (req: Request, res: Response) => {
-  try {
-    const { attorneyId, amount, description, type } = req.body;
-
-    const attorney = attorneyDirectory.attorneys.find(a => a.id === attorneyId);
-    if (!attorney) {
-      return res.status(404).json({ error: "Attorney not found" });
-    }
-
-    // Create billing record (in production, this would integrate with Stripe/payment processor)
-    const billingRecord = {
-      id: Date.now().toString(),
-      attorneyId,
-      attorneyName: attorney.fullName,
-      amount, // amount in cents
-      description,
-      type, // 'monthly', 'per_connection', 'one_time'
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      dueDate: type === 'monthly' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : new Date().toISOString()
-    };
-
-    console.log(`${new Date().toLocaleTimeString()} [express] POST /api/admin/attorney-billing 201`);
-    res.status(201).json({ 
-      success: true, 
-      billing: billingRecord,
-      message: `Billing charge of $${(amount / 100).toFixed(2)} created for ${attorney.fullName}`,
-      paymentUrl: `https://billing.legalai.pro/pay/${billingRecord.id}` // Mock payment URL
-    });
-  } catch (error) {
-    console.error("Error creating attorney billing:", error);
-    res.status(500).json({ error: "Failed to create billing charge" });
-  }
-});
-
-// Get attorney billing history
-router.get("/attorneys/:id/billing", (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    // Mock billing history (in production, fetch from billing database)
-    const billingHistory = [
-      {
-        id: "bill_1",
-        amount: 4900,
-        description: "Monthly subscription - Premium",
-        type: "monthly",
-        status: "paid",
-        createdAt: "2024-10-01",
-        paidAt: "2024-10-02"
-      },
-      {
-        id: "bill_2", 
-        amount: 12500,
-        description: "Per-connection fees (5 connections)",
-        type: "per_connection",
-        status: "paid",
-        createdAt: "2024-10-01",
-        paidAt: "2024-10-03"
-      }
-    ];
-
-    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/attorneys/${id}/billing 200`);
-    res.json(billingHistory);
-  } catch (error) {
-    console.error("Error fetching attorney billing:", error);
-    res.status(500).json({ error: "Failed to fetch billing history" });
-  }
-});
-
-// Get platform revenue analytics
-router.get("/billing/analytics", (req: Request, res: Response) => {
-  try {
-    const analytics = {
-      totalRevenue: 45600, // $456.00 in cents
-      monthlyRecurring: 19800, // $198.00 in cents
-      oneTimeCharges: 25800, // $258.00 in cents
-      activeSubscriptions: attorneyDirectory.attorneys.filter(a => a.subscription !== 'free').length,
-      averageRevenuePerAttorney: 22800, // $228.00 in cents
-      subscriptionBreakdown: {
-        free: attorneyDirectory.attorneys.filter(a => a.subscription === 'free').length,
-        basic: attorneyDirectory.attorneys.filter(a => a.subscription === 'basic').length,
-        premium: attorneyDirectory.attorneys.filter(a => a.subscription === 'premium').length,
-        enterprise: attorneyDirectory.attorneys.filter(a => a.subscription === 'enterprise').length
-      },
-      monthlyGrowth: 12.5 // percentage
-    };
-
-    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/billing/analytics 200`);
-    res.json(analytics);
-  } catch (error) {
-    console.error("Error fetching billing analytics:", error);
-    res.status(500).json({ error: "Failed to fetch billing analytics" });
-  }
-});
-
-// Feature flags
-let featureFlags = {
-  attorneyConnect: true,
-  proSeDirectory: true,
-  aiAssistant: true,
-  videoConsultations: false
-};
-
-// Get feature flags
-router.get("/feature-flags", (req: Request, res: Response) => {
-  try {
-    console.log(`${new Date().toLocaleTimeString()} [express] GET /api/admin/feature-flags 200`);
-    res.json(featureFlags);
-  } catch (error) {
-    console.error("Error getting feature flags:", error);
-    res.status(500).json({ error: "Failed to get feature flags" });
-  }
-});
-
-// Update feature flags
-router.put("/feature-flags", (req: Request, res: Response) => {
-  try {
-    featureFlags = { ...featureFlags, ...req.body };
-    console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/feature-flags 200`);
-    res.json({ success: true, featureFlags });
-  } catch (error) {
-    console.error("Error updating feature flags:", error);
-    res.status(500).json({ error: "Failed to update feature flags" });
-  }
-});
 
 export default router;

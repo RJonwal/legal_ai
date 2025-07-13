@@ -6,6 +6,7 @@ import { ChatInterface } from "@/components/chat/chat-interface";
 import { DocumentCanvas } from "@/components/canvas/document-canvas";
 import { EnhancedFunctionModal } from "@/components/modals/enhanced-function-modal";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import ChatWidget from "@/components/chat/chat-widget";
 
 export default function LegalAssistant() {
   const [location] = useLocation();
@@ -147,6 +148,8 @@ export default function LegalAssistant() {
           console.log('Strategy message:', message);
         }}
       />
+
+      <ChatWidget />
     </div>
   );
 }
