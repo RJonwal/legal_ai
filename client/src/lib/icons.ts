@@ -14,11 +14,13 @@ export {
   BarChart3,
   Bell,
   Bookmark,
+  Book,
   BookOpen,
   Bot,
   Brain,
   Briefcase,
   Building,
+  Calculator,
   Calendar,
   Camera,
   Check,
@@ -89,6 +91,8 @@ export {
   Paperclip,
   Pause,
   Phone,
+  PhoneCall,
+  PieChart,
   Play,
   Plus,
   RefreshCw,
@@ -109,6 +113,7 @@ export {
   Target,
   TestTube,
   Trash2,
+  TrendingDown,
   TrendingUp,
   Type,
   Upload,
@@ -118,11 +123,13 @@ export {
   UserX,
   Volume2,
   VolumeX,
+  Webhook,
   Wifi,
   WifiOff,
   X,
   XCircle,
-  Zap
+  Zap,
+  PhoneForwarded
 } from 'lucide-react';
 
 // Alternative exports for aliased imports
