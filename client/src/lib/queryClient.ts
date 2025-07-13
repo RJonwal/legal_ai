@@ -12,15 +12,21 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  const token = localStorage.getItem('auth_token');
 
-  await throwIfResNotOk(res);
-  return res;
+  const config: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+  };
+
+  if (data) {
+    config.body = JSON.stringify(data);
+  }
+
+  return fetch(url, config);
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
