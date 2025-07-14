@@ -244,12 +244,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: BarChart3,
       isActive: location === "/admin/analytics"
     },
-    {
-      title: "Live Chat",
-      url: "/admin/livechat-management",
-      icon: MessageSquare,
-      isActive: location === "/admin/livechat-management"
-    },
+
     {
       title: "Page Management",
       url: "/admin/page-management",

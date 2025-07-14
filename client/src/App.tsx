@@ -36,7 +36,7 @@ import AdminAnalytics from "@/pages/admin/analytics";
 import AdminSystem from "@/pages/admin/system";
 import AdminBillingPage from "@/pages/admin/billing";
 import AdminAPIManagement from "@/pages/admin/api-management";
-import LiveChatManagement from "@/pages/admin/livechat-management";
+
 import PageManagement from "@/pages/admin/page-management";
 import GlobalPromptManagement from "@/pages/admin/global-prompt-management";
 import HelpCenter from "@/pages/help-center";
@@ -179,11 +179,7 @@ function App() {
                 </AdminLayout>
               </Route>
 
-              <Route path="/admin/livechat-management">
-                <AdminLayout>
-                  <LiveChatManagement />
-                </AdminLayout>
-              </Route>
+
 
               <Route path="/admin/page-management">
                 <AdminLayout>
