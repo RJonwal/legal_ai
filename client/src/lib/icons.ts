@@ -26,6 +26,7 @@ export {
   Check,
   Edit,
   Edit2,
+  Edit3,
   Save,
   Download,
   Upload,
@@ -84,6 +85,8 @@ export {
   TrendingUp,
   Brain,
   Target,
+  Activity,
+  PieChart,
   
   // Additional common icons
   Folder,
@@ -108,6 +111,13 @@ export {
   Wallet,
   Award,
   Crown,
+  Coins,
+  
+  // Device icons
+  Smartphone,
+  Calculator,
+  HardDrive,
+  Server,
   
   // Status indicators
   CheckCircle2,
@@ -119,6 +129,9 @@ export {
   FileAudio,
   FileVideo,
   Camera,
+  Play,
+  Pause,
+  Mic,
   
   // Actions and utilities
   RefreshCw,
@@ -128,6 +141,8 @@ export {
   Minimize,
   Share2,
   Paperclip,
+  PhoneCall,
+  PhoneForwarded,
   
   // Authentication
   LogOut,
@@ -136,6 +151,7 @@ export {
   // Network/connection
   Wifi,
   WifiOff,
+  Webhook,
   
   // Special features
   Bot,
@@ -145,18 +161,52 @@ export {
   Palette,
   MapPin,
   BookOpen,
+  Type,
+  TestTube,
   
   // Additional missing icons
-  PanelLeft,
-  PanelRight,
-  BarChart3,
-  Brain,
-  CreditCard,
-  Key,
-  LogOut,
-  MessageSquare,
-  Users,
-  Cookie,
-  Maximize2,
-  RefreshCw as Refresh
+  RefreshCw as Refresh,
+  TrendingDown,
+  
+  // Common missing icons
+  ChevronDown as ChevronDownIcon,
+  ChevronUp as ChevronUpIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  MoreHorizontal as MoreHorizontalIcon,
+  MoreVertical as MoreVerticalIcon,
+  Settings as SettingsIcon,
+  
+  // Additional commonly used icons
+  Calendar as CalendarIcon,
+  Clock as ClockIcon,
+  User as UserIcon,
+  Users as UsersIcon,
+  Mail as MailIcon,
+  Phone as PhoneIcon,
+  Search as SearchIcon,
+  Filter as FilterIcon,
+  Download as DownloadIcon,
+  Upload as UploadIcon,
+  
+  // Status and feedback icons
+  Check as CheckIcon,
+  X as XIcon,
+  AlertCircle as AlertCircleIcon,
+  CheckCircle as CheckCircleIcon,
+  Info as InfoIcon,
+  
+  // File and document icons
+  File as FileIcon,
+  FileText as FileTextIcon,
+  Folder as FolderIcon,
+  FolderOpen as FolderOpenIcon,
+  
+  // Common actions
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Copy as CopyIcon,
+  Trash2 as TrashIcon,
+  Plus as PlusIcon,
+  Minus as MinusIcon
 } from 'lucide-react';

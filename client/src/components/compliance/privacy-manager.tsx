@@ -15,7 +15,7 @@ import {
   Trash2, 
   Eye, 
   EyeOff, 
-  UserX, 
+  XCircle, 
   Mail, 
   Calendar,
   FileText,
@@ -304,7 +304,7 @@ export default function PrivacyManager() {
                     <span className="text-sm">Right to Deletion</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <UserX className="h-4 w-4 text-orange-600" />
+                    <XCircle className="h-4 w-4 text-orange-600" />
                     <span className="text-sm">Right to Object</span>
                   </div>
                 </CardContent>

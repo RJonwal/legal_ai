@@ -22,7 +22,7 @@ import {
   Edit,
   Trash2,
   Mail,
-  UserX,
+  XCircle,
   AlertTriangle,
   Clock,
   Eye
@@ -309,7 +309,7 @@ export default function AdminUsers() {
               onClick={handleStopImpersonation}
               className="text-orange-700 border-orange-300 hover:bg-orange-100"
             >
-              <UserX className="h-4 w-4 mr-1" />
+              <XCircle className="h-4 w-4 mr-1" />
               Stop Impersonation
             </Button>
           </AlertDescription>
@@ -1030,7 +1030,7 @@ export default function AdminUsers() {
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="outline" className="text-red-600">
-                              <UserX className="h-4 w-4" />
+                              <XCircle className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -1274,7 +1274,7 @@ export default function AdminUsers() {
                       <p className="text-sm font-medium text-gray-600">New This Month</p>
                       <p className="text-2xl font-bold">143</p>
                     </div>
-                    <UserX className="h-8 w-8 text-purple-600" />
+                    <XCircle className="h-8 w-8 text-purple-600" />
                   </div>
                   <p className="text-xs text-green-600 mt-1">+23% from last month</p>
                 </CardContent>
@@ -1533,7 +1533,7 @@ export default function AdminUsers() {
                           onClick={handleStopImpersonation}
                           className="text-orange-700 border-orange-300 hover:bg-orange-100"
                         >
-                          <UserX className="h-4 w-4 mr-2" />
+                          <XCircle className="h-4 w-4 mr-2" />
                           Stop Impersonation
                         </Button>
                       </div>
