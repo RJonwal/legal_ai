@@ -561,6 +561,32 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
+  // Create timeline event
+  app.post("/api/cases/:id/timeline", async (req, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const { title, description, eventType, eventDate, isDeadline } = req.body;
+
+      if (!title || !eventType || !eventDate) {
+        return res.status(400).json({ message: "Missing required fields: title, eventType, and eventDate are required" });
+      }
+
+      const event = await storage.createTimelineEvent({
+        caseId,
+        title,
+        description: description || "",
+        eventType,
+        eventDate: new Date(eventDate),
+        isDeadline: isDeadline || false,
+      });
+
+      res.status(201).json(event);
+    } catch (error) {
+      console.error("Timeline event creation error:", error);
+      res.status(500).json({ message: "Failed to create timeline event" });
+    }
+  });
+
   // Get case analytics
   app.get("/api/cases/:id/analytics", async (req, res) => {
     try {
@@ -574,115 +600,38 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       const messages = await storage.getChatMessages(caseId);
       const timeline = await storage.getTimelineEvents(caseId);
 
-      // Calculate case metrics
+      // Get analytics data from database or generate AI-powered analysis
       const caseStartDate = new Date(case_.createdAt);
       const daysActive = Math.floor((Date.now() - caseStartDate.getTime()) / (1000 * 60 * 60 * 24));
 
-      // Generate realistic financial data based on case type and duration
-      const baseRate = case_.caseType === 'corporate_law' ? 500 : 350;
-      const estimatedHours = Math.min(daysActive * 2.5, 200);
-      const legalFees = Math.floor(baseRate * estimatedHours);
-      const courtCosts = Math.floor(Math.random() * 5000 + 2000);
-      const expertWitnessCosts = Math.floor(Math.random() * 8000 + 3000);
-      const discoveryCosts = Math.floor(Math.random() * 3000 + 1000);
-      const totalCosts = legalFees + courtCosts + expertWitnessCosts + discoveryCosts;
-
-      // Calculate progress metrics
-      const totalTasks = 35; // Standard case tasks
-      const completedTasks = Math.min(Math.floor(daysActive * 0.8), totalTasks);
-      const completionRate = Math.floor((completedTasks / totalTasks) * 100);
-
-      // Risk assessment based on case factors
-      const risks = [
-        {
-          type: 'settlement_timeline',
-          level: daysActive > 90 ? 'high' : daysActive > 60 ? 'medium' : 'low',
-          description: daysActive > 90 ? 'Settlement deadline approaching' : 'Timeline on track'
-        },
-        {
-          type: 'evidence_strength',
-          level: documents.length < 5 ? 'high' : documents.length < 10 ? 'medium' : 'low',
-          description: documents.length < 5 ? 'Additional documentation needed' : 'Strong evidence base'
-        },
-        {
-          type: 'legal_precedent',
-          level: 'low',
-          description: 'Strong case law support'
-        },
-        {
-          type: 'client_communication',
-          level: messages.length > 10 ? 'optimal' : 'medium',
-          description: messages.length > 10 ? 'Regular updates maintained' : 'Increase communication frequency'
-        }
-      ];
-
-      // Task completion breakdown
-      const taskBreakdown = {
-        documents_filed: { completed: Math.min(8, documents.length), total: 10 },
-        discovery_requests: { completed: Math.min(12, Math.floor(daysActive * 0.2)), total: 15 },
-        witness_interviews: { completed: Math.min(6, Math.floor(daysActive * 0.1)), total: 8 },
-        expert_reports: { completed: Math.min(2, Math.floor(documents.length * 0.3)), total: 3 }
-      };
-
-      // Timeline phases
-      const phases = [
-        {
-          name: 'Case Initiation',
-          status: 'complete',
-          progress: 100,
-          estimatedDays: null
-        },
-        {
-          name: 'Discovery Phase',
-          status: daysActive > 30 ? 'complete' : 'in_progress',
-          progress: Math.min(100, Math.floor((daysActive / 30) * 100)),
-          estimatedDays: daysActive > 30 ? null : 30 - daysActive
-        },
-        {
-          name: 'Settlement Negotiations',
-          status: daysActive > 60 ? 'in_progress' : 'pending',
-          progress: daysActive > 60 ? Math.min(85, Math.floor(((days - 60) / 30) * 100)) : 0,
-          estimatedDays: daysActive > 60 ? Math.max(14, 90 - daysActive) : null
-        },
-        {
-          name: 'Trial Preparation',
-          status: daysActive > 90 ? 'in_progress' : 'pending',
-          progress: Math.max(0, Math.min(50, Math.floor(((daysActive - 90) / 60) * 100))),
-          estimatedDays: daysActive > 90 ? Math.max(30, 150 - daysActive) : null
-        }
-      ];
-
-      const analytics = {
-        basicMetrics: {
-          daysActive,
-          totalBillable: legalFees,
-          completionRate,
-          criticalTasks: risks.filter(r => r.level === 'high').length,
-          potentialRecovery: Math.floor(totalCosts * (2.5 + Math.random() * 2))
-        },
-        financial: {
-          legalFees,
-          courtCosts,
-          expertWitnessCosts,
-          discoveryCosts,
-          totalCosts,
-          potentialRecovery: Math.floor(totalCosts * (2.5 + Math.random() * 2)),
-          roi: Math.floor(((Math.floor(totalCosts * (2.5 + Math.random() * 2)) - totalCosts) / totalCosts) * 100)
-        },
-        timeline: {
-          phases,
-          nextDeadline: daysActive > 60 ? 14 : 30 - daysActive,
-          estimatedCompletion: Math.max(30, 180 - daysActive)
-        },
-        tasks: taskBreakdown,
-        risks,
-        performance: {
-          documentsGenerated: documents.length,
-          clientInteractions: messages.filter(m => m.role === 'user').length,
-          aiAssistanceUsed: messages.filter(m => m.role === 'assistant').length,
-          timelineAdherence: phases.filter(p => p.status === 'complete').length / phases.length * 100
-        }
-      };
+      // Generate comprehensive analytics using AI service
+      const analytics = await openaiService.generateCaseAnalytics({
+        caseContext: case_.description,
+        caseType: case_.caseType,
+        priority: case_.priority,
+        status: case_.status,
+        daysActive,
+        documents: documents.map(doc => ({
+          title: doc.title,
+          type: doc.documentType,
+          status: doc.status,
+          createdAt: doc.createdAt
+        })),
+        messages: messages.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp
+        })),
+        timeline: timeline.map(event => ({
+          type: event.eventType,
+          title: event.title,
+          description: event.description,
+          dueDate: event.dueDate,
+          completed: event.completed
+        })),
+        clientName: case_.clientName,
+        opposingParty: case_.opposingParty
+      });
 
       res.json(analytics);
     } catch (error) {
@@ -738,43 +687,32 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   app.post("/api/cases/:id/deposition-analysis", async (req, res) => {
     try {
       const caseId = parseInt(req.params.id);
-      const { witnessName, depositionType, keyTopics, witnessRole } = req.body;
+      const { witnessName, depositionType, keyTopics, witnessRole, objectives, problemAreas } = req.body;
 
       const case_ = await storage.getCase(caseId);
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
       }
 
-      // Generate deposition analysis
-      const analysis = {
-        witness: {
-          name: witnessName,
-          type: depositionType,
-          role: witnessRole,
-          credibilityFactors: ["Direct knowledge of events", "Professional experience", "No apparent bias"],
-          riskFactors: depositionType === 'fact-witness' ? ["Memory gaps possible", "Limited document knowledge"] : ["Technical complexity", "Potential bias"]
-        },
-        preparationScore: 85,
-        estimatedDuration: depositionType === 'expert-witness' ? '6-8 hours' : '3-4 hours',
-        keyStrategies: [
-          "Focus on timeline establishment",
-          "Document authentication priority",
-          "Maintain witness comfort level",
-          "Prepare for objections"
-        ],
-        suggestedDocuments: [
-          "Deposition outline",
-          "Question bank",
-          "Document checklist",
-          "Witness preparation memo"
-        ],
-        timeline: {
-          preparation: "2-3 weeks before",
-          witnessPrep: "1 week before", 
-          finalReview: "24 hours before",
-          deposition: "Day of deposition"
-        }
-      };
+      // Get real case data for analysis
+      const documents = await storage.getDocumentsByCase(caseId);
+      const messages = await storage.getChatMessages(caseId);
+      const timeline = await storage.getTimelineEvents(caseId);
+
+      // Generate AI-powered deposition analysis
+      const analysis = await openaiService.generateDepositionAnalysis({
+        caseContext: case_.description,
+        caseType: case_.caseType,
+        witnessName,
+        depositionType,
+        keyTopics,
+        witnessRole,
+        objectives,
+        problemAreas,
+        availableEvidence: documents.map(doc => doc.title),
+        caseHistory: messages.slice(-10).map(msg => `${msg.role}: ${msg.content}`).join('\n'),
+        timelineEvents: timeline.map(event => `${event.eventType}: ${event.title}`)
+      });
 
       res.json(analysis);
     } catch (error) {

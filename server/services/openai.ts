@@ -354,6 +354,132 @@ export class OpenAIService {
       throw new Error("Failed to generate court preparation");
     }
   }
+
+  async generateDepositionAnalysis(request: {
+    caseContext: string;
+    caseType: string;
+    witnessName: string;
+    depositionType: string;
+    keyTopics: string;
+    witnessRole: string;
+    objectives?: string;
+    problemAreas?: string;
+    availableEvidence: string[];
+    caseHistory: string;
+    timelineEvents: string[];
+  }): Promise<any> {
+    try {
+      const prompt = `Generate a comprehensive deposition analysis for the following case:
+
+      Case Type: ${request.caseType}
+      Case Context: ${request.caseContext}
+      Witness Name: ${request.witnessName}
+      Deposition Type: ${request.depositionType}
+      Witness Role: ${request.witnessRole}
+      Key Topics: ${request.keyTopics}
+      Objectives: ${request.objectives || 'Not specified'}
+      Problem Areas: ${request.problemAreas || 'Not specified'}
+      Available Evidence: ${JSON.stringify(request.availableEvidence)}
+      Case History: ${request.caseHistory}
+      Timeline Events: ${JSON.stringify(request.timelineEvents)}
+
+      Please provide a detailed deposition analysis including:
+      1. Witness assessment and credibility factors
+      2. Deposition preparation score and strategy
+      3. Key preparation strategies and timeline
+      4. Suggested documents and evidence
+      5. Risk factors and mitigation strategies
+      6. Estimated duration and logistics
+
+      Format your response as a JSON object with structured analysis.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are a deposition preparation specialist. Provide detailed strategic analysis for witness depositions and examination strategies." },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.4,
+        max_tokens: 2000,
+      });
+
+      return JSON.parse(response.choices[0].message.content || "{}");
+    } catch (error) {
+      console.error("Deposition analysis generation error:", error);
+      throw new Error("Failed to generate deposition analysis");
+    }
+  }
+
+  async generateCaseAnalytics(request: {
+    caseContext: string;
+    caseType: string;
+    priority: string;
+    status: string;
+    daysActive: number;
+    documents: Array<{
+      title: string;
+      type: string;
+      status: string;
+      createdAt: Date;
+    }>;
+    messages: Array<{
+      role: string;
+      content: string;
+      timestamp: Date;
+    }>;
+    timeline: Array<{
+      type: string;
+      title: string;
+      description: string;
+      dueDate?: Date;
+      completed: boolean;
+    }>;
+    clientName: string;
+    opposingParty?: string;
+  }): Promise<any> {
+    try {
+      const prompt = `Generate comprehensive case analytics for the following legal case:
+
+      Case Type: ${request.caseType}
+      Case Context: ${request.caseContext}
+      Priority: ${request.priority}
+      Status: ${request.status}
+      Days Active: ${request.daysActive}
+      Client: ${request.clientName}
+      Opposing Party: ${request.opposingParty || 'Not specified'}
+      
+      Documents: ${JSON.stringify(request.documents)}
+      Messages: ${JSON.stringify(request.messages.slice(-10))}
+      Timeline: ${JSON.stringify(request.timeline)}
+
+      Please provide detailed case analytics including:
+      1. Basic metrics (days active, completion rate, critical tasks)
+      2. Financial analysis (estimated costs, potential recovery, ROI)
+      3. Timeline analysis (phases, next deadlines, estimated completion)
+      4. Task breakdown (documents filed, discovery, witnesses, experts)
+      5. Risk assessment (settlement, evidence, precedent, communication)
+      6. Performance metrics (documents generated, interactions, adherence)
+
+      Format your response as a JSON object with structured analytics.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are a legal case analytics specialist. Provide comprehensive data-driven analysis of legal case progress and metrics." },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3,
+        max_tokens: 2500,
+      });
+
+      return JSON.parse(response.choices[0].message.content || "{}");
+    } catch (error) {
+      console.error("Case analytics generation error:", error);
+      throw new Error("Failed to generate case analytics");
+    }
+  }
 }
 
 export const openaiService = new OpenAIService();

@@ -85,12 +85,7 @@ export function EnhancedFunctionModal({
   const [newFolderName, setNewFolderName] = useState('');
   const [showFolderSelector, setShowFolderSelector] = useState(false);
   const [documentToMove, setDocumentToMove] = useState<string | null>(null);
-  const [documentFolders, setDocumentFolders] = useState([
-    { id: 'evidence', name: 'Evidence', documentCount: 5 },
-    { id: 'drafts', name: 'Generated Drafts', documentCount: 8 },
-    { id: 'final', name: 'Final Documents', documentCount: 3 },
-    { id: 'correspondence', name: 'Correspondence', documentCount: 12 },
-  ]);
+
 
   // Court preparation analysis state
   const [courtPrepAnalysis, setCourtPrepAnalysis] = useState<any>(null);
@@ -115,7 +110,13 @@ export function EnhancedFunctionModal({
 
   const { data: timelineEvents = [] } = useQuery({
     queryKey: ['/api/cases', caseId, 'timeline'],
-    enabled: isOpen && functionId === 'timeline',
+    enabled: isOpen && (functionId === 'timeline' || functionId === 'calendar'),
+  });
+
+  const { data: caseFolders = [] } = useQuery({
+    queryKey: ['/api/cases', caseId, 'folders'],
+    queryFn: () => apiRequest('GET', `/api/cases/${caseId}/folders`).then(res => res.json()),
+    enabled: isOpen && functionId === 'case-documents',
   });
 
   const uploadFileMutation = useMutation({
@@ -326,11 +327,8 @@ export function EnhancedFunctionModal({
 
       if (response.ok) {
         const newFolder = await response.json();
-        setDocumentFolders(prev => [...prev, { 
-          id: newFolder.id, 
-          name: newFolder.name, 
-          documentCount: 0 
-        }]);
+        // Invalidate folders query to refetch from database
+        queryClient.invalidateQueries({ queryKey: ['/api/cases', caseId, 'folders'] });
         setIsCreatingFolder(false);
         setNewFolderName('');
         toast({
@@ -386,7 +384,7 @@ export function EnhancedFunctionModal({
   const handleMoveToFolder = async (folderId: string) => {
     if (!documentToMove) return;
 
-    const targetFolder = documentFolders.find(f => f.id === folderId);
+    const targetFolder = caseFolders.find((f: any) => f.id === folderId);
 
     try {
       const response = await apiRequest('PUT', `/api/documents/${documentToMove}`, {
@@ -464,7 +462,7 @@ export function EnhancedFunctionModal({
   };
 
   const handleBulkMoveToFolder = async (folderId: string) => {
-    const targetFolder = documentFolders.find(f => f.id === folderId);
+    const targetFolder = caseFolders.find((f: any) => f.id === folderId);
 
     try {
       const response = await apiRequest('PUT', `/api/documents/bulk-move`, {
@@ -1137,7 +1135,7 @@ export function EnhancedFunctionModal({
 
             {/* Folder Grid */}
             <div className="grid grid-cols-3 gap-3">
-              {documentFolders.map((folder) => (
+              {caseFolders.map((folder: any) => (
                 <Card 
                   key={folder.id} 
                   className="border-dashed border-2 border-gray-300 p-3 text-center cursor-pointer hover:bg-gray-50 transition-colors"
@@ -1164,7 +1162,7 @@ export function EnhancedFunctionModal({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-sm">
-                  {selectedFolder ? documentFolders.find(f => f.id === selectedFolder)?.name : 'All Documents'}:
+                  {selectedFolder ? caseFolders.find((f: any) => f.id === selectedFolder)?.name : 'All Documents'}:
                 </h4>
                 {selectedDocumentsForManagement.length > 0 && (
                   <div className="flex items-center space-x-2">
@@ -2338,6 +2336,17 @@ case 'case-analytics':
         );
 
       case 'calendar':
+        const upcomingDeadlines = timelineEvents.filter((event: any) => 
+          event.isDeadline && new Date(event.eventDate) > new Date()
+        ).sort((a: any, b: any) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+
+        const getDeadlineUrgency = (eventDate: string) => {
+          const daysUntil = Math.ceil((new Date(eventDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          if (daysUntil <= 7) return { level: 'urgent', color: 'red', badge: 'URGENT' };
+          if (daysUntil <= 30) return { level: 'high', color: 'yellow', badge: 'SCHEDULED' };
+          return { level: 'normal', color: 'blue', badge: 'UPCOMING' };
+        };
+
         return (
           <div className="space-y-4">
             <div className="bg-red-50 p-4 rounded-lg">
@@ -2348,41 +2357,36 @@ case 'case-analytics':
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <Card className="border-red-200 bg-red-50">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <AlertTriangle className="h-5 w-5 text-red-500" />
-                    <Badge variant="destructive">URGENT</Badge>
-                  </div>
-                  <div className="font-medium text-red-900">Discovery Deadline</div>
-                  <div className="text-sm text-red-700">March 30, 2024- All discovery must be completed</div>
-                  <div className="text-xs text-red-600 mt-1">7 days remaining</div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-yellow-200 bg-yellow-50">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Calendar className="h-5 w-5 text-yellow-500" />
-                    <Badge variant="outline">SCHEDULED</Badge>
-                  </div>
-                  <div className="font-medium text-yellow-900">Settlement Conference</div>
-                  <div className="text-sm text-yellow-700">April 15, 2024 - Court-ordered settlement conference</div>
-                  <div className="text-xs text-yellow-600 mt-1">23 days remaining</div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-blue-200 bg-blue-50">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Gavel className="h-5 w-5 text-blue-500" />
-                    <Badge variant="outline">UPCOMING</Badge>
-                  </div>
-                  <div className="font-medium text-blue-900">Trial Date</div>
-                  <div className="text-sm text-blue-700">June 1, 2024 - Jury trial scheduled</div>
-                  <div className="text-xs text-blue-600 mt-1">70 days remaining</div>
-                </CardContent>
-              </Card>
+              {upcomingDeadlines.length > 0 ? upcomingDeadlines.map((event: any, index: number) => {
+                const urgency = getDeadlineUrgency(event.eventDate);
+                const daysUntil = Math.ceil((new Date(event.eventDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                
+                return (
+                  <Card key={index} className={`border-${urgency.color}-200 bg-${urgency.color}-50`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <AlertTriangle className={`h-5 w-5 text-${urgency.color}-500`} />
+                        <Badge variant={urgency.level === 'urgent' ? 'destructive' : 'outline'}>
+                          {urgency.badge}
+                        </Badge>
+                      </div>
+                      <div className={`font-medium text-${urgency.color}-900`}>{event.title}</div>
+                      <div className={`text-sm text-${urgency.color}-700`}>
+                        {new Date(event.eventDate).toLocaleDateString()} - {event.description}
+                      </div>
+                      <div className={`text-xs text-${urgency.color}-600 mt-1`}>
+                        {daysUntil} days remaining
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              }) : (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No upcoming deadlines found for this case</p>
+                  <p className="text-sm text-gray-400 mt-2">Add deadlines to your case timeline to track important dates</p>
+                </div>
+              )}
             </div>
 
             <div className="flex space-x-2">
@@ -2480,7 +2484,7 @@ case 'case-analytics':
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            {documentFolders.map((folder) => (
+            {caseFolders.map((folder: any) => (
               <Button
                 key={folder.id}
                 variant="outline"
