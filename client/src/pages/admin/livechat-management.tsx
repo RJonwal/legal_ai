@@ -567,7 +567,7 @@ export default function LiveChatManagement() {
 
   const currentConfig = chatConfig || defaultConfig;
 
-  if (isLoading) {
+  if (configLoading) {
     return <div className="p-6">Loading live chat settings...</div>;
   }
 
