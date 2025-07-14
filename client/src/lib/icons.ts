@@ -146,9 +146,17 @@ export {
   MapPin,
   BookOpen,
   
-  // Settings (handle duplicate)
-  Settings as SettingsIcon
+  // Additional missing icons
+  PanelLeft,
+  PanelRight,
+  BarChart3,
+  Brain,
+  CreditCard,
+  Key,
+  LogOut,
+  MessageSquare,
+  Users,
+  Cookie,
+  Maximize2,
+  RefreshCw as Refresh
 } from 'lucide-react';
-
-// Alternative exports for aliased imports
-export { Settings as SettingsIcon } from 'lucide-react';
