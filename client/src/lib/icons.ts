@@ -1,5 +1,5 @@
-// Optimized icon system - Import only critical icons to reduce bundle size
-// This replaces the large centralized export to improve build performance
+// Comprehensive icon system - All icons used in the application
+// Centralized to eliminate build errors and improve maintainability
 
 export {
   // Core navigation and UI
@@ -13,6 +13,8 @@ export {
   X,
   Plus,
   Minus,
+  Circle,
+  Dot,
   
   // Essential actions
   Search,
@@ -23,30 +25,42 @@ export {
   Bell,
   Check,
   Edit,
+  Edit2,
   Save,
   Download,
   Upload,
+  CloudUpload,
   
   // Legal/business specific
   Gavel,
   FileText,
+  File,
+  FileCheck,
   Briefcase,
   Calendar,
   Clock,
+  Scale,
+  Building,
   
   // States and feedback
   Loader2,
   AlertCircle,
+  AlertTriangle,
   CheckCircle,
   Info,
   Eye,
   EyeOff,
+  XCircle,
+  StopCircle,
   
   // Communication
   Mail,
   Phone,
   MessageCircle,
   MessageSquare,
+  Send,
+  Reply,
+  Forward,
   
   // Essential system
   Database,
@@ -54,18 +68,27 @@ export {
   Globe,
   Shield,
   Key,
+  Monitor,
+  Cpu,
   
-  // Layout
+  // Layout and window controls
   PanelLeft,
   PanelRight,
+  Maximize2,
+  Minimize2,
+  GripVertical,
   
   // Charts and visualizations
+  BarChart,
   BarChart3,
   TrendingUp,
   Brain,
+  Target,
   
   // Additional common icons
   Folder,
+  FolderOpen,
+  FolderPlus,
   Copy,
   Trash2,
   ExternalLink,
@@ -76,34 +99,35 @@ export {
   MoreHorizontal,
   MoreVertical,
   Cookie,
+  History,
   
   // Business/financial
   CreditCard,
   DollarSign,
   Receipt,
   Wallet,
+  Award,
+  Crown,
   
   // Status indicators
   CheckCircle2,
-  AlertTriangle,
-  XCircle,
+  UserCheck,
   
   // Media/content
   Image,
   Video,
   FileAudio,
   FileVideo,
+  Camera,
   
-  // Actions
-  RefreshCcw,
+  // Actions and utilities
+  RefreshCw,
+  RotateCw,
   RotateCcw,
   Maximize,
   Minimize,
-  
-  // Communication expanded
-  Send,
-  Reply,
-  Forward,
+  Share2,
+  Paperclip,
   
   // Authentication
   LogOut,
@@ -113,9 +137,17 @@ export {
   Wifi,
   WifiOff,
   
-  // Common UI
-  RefreshCw,
-  RotateCw
+  // Special features
+  Bot,
+  Zap,
+  Sparkles,
+  Lightbulb,
+  Palette,
+  MapPin,
+  BookOpen,
+  
+  // Settings (handle duplicate)
+  Settings as SettingsIcon
 } from 'lucide-react';
 
 // Alternative exports for aliased imports
