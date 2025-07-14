@@ -132,6 +132,7 @@ export {
   Play,
   Pause,
   Mic,
+  Volume2,
   
   // Actions and utilities
   RefreshCw,
@@ -163,6 +164,8 @@ export {
   BookOpen,
   Type,
   TestTube,
+  Book,
+  Code,
   
   // Additional missing icons
   RefreshCw as Refresh,
