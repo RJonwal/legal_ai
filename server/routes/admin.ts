@@ -837,8 +837,10 @@ router.put("/system/maintenance/mode", (req: Request, res: Response) => {
 // Global Prompt Management - now using database
 router.get("/global-prompts", async (req: Request, res: Response) => {
   try {
+    console.log("Fetching global prompts...");
     const prompts = await storage.getAdminPrompts();
-    res.json(prompts);
+    console.log("Global prompts fetched:", prompts?.length || 0, "prompts");
+    res.json(prompts || []);
   } catch (error) {
     console.error("Error fetching global prompts:", error);
     res.status(500).json({ error: "Failed to fetch prompts" });

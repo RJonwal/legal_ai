@@ -43,14 +43,17 @@ export default function GlobalPromptManagement() {
   const [editingContent, setEditingContent] = useState('');
 
   // Fetch global prompts from API
-  const { data: prompts, isLoading, refetch } = useQuery({
+  const { data: prompts, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/admin/global-prompts'],
     queryFn: async () => {
+      console.log("Fetching global prompts from API...");
       const response = await fetch('/api/admin/global-prompts');
       if (!response.ok) {
-        throw new Error('Failed to fetch prompts');
+        throw new Error(`Failed to fetch prompts: ${response.status}`);
       }
-      return response.json();
+      const data = await response.json();
+      console.log("API returned prompts:", data);
+      return data;
     },
     retry: 3,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -138,6 +141,22 @@ export default function GlobalPromptManagement() {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-2">Loading global prompts...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+          <p className="text-red-600">Failed to load global prompts</p>
+          <Button onClick={() => refetch()} className="mt-2">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
@@ -207,7 +226,13 @@ export default function GlobalPromptManagement() {
           ))
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">No global prompts found.</p>
+            <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Global Prompts Found</h3>
+            <p className="text-gray-500 mb-4">Global prompts help configure AI behavior across the platform.</p>
+            <Button onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
           </div>
         )}
       </div>

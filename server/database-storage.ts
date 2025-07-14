@@ -416,18 +416,78 @@ export class DatabaseStorage implements IStorage {
     await db.delete(adminPages).where(eq(adminPages.id, parseInt(id)));
   }
 
+  async createDefaultPrompts(): Promise<void> {
+    try {
+      const existingPrompts = await db.select().from(adminPrompts).limit(1);
+      if (existingPrompts.length === 0) {
+        console.log("Creating default admin prompts...");
+        
+        const defaultPrompts = [
+          {
+            name: "Senior Legal AI Attorney System",
+            description: "Primary system prompt for legal AI assistance",
+            promptContent: "You are a Senior Legal AI Attorney with extensive experience in legal research, case analysis, and document preparation. You provide comprehensive legal assistance while maintaining the highest standards of professional ethics.",
+            category: "system" as const,
+            isActive: true
+          },
+          {
+            name: "Document Generation Assistant", 
+            description: "Specialized prompt for legal document creation",
+            promptContent: "You are an expert legal document drafting assistant. You help create precise, legally sound documents tailored to specific jurisdictions and case requirements.",
+            category: "document" as const,
+            isActive: true
+          },
+          {
+            name: "Case Analysis Expert",
+            description: "Focused on case law research and analysis",
+            promptContent: "You are a legal case analysis expert specializing in case law research, precedent analysis, and legal strategy development.",
+            category: "analysis" as const,
+            isActive: true
+          }
+        ];
+
+        for (const prompt of defaultPrompts) {
+          await db.insert(adminPrompts).values({
+            ...prompt,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
+        
+        console.log("Default prompts created successfully");
+      }
+    } catch (error) {
+      console.error("Error creating default prompts:", error);
+    }
+  }
+
   async getAdminPrompts(): Promise<any[]> {
-    const prompts = await db.select().from(adminPrompts).orderBy(desc(adminPrompts.createdAt));
-    return prompts.map(prompt => ({
-      id: prompt.id.toString(),
-      name: prompt.name,
-      description: prompt.description,
-      promptContent: prompt.promptContent,
-      isActive: prompt.isActive,
-      category: prompt.category,
-      createdAt: prompt.createdAt?.toISOString(),
-      updatedAt: prompt.updatedAt?.toISOString()
-    }));
+    try {
+      console.log("Querying database for admin prompts...");
+      
+      // Ensure default prompts exist
+      await this.createDefaultPrompts();
+      
+      const prompts = await db.select().from(adminPrompts).orderBy(desc(adminPrompts.createdAt));
+      console.log("Database returned prompts:", prompts?.length || 0);
+      
+      const mappedPrompts = prompts.map(prompt => ({
+        id: prompt.id.toString(),
+        name: prompt.name,
+        description: prompt.description,
+        promptContent: prompt.promptContent,
+        isActive: prompt.isActive,
+        category: prompt.category,
+        createdAt: prompt.createdAt?.toISOString(),
+        updatedAt: prompt.updatedAt?.toISOString()
+      }));
+      
+      console.log("Mapped prompts:", mappedPrompts);
+      return mappedPrompts;
+    } catch (error) {
+      console.error("Error in getAdminPrompts:", error);
+      return [];
+    }
   }
 
   async getAdminPrompt(id: string): Promise<any> {
@@ -442,6 +502,84 @@ export class DatabaseStorage implements IStorage {
       createdAt: prompt.createdAt?.toISOString(),
       updatedAt: prompt.updatedAt?.toISOString()
     } : null;
+  }
+
+  async updateAdminPrompt(id: string, updates: any): Promise<any> {
+    try {
+      console.log("Updating admin prompt:", id, updates);
+      
+      const [updatedPrompt] = await db.update(adminPrompts)
+        .set({
+          name: updates.name,
+          description: updates.description,
+          promptContent: updates.promptContent || updates.content,
+          isActive: updates.isActive,
+          category: updates.category,
+          updatedAt: new Date()
+        })
+        .where(eq(adminPrompts.id, parseInt(id)))
+        .returning();
+
+      if (!updatedPrompt) {
+        throw new Error("Prompt not found");
+      }
+
+      return {
+        id: updatedPrompt.id.toString(),
+        name: updatedPrompt.name,
+        description: updatedPrompt.description,
+        promptContent: updatedPrompt.promptContent,
+        isActive: updatedPrompt.isActive,
+        category: updatedPrompt.category,
+        createdAt: updatedPrompt.createdAt?.toISOString(),
+        updatedAt: updatedPrompt.updatedAt?.toISOString()
+      };
+    } catch (error) {
+      console.error("Error updating admin prompt:", error);
+      throw error;
+    }
+  }
+
+  async createAdminPrompt(promptData: any): Promise<any> {
+    try {
+      console.log("Creating admin prompt:", promptData);
+      
+      const [newPrompt] = await db.insert(adminPrompts)
+        .values({
+          name: promptData.name,
+          description: promptData.description,
+          promptContent: promptData.promptContent || promptData.content,
+          isActive: promptData.isActive !== undefined ? promptData.isActive : true,
+          category: promptData.category || 'general',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      return {
+        id: newPrompt.id.toString(),
+        name: newPrompt.name,
+        description: newPrompt.description,
+        promptContent: newPrompt.promptContent,
+        isActive: newPrompt.isActive,
+        category: newPrompt.category,
+        createdAt: newPrompt.createdAt?.toISOString(),
+        updatedAt: newPrompt.updatedAt?.toISOString()
+      };
+    } catch (error) {
+      console.error("Error creating admin prompt:", error);
+      throw error;
+    }
+  }
+
+  async deleteAdminPrompt(id: string): Promise<void> {
+    try {
+      console.log("Deleting admin prompt:", id);
+      await db.delete(adminPrompts).where(eq(adminPrompts.id, parseInt(id)));
+    } catch (error) {
+      console.error("Error deleting admin prompt:", error);
+      throw error;
+    }
   }
 
   async createAdminPrompt(prompt: any): Promise<any> {

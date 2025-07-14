@@ -15,7 +15,7 @@ export {
   Minus,
   Circle,
   Dot,
-  
+
   // Essential actions
   Search,
   Settings,
@@ -31,7 +31,7 @@ export {
   Download,
   Upload,
   CloudUpload,
-  
+
   // Legal/business specific
   Gavel,
   FileText,
@@ -42,7 +42,7 @@ export {
   Clock,
   Scale,
   Building,
-  
+
   // States and feedback
   Loader2,
   AlertCircle,
@@ -53,7 +53,7 @@ export {
   EyeOff,
   XCircle,
   StopCircle,
-  
+
   // Communication
   Mail,
   Phone,
@@ -62,7 +62,7 @@ export {
   Send,
   Reply,
   Forward,
-  
+
   // Essential system
   Database,
   Lock,
@@ -71,14 +71,14 @@ export {
   Key,
   Monitor,
   Cpu,
-  
+
   // Layout and window controls
   PanelLeft,
   PanelRight,
   Maximize2,
   Minimize2,
   GripVertical,
-  
+
   // Charts and visualizations
   BarChart,
   BarChart3,
@@ -87,7 +87,7 @@ export {
   Target,
   Activity,
   PieChart,
-  
+
   // Additional common icons
   Folder,
   FolderOpen,
@@ -103,7 +103,7 @@ export {
   MoreVertical,
   Cookie,
   History,
-  
+
   // Business/financial
   CreditCard,
   DollarSign,
@@ -112,17 +112,17 @@ export {
   Award,
   Crown,
   Coins,
-  
+
   // Device icons
   Smartphone,
   Calculator,
   HardDrive,
   Server,
-  
+
   // Status indicators
   CheckCircle2,
   UserCheck,
-  
+
   // Media/content
   Image,
   Video,
@@ -133,7 +133,7 @@ export {
   Pause,
   Mic,
   Volume2,
-  
+
   // Actions and utilities
   RefreshCw,
   RotateCw,
@@ -144,16 +144,16 @@ export {
   Paperclip,
   PhoneCall,
   PhoneForwarded,
-  
+
   // Authentication
   LogOut,
   LogIn,
-  
+
   // Network/connection
   Wifi,
   WifiOff,
   Webhook,
-  
+
   // Special features
   Bot,
   Zap,
@@ -166,11 +166,11 @@ export {
   TestTube,
   Book,
   Code,
-  
+
   // Additional missing icons
   RefreshCw as Refresh,
   TrendingDown,
-  
+
   // Common missing icons
   ChevronDown as ChevronDownIcon,
   ChevronUp as ChevronUpIcon,
@@ -179,7 +179,7 @@ export {
   MoreHorizontal as MoreHorizontalIcon,
   MoreVertical as MoreVerticalIcon,
   Settings as SettingsIcon,
-  
+
   // Additional commonly used icons
   Calendar as CalendarIcon,
   Clock as ClockIcon,
@@ -191,20 +191,20 @@ export {
   Filter as FilterIcon,
   Download as DownloadIcon,
   Upload as UploadIcon,
-  
+
   // Status and feedback icons
   Check as CheckIcon,
   X as XIcon,
   AlertCircle as AlertCircleIcon,
   CheckCircle as CheckCircleIcon,
   Info as InfoIcon,
-  
+
   // File and document icons
   File as FileIcon,
   FileText as FileTextIcon,
   Folder as FolderIcon,
   FolderOpen as FolderOpenIcon,
-  
+
   // Common actions
   Edit as EditIcon,
   Save as SaveIcon,
