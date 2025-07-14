@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BrandingProvider, useBranding } from "@/components/ui/branding-provider";
 import { Logo } from "@/components/ui/logo";
 import USCookieBanner from "@/components/compliance/us-cookie-banner";
-import EnhancedLiveChat from "@/components/live-chat/enhanced-live-chat";
+
 
 // Live Chat Widget Component
 const LiveChatWidget = () => {
@@ -559,7 +559,7 @@ const LandingContent = () => {
       </section>
 
       <Footer />
-      <EnhancedLiveChat onPageLoad={true} />
+      <LiveChatWidget />
       <USCookieBanner />
     </div>
   );
