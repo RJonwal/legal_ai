@@ -23,7 +23,13 @@ import {
   Settings,
   Star,
   Archive,
-  Flag
+  Flag,
+  Bot,
+  User,
+  Image,
+  ScreenShare,
+  StopCircle,
+  Monitor
 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
