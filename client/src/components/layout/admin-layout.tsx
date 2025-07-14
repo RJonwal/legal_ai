@@ -245,22 +245,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       isActive: location === "/admin/analytics"
     },
     {
-      title: "Email Management",
-      url: "/admin/email-management",
-      icon: Mail,
-      isActive: location === "/admin/email-management"
-    },
-    {
       title: "Live Chat",
       url: "/admin/livechat-management",
       icon: MessageSquare,
       isActive: location === "/admin/livechat-management"
-    },
-    {
-      title: "VoIP Management",
-      url: "/admin/voip-management",
-      icon: Phone,
-      isActive: location === "/admin/voip-management"
     },
     {
       title: "Page Management",
