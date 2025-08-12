@@ -28,6 +28,7 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   subscriptionStatus: text("subscription_status").default("inactive"),
+  paymentMethod: text("payment_method"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -43,6 +44,8 @@ export const cases = pgTable("cases", {
   clientName: text("client_name").notNull(),
   opposingParty: text("opposing_party"),
   assignedAttorney: integer("assigned_attorney").references(() => users.id),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  bookmarked: boolean("bookmarked").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -64,6 +67,7 @@ export const documents = pgTable("documents", {
   content: text("content").notNull(),
   documentType: text("document_type").notNull(),
   status: text("status").notNull().default("draft"),
+  folderId: text("folder_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

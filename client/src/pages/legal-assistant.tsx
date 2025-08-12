@@ -119,7 +119,7 @@ export default function LegalAssistant() {
         className="flex-1"
         onLayout={onLayoutChange}
       >
-        <ResizablePanel size={chatSize} minSize={30}>
+        <ResizablePanel defaultSize={chatSize} minSize={30}>
           <ChatInterface
             caseId={currentCaseId}
             onFunctionClick={handleFunctionClick}
@@ -129,7 +129,7 @@ export default function LegalAssistant() {
 
         <ResizableHandle withHandle />
 
-        <ResizablePanel size={canvasSize} minSize={25}>
+        <ResizablePanel defaultSize={canvasSize} minSize={25}>
           <DocumentCanvas
             caseId={currentCaseId}
             document={currentDocument}

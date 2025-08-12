@@ -10,6 +10,17 @@ import paymentRoutes from "./routes/payment";
 import uploadRoutes from "./routes/uploads";
 import { authenticateToken, type AuthRequest } from "./services/auth";
 import { Request, Response } from "express";
+
+// Extend Request interface to include user property
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+    };
+  }
+}
 import rateLimit from "express-rate-limit";
 import express from "express";
 
@@ -341,8 +352,8 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     } catch (error) {
       clearTimeout(timeout);
       console.error("Chat message error:", {
-        error: error.message,
-        stack: error.stack,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
         caseId: req.params.id,
         timestamp: new Date().toISOString()
       });
@@ -601,12 +612,12 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
       const timeline = await storage.getTimelineEvents(caseId);
 
       // Get analytics data from database or generate AI-powered analysis
-      const caseStartDate = new Date(case_.createdAt);
+      const caseStartDate = new Date(case_.createdAt || Date.now());
       const daysActive = Math.floor((Date.now() - caseStartDate.getTime()) / (1000 * 60 * 60 * 24));
 
       // Generate comprehensive analytics using AI service
       const analytics = await openaiService.generateCaseAnalytics({
-        caseContext: case_.description,
+        caseContext: case_.description || '',
         caseType: case_.caseType,
         priority: case_.priority,
         status: case_.status,
@@ -615,22 +626,22 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
           title: doc.title,
           type: doc.documentType,
           status: doc.status,
-          createdAt: doc.createdAt
+          createdAt: doc.createdAt || new Date()
         })),
         messages: messages.map(msg => ({
           role: msg.role,
           content: msg.content,
-          timestamp: msg.timestamp
+          timestamp: msg.createdAt || new Date()
         })),
         timeline: timeline.map(event => ({
           type: event.eventType,
           title: event.title,
-          description: event.description,
-          dueDate: event.dueDate,
-          completed: event.completed
+          description: event.description || '',
+          dueDate: event.eventDate,
+          completed: !event.isDeadline
         })),
         clientName: case_.clientName,
-        opposingParty: case_.opposingParty
+        opposingParty: case_.opposingParty || ''
       });
 
       res.json(analytics);
@@ -651,7 +662,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         return res.status(404).json({ message: "Case not found" });
       }
 
-      const caseContext = `${case_.title} - ${case_.description}`;
+      const caseContext = `${case_.title} - ${case_.description || ''}`;
       const analysis = await openaiService.analyzeContract(contractText, caseContext);
 
       res.json(analysis);
@@ -670,7 +681,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
         return res.status(404).json({ message: "Case not found" });
       }
 
-      const caseContext = `${case_.title} - ${case_.description}`;
+      const caseContext = `${case_.title} - ${case_.description || ''}`;
       const messages = await storage.getChatMessages(caseId);
       const caseHistory = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
 
@@ -701,7 +712,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
 
       // Generate AI-powered deposition analysis
       const analysis = await openaiService.generateDepositionAnalysis({
-        caseContext: case_.description,
+        caseContext: case_.description || '',
         caseType: case_.caseType,
         witnessName,
         depositionType,

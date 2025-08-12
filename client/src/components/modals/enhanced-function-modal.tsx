@@ -90,6 +90,14 @@ export function EnhancedFunctionModal({
   // Court preparation analysis state
   const [courtPrepAnalysis, setCourtPrepAnalysis] = useState<any>(null);
   const [loadingCourtPrep, setLoadingCourtPrep] = useState(false);
+  
+  // Next best action state
+  const [nextActionData, setNextActionData] = useState<any>(null);
+  const [loadingNextAction, setLoadingNextAction] = useState(false);
+  
+  // Deposition analysis state  
+  const [depositionAnalysisData, setDepositionAnalysisData] = useState<any>(null);
+  const [loadingDepositionAnalysis, setLoadingDepositionAnalysis] = useState(false);
 
   const { data: currentCase } = useQuery({
     queryKey: [`/api/cases/${caseId}`],
@@ -206,8 +214,118 @@ export function EnhancedFunctionModal({
     },
   });
 
+  const nextActionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', `/api/cases/${caseId}/next-action`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to get next best action');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setNextActionData(data);
+      setLoadingNextAction(false);
+      toast({
+        title: "Strategic Analysis Complete",
+        description: "AI recommendations have been generated for your case.",
+      });
+    },
+    onError: (error: any) => {
+      setLoadingNextAction(false);
+      toast({
+        variant: "destructive",
+        title: "Failed to generate recommendations",
+        description: error.message || "Please try again.",
+      });
+    },
+  });
+
+  const depositionAnalysisMutation = useMutation({
+    mutationFn: async (analysisData: any) => {
+      const response = await apiRequest('POST', `/api/cases/${caseId}/deposition-analysis`, analysisData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate deposition analysis');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setDepositionAnalysisData(data);
+      setLoadingDepositionAnalysis(false);
+      toast({
+        title: "Deposition Analysis Complete",
+        description: "Comprehensive deposition preparation has been generated.",
+      });
+    },
+    onError: (error: any) => {
+      setLoadingDepositionAnalysis(false);
+      toast({
+        variant: "destructive",
+        title: "Failed to generate analysis",
+        description: error.message || "Please try again.",
+      });
+    },
+  });
+
+  const courtPrepMutation = useMutation({
+    mutationFn: async (courtData: any) => {
+      const response = await apiRequest('POST', `/api/cases/${caseId}/court-prep`, courtData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate court preparation');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setCourtPrepAnalysis(data);
+      setLoadingCourtPrep(false);
+      toast({
+        title: "Court Preparation Complete",
+        description: "Strategic court preparation analysis has been generated.",
+      });
+    },
+    onError: (error: any) => {
+      setLoadingCourtPrep(false);
+      toast({
+        variant: "destructive",
+        title: "Failed to generate preparation",
+        description: error.message || "Please try again.",
+      });
+    },
+  });
+
   const handleGenerateDocument = (documentType: string) => {
     generateDocumentMutation.mutate(documentType);
+  };
+
+  const handleNextBestAction = () => {
+    setLoadingNextAction(true);
+    nextActionMutation.mutate();
+  };
+
+  const handleDepositionAnalysis = () => {
+    const analysisData = {
+      witnessName: depositionInputs.witnessName,
+      depositionType: depositionInputs.depositionType,
+      keyTopics: depositionInputs.keyTopics,
+      witnessRole: depositionInputs.witnessRole,
+      objectives: depositionInputs.objectives,
+      problemAreas: depositionInputs.problemAreas,
+    };
+    setLoadingDepositionAnalysis(true);
+    depositionAnalysisMutation.mutate(analysisData);
+  };
+
+  const handleCourtPrep = () => {
+    const courtData = {
+      hearingType: courtPrepInputs.hearingType,
+      keyArguments: courtPrepInputs.keyArguments.split(',').map(s => s.trim()).filter(Boolean),
+      evidence: courtPrepInputs.evidenceList.split(',').map(s => s.trim()).filter(Boolean),
+      timeline: [],
+    };
+    setLoadingCourtPrep(true);
+    courtPrepMutation.mutate(courtData);
   };
 
   const handleFileUpload = async (files: FileList) => {
@@ -943,6 +1061,38 @@ export function EnhancedFunctionModal({
                 AI-powered next steps and document generation for optimal case strategy.
               </p>
             </div>
+
+            {/* AI-Powered Strategic Analysis Section */}
+            <div className="mb-4">
+              <Button 
+                onClick={handleNextBestAction} 
+                disabled={loadingNextAction || nextActionMutation.isPending}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                {loadingNextAction || nextActionMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Analyzing Case Strategy...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="h-4 w-4 mr-2" />
+                    Generate AI Strategic Analysis
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {nextActionData && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-green-900 mb-2">AI Strategic Recommendations</h4>
+                <div className="text-sm text-green-800">
+                  {nextActionData.recommendations && (
+                    <div dangerouslySetInnerHTML={{ __html: nextActionData.recommendations }} />
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3">
               <Card className="border-red-200 bg-red-50">
@@ -1810,12 +1960,44 @@ case 'case-analytics':
               </p>
             </div>
 
+            {/* AI-Powered Deposition Analysis Section */}
+            <div className="mb-4">
+              <Button 
+                onClick={handleDepositionAnalysis} 
+                disabled={loadingDepositionAnalysis || depositionAnalysisMutation.isPending || !depositionInputs.witnessName}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                {loadingDepositionAnalysis || depositionAnalysisMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Generating Deposition Analysis...
+                  </>
+                ) : (
+                  <>
+                    <Users className="h-4 w-4 mr-2" />
+                    Generate AI Deposition Analysis
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {depositionAnalysisData && (
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-purple-900 mb-2">Deposition Strategy Analysis</h4>
+                <div className="text-sm text-purple-800">
+                  {depositionAnalysisData.strategy && (
+                    <div dangerouslySetInnerHTML={{ __html: depositionAnalysisData.strategy }} />
+                  )}
+                </div>
+              </div>
+            )}
+
             <Button 
               onClick={() => handleGenerateDocument(`Comprehensive Deposition Preparation Package - ${depositionInputs.witnessName || currentCase?.title}`)}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white"
               disabled={!depositionInputs.witnessName || !depositionInputs.keyTopics || generateDocumentMutation.isPending}
             >
-              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Complete Deposition Package'}
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Complete Document Package'}
             </Button>
           </div>
         );
@@ -2167,12 +2349,44 @@ case 'case-analytics':
               </p>
             </div>
 
+            {/* AI-Powered Court Preparation Analysis Section */}
+            <div className="mb-4">
+              <Button 
+                onClick={handleCourtPrep} 
+                disabled={loadingCourtPrep || courtPrepMutation.isPending || !courtPrepInputs.hearingType}
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
+              >
+                {loadingCourtPrep || courtPrepMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Generating Court Analysis...
+                  </>
+                ) : (
+                  <>
+                    <Gavel className="h-4 w-4 mr-2" />
+                    Generate AI Court Preparation Analysis
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {courtPrepAnalysis && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-red-900 mb-2">Court Preparation Strategy</h4>
+                <div className="text-sm text-red-800">
+                  {courtPrepAnalysis.preparation && (
+                    <div dangerouslySetInnerHTML={{ __html: courtPrepAnalysis.preparation }} />
+                  )}
+                </div>
+              </div>
+            )}
+
             <Button 
               onClick={() => handleGenerateDocument(`Complete Court Preparation Package - ${courtPrepInputs.hearingType || currentCase?.title}`)}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
               disabled={!courtPrepInputs.hearingType || !courtPrepInputs.keyArguments || generateDocumentMutation.isPending}
             >
-              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Complete Court Package'}
+              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate Complete Document Package'}
             </Button>
           </div>
         );
