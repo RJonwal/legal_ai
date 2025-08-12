@@ -75,6 +75,20 @@ export interface IStorage {
   createAdminPrompt(prompt: any): Promise<any>;
   updateAdminPrompt(id: string, updates: any): Promise<any>;
   deleteAdminPrompt(id: string): Promise<void>;
+
+  // New admin methods for all requirements
+  getUserById(id: string): Promise<SchemaUser | undefined>;
+  logAdminAction(action: any): Promise<void>;
+  updateRolePermissions(roleId: string, permissions: string[]): Promise<void>;
+  updateUserRole(userId: string, role: string): Promise<SchemaUser>;
+  updateUserStatus(userId: string, status: string): Promise<SchemaUser>;
+  deleteUser(userId: string): Promise<void>;
+  getBillingMetrics(): Promise<any>;
+  getBillingCustomers(): Promise<any[]>;
+  getBillingTransactions(): Promise<any[]>;
+  getSubscriptionPlans(): Promise<any[]>;
+  togglePlanStatus(planId: string): Promise<any>;
+  setPrimaryPlan(planId: string): Promise<void>;
 }
 
 export interface User {
@@ -622,6 +636,134 @@ export class MemStorage implements IStorage {
 
   async getAllCases(): Promise<Case[]> {
     return Array.from(this.cases.values());
+  }
+
+  // New admin methods implementation
+  async getUserById(id: string): Promise<SchemaUser | undefined> {
+    const numId = parseInt(id);
+    return this.users.get(numId);
+  }
+
+  async logAdminAction(action: any): Promise<void> {
+    // In real implementation, this would log to database
+    console.log('Admin action logged:', action);
+  }
+
+  async updateRolePermissions(roleId: string, permissions: string[]): Promise<void> {
+    // In real implementation, this would update role permissions in database
+    console.log(`Role ${roleId} permissions updated:`, permissions);
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<SchemaUser> {
+    const numId = parseInt(userId);
+    const user = this.users.get(numId);
+    if (!user) throw new Error("User not found");
+    
+    const updated = { ...user, userType: role, updatedAt: new Date() };
+    this.users.set(numId, updated);
+    return updated;
+  }
+
+  async updateUserStatus(userId: string, status: string): Promise<SchemaUser> {
+    const numId = parseInt(userId);
+    const user = this.users.get(numId);
+    if (!user) throw new Error("User not found");
+    
+    const updated = { ...user, isVerified: status === 'active', updatedAt: new Date() };
+    this.users.set(numId, updated);
+    return updated;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    const numId = parseInt(userId);
+    this.users.delete(numId);
+  }
+
+  async getBillingMetrics(): Promise<any> {
+    const users = Array.from(this.users.values());
+    return {
+      totalRevenue: 45750,
+      monthlyRevenue: 8900,
+      activeSubscriptions: users.filter(u => u.subscriptionStatus === 'active').length,
+      churnRate: 3.2,
+      averageRevenuePerUser: 89.50,
+      totalCustomers: users.length
+    };
+  }
+
+  async getBillingCustomers(): Promise<any[]> {
+    const users = Array.from(this.users.values());
+    return users.map(user => ({
+      id: user.id.toString(),
+      name: user.fullName,
+      email: user.email,
+      plan: user.userType === 'attorney' ? 'Professional' : 'Pro Se',
+      status: user.subscriptionStatus || 'inactive',
+      nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      totalSpent: Math.floor(Math.random() * 2000) + 100,
+      joinDate: user.createdAt?.toISOString().split('T')[0] || '2024-01-01'
+    }));
+  }
+
+  async getBillingTransactions(): Promise<any[]> {
+    return [
+      {
+        id: 'txn_001',
+        customer: 'Sarah Johnson',
+        amount: 99.00,
+        status: 'completed',
+        date: '2024-01-15',
+        plan: 'Professional'
+      },
+      {
+        id: 'txn_002', 
+        customer: 'John Smith',
+        amount: 29.00,
+        status: 'completed',
+        date: '2024-01-14',
+        plan: 'Pro Se'
+      }
+    ];
+  }
+
+  async getSubscriptionPlans(): Promise<any[]> {
+    return [
+      {
+        id: 'pro_se_plan',
+        name: 'Pro Se',
+        price: 29,
+        billingPeriod: 'monthly',
+        features: ['Basic AI assistance', 'Document templates', 'Case tracking', 'Email support'],
+        isActive: true,
+        isPopular: false,
+        isPrimary: false
+      },
+      {
+        id: 'professional_plan',
+        name: 'Professional',
+        price: 99,
+        billingPeriod: 'monthly', 
+        features: ['Full AI analysis', 'Unlimited documents', 'Advanced case management', 'Priority support', 'Court preparation tools'],
+        isActive: true,
+        isPopular: true,
+        isPrimary: true
+      }
+    ];
+  }
+
+  async togglePlanStatus(planId: string): Promise<any> {
+    // In real implementation, toggle plan status in database
+    const plans = await this.getSubscriptionPlans();
+    const plan = plans.find(p => p.id === planId);
+    if (plan) {
+      plan.isActive = !plan.isActive;
+    }
+    return plan;
+  }
+
+  async setPrimaryPlan(planId: string): Promise<void> {
+    // In real implementation, set primary plan in database
+    console.log(`Setting primary plan to: ${planId}`);
   }
 
   async getUserStats(): Promise<{

@@ -157,6 +157,26 @@ export default function AdminUsers() {
     },
   });
 
+  // Fetch admin roles data
+  const { data: adminRoles = [] } = useQuery({
+    queryKey: ['admin-roles'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/roles');
+      if (!response.ok) throw new Error('Failed to fetch roles');
+      return response.json();
+    },
+  });
+
+  // Fetch permission groups for role editing
+  const { data: adminPermissionGroups = [] } = useQuery({
+    queryKey: ['admin-permission-groups'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/permission-groups');
+      if (!response.ok) throw new Error('Failed to fetch permission groups');
+      return response.json();
+    },
+  });
+
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: any) => {
@@ -256,30 +276,68 @@ export default function AdminUsers() {
     }
   };
 
+  // Impersonation mutation
+  const impersonateUserMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      const response = await fetch(`/api/admin/users/${userId}/impersonate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      if (!response.ok) throw new Error('Failed to start impersonation');
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      const user = users.find(u => u.id === variables.userId);
+      if (user) {
+        setCurrentImpersonation({
+          user,
+          startTime: new Date(),
+          reason: variables.reason
+        });
+      }
+      setImpersonationTarget(null);
+      setImpersonationReason("");
+      console.log('Impersonation started successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error starting impersonation:', error);
+      alert('Failed to start impersonation. Please try again.');
+    },
+  });
+
   const handleImpersonateUser = (user: User) => {
     if (!impersonationReason.trim()) {
       alert("Please provide a reason for impersonation");
       return;
     }
     
-    setCurrentImpersonation({
-      user,
-      startTime: new Date(),
-      reason: impersonationReason
-    });
-    setImpersonationTarget(null);
-    setImpersonationReason("");
-    
-    // In a real implementation, this would make an API call to start impersonation
-    console.log(`Starting impersonation of user ${user.name} (${user.email})`);
-    console.log(`Reason: ${impersonationReason}`);
+    impersonateUserMutation.mutate({ userId: user.id, reason: impersonationReason });
   };
+
+  // Stop impersonation mutation
+  const stopImpersonationMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await fetch(`/api/admin/users/${userId}/stop-impersonation`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to stop impersonation');
+      return response.json();
+    },
+    onSuccess: () => {
+      setCurrentImpersonation(null);
+      console.log('Impersonation stopped successfully');
+    },
+    onError: (error) => {
+      console.error('Error stopping impersonation:', error);
+    },
+  });
 
   const handleStopImpersonation = () => {
     if (currentImpersonation) {
       const duration = Date.now() - currentImpersonation.startTime.getTime();
       console.log(`Stopping impersonation of ${currentImpersonation.user.name} after ${Math.round(duration / 1000)} seconds`);
-      setCurrentImpersonation(null);
+      stopImpersonationMutation.mutate(currentImpersonation.user.id);
     }
   };
 
@@ -770,25 +828,54 @@ export default function AdminUsers() {
                           </CardTitle>
                           <CardDescription>Advanced legal features</CardDescription>
                         </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            const permissions = [
-                              "unlimited_cases",
-                              "advanced_ai_features", 
-                              "document_generation",
-                              "priority_support",
-                              "api_access_limited"
-                            ];
-                            updateRolePermissionsMutation.mutate({ 
-                              roleId: "pro_user", 
-                              permissions 
-                            });
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>Edit Professional User Role</DialogTitle>
+                              <DialogDescription>Configure permissions for Professional User role</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 max-h-96 overflow-y-auto">
+                              {adminPermissionGroups.map(group => (
+                                <div key={group.id} className="space-y-2">
+                                  <h4 className="font-medium text-sm">{group.name}</h4>
+                                  <p className="text-xs text-gray-600">{group.description}</p>
+                                  <div className="space-y-2 pl-4">
+                                    {group.permissions.map(permission => (
+                                      <div key={permission.id} className="flex items-center space-x-2">
+                                        <input 
+                                          type="checkbox" 
+                                          id={`pro-${permission.id}`}
+                                          defaultChecked={[
+                                            "unlimited_cases", "advanced_ai_features", 
+                                            "document_generation", "priority_support", "api_access_limited"
+                                          ].includes(permission.id)}
+                                          className="rounded"
+                                        />
+                                        <label htmlFor={`pro-${permission.id}`} className="text-sm">
+                                          {permission.name}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline">Cancel</Button>
+                              <Button onClick={() => {
+                                const permissions = ["unlimited_cases", "advanced_ai_features", "document_generation", "priority_support", "api_access_limited"];
+                                updateRolePermissionsMutation.mutate({ roleId: "pro_user", permissions });
+                              }}>
+                                Save Changes
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </CardHeader>
                     <CardContent>

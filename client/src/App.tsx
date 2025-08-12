@@ -9,6 +9,7 @@ import { lazy, useEffect, Suspense } from 'react';
 
 // Import pages
 import LandingPage from "@/pages/landing";
+import NewLanding from "@/pages/landing-new";
 import LegalAssistant from "@/pages/legal-assistant";
 import NewCase from "@/pages/new-case";
 import SearchCases from "@/pages/search-cases";
@@ -123,8 +124,9 @@ function App() {
         <TooltipProvider>
           <Router>
             <Switch>
-              {/* Landing page */}
-              <Route path="/" component={LandingPage} />
+              {/* Landing pages */}
+              <Route path="/" component={NewLanding} />
+              <Route path="/landing-old" component={LandingPage} />
 
               {/* Auth routes */}
               <Route path="/login" component={Login} />

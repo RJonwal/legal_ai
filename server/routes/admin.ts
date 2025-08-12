@@ -15,9 +15,14 @@ router.get("/global-prompts", async (req: Request, res: Response) => {
   }
 });
 
-// Admin Users Management
+// Admin Users Management  
 router.get("/users", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if user is admin
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
     // Get all users from database
     const users = await storage.getAllUsers();
 
@@ -39,6 +44,11 @@ router.get("/users", authenticateToken, async (req: AuthRequest, res: Response) 
 
 router.get("/user-analytics", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if user is admin
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
     const users = await storage.getAllUsers();
     const totalUsers = users.length;
     const activeUsers = users.filter(u => u.isVerified).length;
@@ -60,6 +70,11 @@ router.get("/user-analytics", authenticateToken, async (req: AuthRequest, res: R
 // Admin Dashboard Stats
 router.get("/dashboard-stats", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if user is admin
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
     const users = await storage.getAllUsers();
     const cases = await storage.getAllCases();
 
@@ -769,7 +784,7 @@ router.get("/system/logs", (req: Request, res: Response) => {
   ];
 
   let filteredLogs = allLogs;
-  if (type !== "all") {
+  if (type !== "all" && typeof type === 'string') {
     filteredLogs = allLogs.filter(log => log.level.toLowerCase() === type.toLowerCase());
   }
 
@@ -828,8 +843,7 @@ router.put("/system/maintenance/mode", (req: Request, res: Response) => {
   const { enabled, message } = req.body;
   console.log(`${new Date().toLocaleTimeString()} [express] PUT /api/admin/system/maintenance/mode 200`);
   res.json({ 
-    success:```tool_code
- true, 
+    success: true, 
     message: enabled ? "Maintenance mode enabled" : "Maintenance mode disabled" 
   });
 });
@@ -930,6 +944,356 @@ router.patch("/global-prompts/:id/toggle", authenticateToken, async (req: AuthRe
   } catch (error) {
     console.error("Error toggling prompt:", error);
     res.status(500).json({ error: "Failed to toggle prompt status" });
+  }
+});
+
+// 1. User Impersonation endpoints
+router.post("/users/:userId/impersonate", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { userId } = req.params;
+    const { reason } = req.body;
+    
+    const targetUser = await storage.getUserById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Log impersonation action
+    await storage.logAdminAction({
+      adminId: req.user.id,
+      action: 'impersonate_user',
+      targetUserId: userId,
+      reason: reason,
+      timestamp: new Date()
+    });
+    
+    res.json({ 
+      success: true, 
+      message: "Impersonation started",
+      targetUser: {
+        id: targetUser.id,
+        name: targetUser.fullName,
+        email: targetUser.email
+      }
+    });
+  } catch (error) {
+    console.error("Error starting impersonation:", error);
+    res.status(500).json({ error: "Failed to start impersonation" });
+  }
+});
+
+router.post("/users/:userId/stop-impersonation", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { userId } = req.params;
+    
+    await storage.logAdminAction({
+      adminId: req.user.id,
+      action: 'stop_impersonation',
+      targetUserId: userId,
+      timestamp: new Date()
+    });
+    
+    res.json({ success: true, message: "Impersonation stopped" });
+  } catch (error) {
+    console.error("Error stopping impersonation:", error);
+    res.status(500).json({ error: "Failed to stop impersonation" });
+  }
+});
+
+// 2. Role management endpoints
+router.get("/roles", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const roles = [
+      {
+        id: "admin",
+        name: "Administrator",
+        description: "Full platform access and control",
+        permissions: [
+          "user_management",
+          "system_configuration", 
+          "financial_reports",
+          "content_management",
+          "api_access_full",
+          "impersonation",
+          "admin_panel_access"
+        ],
+        editable: false
+      },
+      {
+        id: "pro_user",
+        name: "Professional User",
+        description: "Advanced legal features and tools",
+        permissions: [
+          "unlimited_cases",
+          "advanced_ai_features",
+          "document_generation",
+          "priority_support",
+          "api_access_limited",
+          "export_functionality"
+        ],
+        editable: true
+      },
+      {
+        id: "free_user",
+        name: "Pro Se User", 
+        description: "Basic legal assistance and tools",
+        permissions: [
+          "limited_cases",
+          "basic_ai_assistance",
+          "document_templates",
+          "email_support"
+        ],
+        editable: true
+      }
+    ];
+    
+    res.json(roles);
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    res.status(500).json({ error: "Failed to fetch roles" });
+  }
+});
+
+router.put("/roles/:roleId", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { roleId } = req.params;
+    const { permissions } = req.body;
+    
+    // In real implementation, save role permissions to database
+    await storage.updateRolePermissions(roleId, permissions);
+    
+    res.json({ 
+      success: true, 
+      message: `Role ${roleId} permissions updated`,
+      roleId,
+      permissions 
+    });
+  } catch (error) {
+    console.error("Error updating role permissions:", error);
+    res.status(500).json({ error: "Failed to update role permissions" });
+  }
+});
+
+// 3. User management endpoints
+router.put("/users/:userId/role", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { userId } = req.params;
+    const { role } = req.body;
+    
+    const updatedUser = await storage.updateUserRole(userId, role);
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    res.status(500).json({ error: "Failed to update user role" });
+  }
+});
+
+router.put("/users/:userId/status", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { userId } = req.params;
+    const { status } = req.body;
+    
+    const updatedUser = await storage.updateUserStatus(userId, status);
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Error updating user status:", error);
+    res.status(500).json({ error: "Failed to update user status" });
+  }
+});
+
+router.delete("/users/:userId", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { userId } = req.params;
+    
+    await storage.deleteUser(userId);
+    res.json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Failed to delete user" });
+  }
+});
+
+// 4. Permission groups
+router.get("/permission-groups", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const permissionGroups = [
+      {
+        id: "case_management",
+        name: "Case Management",
+        description: "Permissions related to case creation and management",
+        permissions: [
+          { id: "create_cases", name: "Create Cases", description: "Ability to create new legal cases" },
+          { id: "edit_cases", name: "Edit Cases", description: "Ability to modify existing cases" },
+          { id: "delete_cases", name: "Delete Cases", description: "Ability to remove cases" },
+          { id: "unlimited_cases", name: "Unlimited Cases", description: "No limit on number of cases" },
+          { id: "limited_cases", name: "Limited Cases", description: "Limited number of cases per month" }
+        ]
+      },
+      {
+        id: "ai_features",
+        name: "AI Features",
+        description: "Access to AI-powered legal assistance",
+        permissions: [
+          { id: "advanced_ai_features", name: "Advanced AI Features", description: "Full AI legal analysis and recommendations" },
+          { id: "basic_ai_assistance", name: "Basic AI Assistance", description: "Basic AI help and suggestions" },
+          { id: "ai_document_review", name: "AI Document Review", description: "AI-powered document analysis" }
+        ]
+      },
+      {
+        id: "document_features",
+        name: "Document Features",
+        description: "Document creation and management capabilities",
+        permissions: [
+          { id: "document_generation", name: "Document Generation", description: "Create legal documents with AI" },
+          { id: "document_templates", name: "Document Templates", description: "Access to pre-built templates" },
+          { id: "export_functionality", name: "Export Functionality", description: "Export documents in various formats" }
+        ]
+      },
+      {
+        id: "support_access",
+        name: "Support Access",
+        description: "Different levels of customer support",
+        permissions: [
+          { id: "priority_support", name: "Priority Support", description: "24/7 priority customer support" },
+          { id: "email_support", name: "Email Support", description: "Email-based customer support" },
+          { id: "chat_support", name: "Live Chat Support", description: "Real-time chat support" }
+        ]
+      },
+      {
+        id: "api_access",
+        name: "API Access",
+        description: "Access to platform APIs",
+        permissions: [
+          { id: "api_access_full", name: "Full API Access", description: "Complete API access with high rate limits" },
+          { id: "api_access_limited", name: "Limited API Access", description: "Basic API access with rate limits" }
+        ]
+      }
+    ];
+    
+    res.json(permissionGroups);
+  } catch (error) {
+    console.error("Error fetching permission groups:", error);
+    res.status(500).json({ error: "Failed to fetch permission groups" });
+  }
+});
+
+// 5. Comprehensive billing endpoints
+router.get("/billing/metrics", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const metrics = await storage.getBillingMetrics();
+    res.json(metrics);
+  } catch (error) {
+    console.error("Error fetching billing metrics:", error);
+    res.status(500).json({ error: "Failed to fetch billing metrics" });
+  }
+});
+
+router.get("/billing/customers", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const customers = await storage.getBillingCustomers();
+    res.json(customers);
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+    res.status(500).json({ error: "Failed to fetch customers" });
+  }
+});
+
+router.get("/billing/transactions", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const transactions = await storage.getBillingTransactions();
+    res.json(transactions);
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    res.status(500).json({ error: "Failed to fetch transactions" });
+  }
+});
+
+// 6. Plan management endpoints
+router.get("/plans", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const plans = await storage.getSubscriptionPlans();
+    res.json(plans);
+  } catch (error) {
+    console.error("Error fetching plans:", error);
+    res.status(500).json({ error: "Failed to fetch plans" });
+  }
+});
+
+router.put("/plans/:planId/toggle", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { planId } = req.params;
+    const plan = await storage.togglePlanStatus(planId);
+    res.json({ success: true, plan });
+  } catch (error) {
+    console.error("Error toggling plan status:", error);
+    res.status(500).json({ error: "Failed to toggle plan status" });
+  }
+});
+
+router.put("/plans/primary/:planId", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { planId } = req.params;
+    await storage.setPrimaryPlan(planId);
+    res.json({ success: true, message: "Primary plan updated" });
+  } catch (error) {
+    console.error("Error setting primary plan:", error);
+    res.status(500).json({ error: "Failed to set primary plan" });
   }
 });
 

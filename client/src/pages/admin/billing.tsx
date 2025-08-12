@@ -121,25 +121,25 @@ export default function AdminBilling() {
   const { data: plans = [], isLoading: plansLoading } = useQuery({
     queryKey: ['admin-subscription-plans'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/subscription-plans');
+      const response = await fetch('/api/admin/plans');
       if (!response.ok) throw new Error('Failed to fetch plans');
       return response.json();
     },
   });
 
   const { data: customers = [], isLoading: customersLoading } = useQuery({
-    queryKey: ['admin-customers'],
+    queryKey: ['admin-billing-customers'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/customers');
+      const response = await fetch('/api/admin/billing/customers');
       if (!response.ok) throw new Error('Failed to fetch customers');
       return response.json();
     },
   });
 
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
-    queryKey: ['admin-transactions'],
+    queryKey: ['admin-billing-transactions'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/transactions');
+      const response = await fetch('/api/admin/billing/transactions');
       if (!response.ok) throw new Error('Failed to fetch transactions');
       return response.json();
     },
@@ -152,10 +152,14 @@ export default function AdminBilling() {
       if (!response.ok) throw new Error('Failed to fetch gateway settings');
       return response.json();
     },
-    onSuccess: (data) => {
-      setGatewaySettings(data);
-    },
   });
+
+  // Update gateway settings when data is fetched
+  useEffect(() => {
+    if (paymentGatewaySettings) {
+      setGatewaySettings(paymentGatewaySettings);
+    }
+  }, [paymentGatewaySettings]);
 
   // Mutations
   const createPlanMutation = useMutation({
@@ -205,6 +209,44 @@ export default function AdminBilling() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-subscription-plans'] });
       toast({ title: "Plan Deleted", description: "Subscription plan deleted successfully." });
+    },
+  });
+
+  // Plan toggle mutation
+  const togglePlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      const response = await fetch(`/api/admin/plans/${planId}/toggle`, {
+        method: 'PUT',
+      });
+      if (!response.ok) throw new Error('Failed to toggle plan status');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-subscription-plans'] });
+      toast({ title: "Success", description: "Plan status updated successfully" });
+    },
+    onError: (error) => {
+      console.error('Error toggling plan:', error);
+      toast({ title: "Error", description: "Failed to update plan status", variant: "destructive" });
+    },
+  });
+
+  // Set primary plan mutation
+  const setPrimaryPlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      const response = await fetch(`/api/admin/plans/primary/${planId}`, {
+        method: 'PUT',
+      });
+      if (!response.ok) throw new Error('Failed to set primary plan');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-subscription-plans'] });
+      toast({ title: "Success", description: "Primary plan updated successfully" });
+    },
+    onError: (error) => {
+      console.error('Error setting primary plan:', error);
+      toast({ title: "Error", description: "Failed to set primary plan", variant: "destructive" });
     },
   });
 
