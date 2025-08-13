@@ -2,6 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { openaiService } from "./services/openai";
+import {
+  ObjectStorageService,
+  ObjectNotFoundError,
+} from "./objectStorage";
+import { ObjectPermission } from "./objectAcl";
 import { insertChatMessageSchema, insertDocumentSchema, insertTimelineSchema } from "@shared/schema";
 import { z } from "zod";
 // import adminRoutes from "./routes/admin"; // Temporarily disabled due to syntax error
@@ -2019,6 +2024,148 @@ User Experience Focus:
     } catch (error) {
       console.error('Error deleting admin prompt:', error);
       res.status(500).json({ error: 'Failed to delete admin prompt' });
+    }
+  });
+
+  // Landing page configuration endpoint
+  app.get("/api/admin/landing-config", async (req, res) => {
+    try {
+      const config = await storage.getAdminConfig('landing-config');
+      const defaultConfig = {
+        heroTitle: "Transform Your Legal Practice with AI",
+        heroSubtitle: "Advanced AI assistant with 20+ years of legal experience. Strategic analysis, automated document generation, and comprehensive case management in one platform.",
+        ctaButtonText: "Get Started",
+        dashboardScreenshots: [],
+        features: [
+          {
+            title: "AI-Powered Legal Analysis",
+            description: "Senior-level legal reasoning with 20+ years of experience. Strategic case analysis, risk assessment, and proactive recommendations.",
+            icon: "brain"
+          },
+          {
+            title: "Automated Document Generation",
+            description: "Create motions, briefs, contracts, and pleadings with intelligent templates and case-specific customization.",
+            icon: "file-text"
+          },
+          {
+            title: "Comprehensive Case Management",
+            description: "Track deadlines, manage documents, monitor case progress, and collaborate with team members in one unified platform.",
+            icon: "folder"
+          },
+          {
+            title: "Enterprise Security",
+            description: "Bank-grade encryption, HIPAA compliance, and secure client data handling with complete privacy protection.",
+            icon: "shield"
+          }
+        ],
+        testimonials: [
+          {
+            name: "Sarah Martinez",
+            role: "Managing Partner", 
+            company: "Martinez & Associates",
+            content: "The AI legal analysis is phenomenal. It's like having a senior partner review every case with 20+ years of experience.",
+            rating: 5
+          },
+          {
+            name: "David Chen",
+            role: "Solo Practitioner",
+            company: "Chen Law Office",
+            content: "Document generation saves me 15+ hours per week. The AI understands legal context better than any tool I've used.",
+            rating: 5
+          }
+        ],
+        pricingPlans: [
+          {
+            name: "Pro Se",
+            price: "$29",
+            features: ["Basic AI assistance", "Document templates", "Case tracking", "Email support"],
+            popular: false
+          },
+          {
+            name: "Professional",
+            price: "$99",
+            features: ["Full AI analysis", "Unlimited documents", "Advanced case management", "Priority support", "Court preparation tools"],
+            popular: true
+          },
+          {
+            name: "Enterprise",
+            price: "$299",
+            features: ["Custom AI training", "API access", "White-label solution", "Dedicated support", "Advanced analytics", "Custom integrations"],
+            popular: false
+          }
+        ]
+      };
+      res.json(config || defaultConfig);
+    } catch (error) {
+      console.error('Error fetching landing config:', error);
+      res.status(500).json({ error: 'Failed to fetch landing config' });
+    }
+  });
+
+  app.put("/api/admin/landing-config", async (req, res) => {
+    try {
+      const configData = req.body;
+      await storage.setAdminConfig('landing-config', configData);
+      res.json({ success: true, message: 'Landing configuration updated successfully' });
+    } catch (error) {
+      console.error('Error updating landing config:', error);
+      res.status(500).json({ error: 'Failed to update landing config' });
+    }
+  });
+
+  // Object storage routes for dashboard screenshot uploads
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/objects/upload", authenticateToken, async (req: AuthRequest, res: Response) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.put("/api/dashboard-screenshots", authenticateToken, async (req: AuthRequest, res: Response) => {
+    if (!req.body.screenshotURL) {
+      return res.status(400).json({ error: "screenshotURL is required" });
+    }
+
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.screenshotURL,
+        {
+          owner: userId.toString(),
+          visibility: "public",
+        },
+      );
+
+      res.status(200).json({
+        objectPath: objectPath,
+      });
+    } catch (error) {
+      console.error("Error setting dashboard screenshot:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 

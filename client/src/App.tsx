@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Router, Route, Switch } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
-import MobileLayout from "@/components/layout/mobile-layout";
+import { MobileLayout } from "@/components/layout/mobile-layout";
 import AdminLayout from "@/components/layout/admin-layout";
 import { lazy, useEffect, Suspense } from 'react';
 

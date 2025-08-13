@@ -25,15 +25,13 @@ import {
   Activity,
   Home,
   ChevronUp,
-  User2,
+  User,
   CreditCard,
   Key,
   MessageSquare,
   Phone,
   FileText,
   Scale,
-  ToggleLeft,
-  ToggleRight,
   LogOut,
   Brain
 } from "@/lib/icons";
@@ -53,6 +51,7 @@ interface NavigationItem {
   url: string;
   icon: any;
   isActive: boolean;
+  hidden?: boolean;
   hidden?: boolean;
 }
 

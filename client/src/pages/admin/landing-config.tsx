@@ -1,2161 +1,542 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Plus, 
+  Upload, 
   Trash2, 
-  Save, 
-  Eye, 
-  Settings, 
-  Image, 
-  Type, 
-  Users, 
-  MessageSquare, 
-  CreditCard,
-  Phone,
-  Mail,
-  MapPin,
-  Upload,
-  Palette,
-  Smartphone,
-  Monitor,
-  Globe,
-  Link,
-  Hash,
-  Download
-} from "@/lib/icons";
+  Eye,
+  Save,
+  RefreshCw,
+  Image as ImageIcon,
+  Settings,
+  FileText,
+  Users,
+  DollarSign
+} from "lucide-react";
+import type { UploadResult } from "@uppy/core";
 
-interface AdminConfig {
-  hero: {
-    title: string;
-    subtitle: string;
-    ctaText: string;
-    backgroundImage?: string;
-  };
+interface LandingConfig {
+  heroTitle: string;
+  heroSubtitle: string;
+  ctaButtonText: string;
+  dashboardScreenshots: string[];
   features: Array<{
-    id: string;
-    icon: string;
     title: string;
     description: string;
-    enabled: boolean;
+    icon: string;
   }>;
   testimonials: Array<{
-    id: string;
     name: string;
     role: string;
     company: string;
     content: string;
     rating: number;
-    enabled: boolean;
   }>;
-  pricing: Array<{
-    id: string;
+  pricingPlans: Array<{
     name: string;
     price: string;
-    period: string;
     features: string[];
-    popular: boolean;
-    enabled: boolean;
+    popular?: boolean;
   }>;
-  contact: {
-    phone: string;
-    email: string;
-    address: string;
-  };
-  seo: {
-    title: string;
-    description: string;
-    keywords: string[];
-  };
-  htmlCustomizations: {
-    headerScripts: string;
-    bodyScripts: string;
-    footerScripts: string;
-    customCSS: string;
-    chatWidget: {
-      enabled: boolean;
-      provider: string;
-      apiKey: string;
-      position: string;
-      showOnDashboard: boolean;
-      allowedPages: string[];
-      customization: {
-        primaryColor: string;
-        fontFamily: string;
-        borderRadius: string;
-        position: string;
-      };
-    };
-    analytics: {
-      googleAnalytics: string;
-      facebookPixel: string;
-      customTracking: string;
-    };
-  };
 }
 
-interface BrandingConfig {
-  logo: {
-    primaryLogo: string | null;
-    secondaryLogo: string | null;
-    logoHeight: number;
-    logoWidth: number;
-    showText: boolean;
-    textPosition: string;
-  };
-  favicon: {
-    ico: string | null;
-    png16: string | null;
-    png32: string | null;
-    png192: string | null;
-    png512: string | null;
-    appleTouchIcon: string | null;
-  };
-  appIcons: {
-    webAppIcon192: string | null;
-    webAppIcon512: string | null;
-    maskableIcon: string | null;
-  };
-  brand: {
-    companyName: string;
-    tagline: string;
-    description: string;
-    domain: string;
-  };
-  colors: {
-    primary: string;
-    primaryDark: string;
-    primaryLight: string;
-    secondary: string;
-    accent: string;
-    success: string;
-    warning: string;
-    error: string;
-    background: string;
-    backgroundDark: string;
-    text: string;
-    textDark: string;
-    muted: string;
-    border: string;
-  };
-  typography: {
-    fontFamily: string;
-    headingFont: string;
-    bodyFont: string;
-    fontScale: number;
-  };
-  theme: {
-    borderRadius: string;
-    shadowStyle: string;
-    animationSpeed: string;
-  };
-  social: {
-    twitter: string;
-    linkedin: string;
-    facebook: string;
-    instagram: string;
-    youtube: string;
-    socialToggles?: {
-      twitter?: boolean;
-      linkedin?: boolean;
-      facebook?: boolean;
-      instagram?: boolean;
-      youtube?: boolean;
-    };
-  };
-  seo: {
-    ogImage: string | null;
-    twitterImage: string | null;
-  };
-}
+export default function AdminLandingConfig() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("hero");
 
-export default function LandingConfig() {
-  const [brandingConfig, setBrandingConfig] = useState<BrandingConfig>({
-    logo: {
-      primaryLogo: null,
-      secondaryLogo: null,
-      logoHeight: 40,
-      logoWidth: 40,
-      showText: true,
-      textPosition: "right"
-    },
-    favicon: {
-      ico: null,
-      png16: null,
-      png32: null,
-      png192: null,
-      png512: null,
-      appleTouchIcon: null
-    },
-    appIcons: {
-      webAppIcon192: null,
-      webAppIcon512: null,
-      maskableIcon: null
-    },
-    brand: {
-      companyName: "LegalAI Pro",
-      tagline: "AI-Powered Legal Excellence",
-      description: "Empowering lawyers and pro se litigants with intelligent case management, document generation, and strategic legal analysis",
-      domain: "legalai.pro"
-    },
-    colors: {
-      primary: "#3b82f6",
-      primaryDark: "#1d4ed8",
-      primaryLight: "#60a5fa",
-      secondary: "#64748b",
-      accent: "#f59e0b",
-      success: "#10b981",
-      warning: "#f59e0b",
-      error: "#ef4444",
-      background: "#ffffff",
-      backgroundDark: "#0f172a",
-      text: "#1e293b",
-      textDark: "#f8fafc",
-      muted: "#64748b",
-      border: "#e2e8f0"
-    },
-    typography: {
-      fontFamily: "Inter",
-      headingFont: "Inter",
-      bodyFont: "Inter",
-      fontScale: 1.0
-    },
-    theme: {
-      borderRadius: "0.5rem",
-      shadowStyle: "modern",
-      animationSpeed: "normal"
-    },
-    social: {
-      twitter: "",
-      linkedin: "",
-      facebook: "",
-      instagram: "",
-      youtube: "",
-      socialToggles: {
-        twitter: true,
-        linkedin: true,
-        facebook: true,
-        instagram: true,
-        youtube: true
-      }
-    },
-    seo: {
-      ogImage: null,
-      twitterImage: null
-    }
+  // Fetch current landing config
+  const { data: config, isLoading } = useQuery<LandingConfig>({
+    queryKey: ['/api/admin/landing-config'],
+    retry: false,
   });
 
-  const [config, setConfig] = useState<AdminConfig>({
-    hero: {
-      title: "Revolutionary AI Legal Assistant",
-      subtitle: "Empowering lawyers and pro se litigants with intelligent case management, document generation, and strategic legal analysis",
-      ctaText: "Start Your Legal Journey"
-    },
+  // Initialize form state with default values
+  const [formData, setFormData] = useState<LandingConfig>({
+    heroTitle: "Transform Your Legal Practice with AI",
+    heroSubtitle: "Advanced AI assistant with 20+ years of legal experience. Strategic analysis, automated document generation, and comprehensive case management in one platform.",
+    ctaButtonText: "Get Started",
+    dashboardScreenshots: [],
     features: [
       {
-        id: "1",
-        icon: "Scale",
         title: "AI-Powered Legal Analysis",
-        description: "Advanced AI that thinks like a senior attorney with 20+ years of experience",
-        enabled: true
-      },
-      {
-        id: "2",
-        icon: "FileText",
-        title: "Automated Document Generation",
-        description: "Generate court-ready legal documents, briefs, and motions instantly",
-        enabled: true
-      },
-      {
-        id: "3",
-        icon: "Gavel",
-        title: "Case Strategy Planning",
-        description: "Comprehensive case analysis with proactive strategic recommendations",
-        enabled: true
+        description: "Senior-level legal reasoning with 20+ years of experience. Strategic case analysis, risk assessment, and proactive recommendations.",
+        icon: "brain"
       }
     ],
     testimonials: [
       {
-        id: "1",
-        name: "Sarah Johnson",
-        role: "Partner",
-        company: "Johnson & Associates",
-        content: "This AI assistant has revolutionized our practice. We're 300% more efficient.",
-        rating: 5,
-        enabled: true
+        name: "Sarah Martinez",
+        role: "Managing Partner", 
+        company: "Martinez & Associates",
+        content: "The AI legal analysis is phenomenal. It's like having a senior partner review every case with 20+ years of experience.",
+        rating: 5
       }
     ],
-    pricing: [
+    pricingPlans: [
       {
-        id: "1",
-        name: "Pro Se",
-        price: "$29",
-        period: "month",
-        features: ["Basic AI assistance", "Document templates", "Case tracking", "Email support"],
-        popular: false,
-        enabled: true
-      },
-      {
-        id: "2",
         name: "Professional",
-        price: "$99",
-        period: "month",
-        features: ["Full AI analysis", "Unlimited documents", "Advanced case management", "Priority support", "Court preparation tools"],
-        popular: true,
-        enabled: true
+        price: "$49",
+        features: ["AI Legal Analysis", "Document Generation", "Case Management", "5 Cases / Month", "Email Support"]
       }
-    ],
-    contact: {
-      phone: "+1 (555) 123-LEGAL",
-      email: "contact@legalai.com",
-      address: "123 Legal District, Suite 500, New York, NY 10001"
+    ]
+  });
+
+  // Update form data when config loads
+  useState(() => {
+    if (config) {
+      setFormData(config);
+    }
+  }, [config]);
+
+  // Save landing config mutation
+  const saveConfigMutation = useMutation({
+    mutationFn: async (data: LandingConfig) => {
+      const response = await fetch('/api/admin/landing-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to save config');
+      return response.json();
     },
-    seo: {
-      title: "LegalAI Pro - Revolutionary AI Legal Assistant",
-      description: "Empowering lawyers and pro se litigants with AI-powered case management, document generation, and strategic legal analysis.",
-      keywords: ["legal AI", "case management", "document generation", "pro se", "attorney", "legal assistant"]
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/landing-config'] });
+      toast({
+        title: "Configuration Saved",
+        description: "Landing page configuration updated successfully.",
+      });
     },
-    htmlCustomizations: {
-      headerScripts: "",
-      bodyScripts: "",
-      footerScripts: "",
-      customCSS: "",
-      chatWidget: {
-        enabled: false,
-        provider: "crisp",
-        apiKey: "",
-        position: "bottom-right",
-        showOnDashboard: false,
-        allowedPages: ["landing", "pricing", "contact"],
-        customization: {
-          primaryColor: "#3B82F6",
-          fontFamily: "Inter",
-          borderRadius: "8px",
-          position: "bottom-right"
-        }
-      },
-      analytics: {
-        googleAnalytics: "",
-        facebookPixel: "",
-        customTracking: ""
-      }
+    onError: (error) => {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save landing page configuration. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
-  const [activeTab, setActiveTab] = useState("hero");
-  const [isSaving, setSaving] = useState(false);
+  const handleSave = () => {
+    saveConfigMutation.mutate(formData);
+  };
 
-  // Load chat widget config and branding config on component mount
-  useEffect(() => {
-    const loadConfigs = async () => {
-      try {
-        // Load chat widget config
-        const chatResponse = await fetch('/api/admin/chat-widget-config');
-        const chatData = await chatResponse.json();
-        if (chatData.success) {
-          setConfig(prev => ({
-            ...prev,
-            htmlCustomizations: {
-              ...prev.htmlCustomizations,
-              chatWidget: chatData.config
-            }
-          }));
-        }
-
-        // Load branding config
-        const brandingResponse = await fetch('/api/admin/branding-config');
-        const brandingData = await brandingResponse.json();
-        if (brandingData) {
-          setBrandingConfig(brandingData);
-        }
-      } catch (error) {
-        console.error('Failed to load configs:', error);
-      }
+  // Handle screenshot upload
+  const handleGetUploadParameters = async () => {
+    const response = await fetch('/api/objects/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) throw new Error('Failed to get upload URL');
+    const data = await response.json();
+    return {
+      method: 'PUT' as const,
+      url: data.uploadURL,
     };
+  };
 
-    loadConfigs();
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    
-    try {
-      // Save chat widget config
-      const chatResponse = await fetch('/api/admin/chat-widget-config', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          config: config.htmlCustomizations.chatWidget
-        }),
-      });
-
-      if (!chatResponse.ok) {
-        throw new Error('Failed to save chat widget config');
-      }
-
-      // Save branding config
-      const brandingResponse = await fetch('/api/admin/branding-config', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(brandingConfig),
-      });
-
-      if (!brandingResponse.ok) {
-        throw new Error('Failed to save branding config');
-      }
-
-      // Save landing page config
-      const landingResponse = await fetch('/api/admin/landing-config', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config),
-      });
-
-      if (!landingResponse.ok) {
-        throw new Error('Failed to save landing config');
-      }
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const uploadURL = uploadedFile.uploadURL;
       
-      console.log("Saving configs:", { config, brandingConfig });
-      alert("Configuration saved successfully!");
-    } catch (error) {
-      console.error('Save failed:', error);
-      alert("Failed to save configuration. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleImageUpload = async (type: string, file: File) => {
-    try {
-      // Convert file to base64 for storage
-      const reader = new FileReader();
-      return new Promise<string>((resolve, reject) => {
-        reader.onload = async () => {
-          try {
-            const base64Data = reader.result as string;
-            const response = await fetch('/api/admin/branding/upload', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                type,
-                imageData: base64Data,
-                filename: file.name
-              }),
-            });
-
-            if (!response.ok) {
-              throw new Error('Upload failed');
-            }
-
-            const result = await response.json();
-            resolve(result.url);
-          } catch (error) {
-            reject(error);
-          }
-        };
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsDataURL(file);
-      });
-    } catch (error) {
-      console.error('Upload failed:', error);
-      throw new Error('Failed to upload image');
-    }
-  };
-
-  const applyBrandingGlobally = async () => {
-    try {
-      const response = await fetch('/api/admin/apply-branding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(brandingConfig),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to apply branding');
-      }
-
-      const result = await response.json();
-      alert('Branding applied globally! Changes will be visible across the platform.');
-      return result;
-    } catch (error) {
-      console.error('Apply branding failed:', error);
-      alert('Failed to apply branding globally. Please try again.');
-      throw error;
-    }
-  };
-
-  const generateCSSVariables = () => {
-    return fetch('/api/admin/branding/css-variables')
-      .then(response => response.text());
-  };
-
-  const downloadManifest = () => {
-    fetch('/api/admin/branding/manifest')
+      // Update dashboard screenshot with object storage
+      fetch('/api/dashboard-screenshots', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ screenshotURL: uploadURL }),
+      })
       .then(response => response.json())
-      .then(manifest => {
-        const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'manifest.json';
-        a.click();
-        URL.revokeObjectURL(url);
+      .then(data => {
+        const newScreenshots = [...formData.dashboardScreenshots, data.objectPath];
+        setFormData({...formData, dashboardScreenshots: newScreenshots});
+        toast({
+          title: "Screenshot Uploaded",
+          description: "Dashboard screenshot uploaded successfully.",
+        });
+      })
+      .catch(error => {
+        console.error('Error setting screenshot:', error);
+        toast({
+          title: "Upload Error",
+          description: "Failed to save uploaded screenshot.",
+          variant: "destructive",
+        });
       });
+    }
   };
 
-  const addFeature = () => {
-    const newFeature = {
-      id: Date.now().toString(),
-      icon: "FileText",
-      title: "New Feature",
-      description: "Feature description",
-      enabled: true
-    };
-    setConfig(prev => ({
-      ...prev,
-      features: [...prev.features, newFeature]
-    }));
+  const removeScreenshot = (index: number) => {
+    const newScreenshots = formData.dashboardScreenshots.filter((_, i) => i !== index);
+    setFormData({...formData, dashboardScreenshots: newScreenshots});
+    toast({
+      title: "Screenshot Removed",
+      description: "Dashboard screenshot removed from landing page.",
+    });
   };
 
-  const removeFeature = (id: string) => {
-    setConfig(prev => ({
-      ...prev,
-      features: prev.features.filter(f => f.id !== id)
-    }));
-  };
-
-  const addTestimonial = () => {
-    const newTestimonial = {
-      id: Date.now().toString(),
-      name: "Client Name",
-      role: "Role",
-      company: "Company",
-      content: "Testimonial content",
-      rating: 5,
-      enabled: true
-    };
-    setConfig(prev => ({
-      ...prev,
-      testimonials: [...prev.testimonials, newTestimonial]
-    }));
-  };
-
-  const removeTestimonial = (id: string) => {
-    setConfig(prev => ({
-      ...prev,
-      testimonials: prev.testimonials.filter(t => t.id !== id)
-    }));
-  };
-
-  const addPricingPlan = () => {
-    const newPlan = {
-      id: Date.now().toString(),
-      name: "New Plan",
-      price: "$0",
-      period: "month",
-      features: ["Feature 1"],
-      popular: false,
-      enabled: true
-    };
-    setConfig(prev => ({
-      ...prev,
-      pricing: [...prev.pricing, newPlan]
-    }));
-  };
-
-  const removePricingPlan = (id: string) => {
-    setConfig(prev => ({
-      ...prev,
-      pricing: prev.pricing.filter(p => p.id !== id)
-    }));
-  };
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Landing Page Configuration</h1>
-            <p className="text-gray-600 mt-2">Manage your landing page content and appearance</p>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline">
-              <Eye className="mr-2 h-4 w-4" />
-              Preview
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Landing Page Configuration</h1>
+          <p className="text-gray-600 mt-2">Manage your landing page content, screenshots, and configuration</p>
         </div>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => window.open('/', '_blank')}>
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+          <Button 
+            onClick={handleSave}
+            disabled={saveConfigMutation.isPending}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {saveConfigMutation.isPending ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="hero" className="flex items-center gap-2">
-              <Type className="h-4 w-4" />
-              Hero
-            </TabsTrigger>
-            <TabsTrigger value="branding" className="flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Branding
-            </TabsTrigger>
-            <TabsTrigger value="features" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Features
-            </TabsTrigger>
-            <TabsTrigger value="testimonials" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Testimonials
-            </TabsTrigger>
-            <TabsTrigger value="pricing" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Pricing
-            </TabsTrigger>
-            <TabsTrigger value="contact" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              Contact
-            </TabsTrigger>
-            <TabsTrigger value="html" className="flex items-center gap-2">
-              <Image className="h-4 w-4" />
-              HTML/Chat
-            </TabsTrigger>
-            <TabsTrigger value="seo" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              SEO
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="hero" className="flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            Hero
+          </TabsTrigger>
+          <TabsTrigger value="screenshots" className="flex items-center gap-2">
+            <ImageIcon className="w-4 h-4" />
+            Screenshots
+          </TabsTrigger>
+          <TabsTrigger value="features" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Features
+          </TabsTrigger>
+          <TabsTrigger value="testimonials" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Testimonials
+          </TabsTrigger>
+          <TabsTrigger value="pricing" className="flex items-center gap-2">
+            <DollarSign className="w-4 h-4" />
+            Pricing
+          </TabsTrigger>
+        </TabsList>
 
-          {/* Hero Section */}
-          <TabsContent value="hero">
-            <Card>
-              <CardHeader>
-                <CardTitle>Hero Section</CardTitle>
-                <CardDescription>Configure the main hero section of your landing page</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
+        {/* Hero Section Configuration */}
+        <TabsContent value="hero" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Hero Section</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Hero Title</label>
+                <Input
+                  value={formData.heroTitle}
+                  onChange={(e) => setFormData({...formData, heroTitle: e.target.value})}
+                  placeholder="Transform Your Legal Practice with AI"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Hero Subtitle</label>
+                <Textarea
+                  value={formData.heroSubtitle}
+                  onChange={(e) => setFormData({...formData, heroSubtitle: e.target.value})}
+                  placeholder="Advanced AI assistant with 20+ years of legal experience..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">CTA Button Text</label>
+                <Input
+                  value={formData.ctaButtonText}
+                  onChange={(e) => setFormData({...formData, ctaButtonText: e.target.value})}
+                  placeholder="Get Started"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Dashboard Screenshots */}
+        <TabsContent value="screenshots" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5" />
+                Dashboard Screenshots
+              </CardTitle>
+              <p className="text-sm text-gray-600">
+                Upload real dashboard screenshots to showcase your platform's capabilities on the landing page.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="hero-title">Main Title</Label>
-                  <Input
-                    id="hero-title"
-                    value={config.hero.title}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      hero: { ...prev.hero, title: e.target.value }
-                    }))}
-                    placeholder="Enter main title"
-                  />
+                  <h3 className="text-lg font-medium">Current Screenshots</h3>
+                  <p className="text-sm text-gray-600">
+                    {formData.dashboardScreenshots.length} screenshot(s) uploaded
+                  </p>
                 </div>
-                <div>
-                  <Label htmlFor="hero-subtitle">Subtitle</Label>
-                  <Textarea
-                    id="hero-subtitle"
-                    value={config.hero.subtitle}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      hero: { ...prev.hero, subtitle: e.target.value }
-                    }))}
-                    placeholder="Enter subtitle"
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="hero-cta">Call to Action Text</Label>
-                  <Input
-                    id="hero-cta"
-                    value={config.hero.ctaText}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      hero: { ...prev.hero, ctaText: e.target.value }
-                    }))}
-                    placeholder="Enter CTA text"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={5 * 1024 * 1024} // 5MB
+                  onGetUploadParameters={handleGetUploadParameters}
+                  onComplete={handleUploadComplete}
+                  buttonClassName="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Screenshot
+                </ObjectUploader>
+              </div>
 
-          {/* Branding Section */}
-          <TabsContent value="branding">
-            <div className="space-y-6">
-              {/* Logo Management */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Image className="h-5 w-5" />
-                    Logo Management
-                  </CardTitle>
-                  <CardDescription>Upload and configure your brand logos</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label>Primary Logo</Label>
-                      <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        {brandingConfig.logo.primaryLogo ? (
-                          <div className="space-y-2">
-                            <img src={brandingConfig.logo.primaryLogo} alt="Primary Logo" className="mx-auto h-16 w-auto" />
-                            <Button variant="outline" size="sm" onClick={() => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, primaryLogo: null } }))}>
-                              Remove
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                            <div>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                id="primary-logo-upload"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    try {
-                                      const url = await handleImageUpload('primary-logo', file);
-                                      setBrandingConfig(prev => ({ 
-                                        ...prev, 
-                                        logo: { ...prev.logo, primaryLogo: url } 
-                                      }));
-                                    } catch (error) {
-                                      alert('Failed to upload logo');
-                                    }
-                                  }
-                                }}
-                              />
-                              <Button 
-                                variant="outline" 
-                                className="mb-2" 
-                                onClick={() => document.getElementById('primary-logo-upload')?.click()}
-                              >
-                                <Upload className="mr-2 h-4 w-4" />
-                                Upload Logo
-                              </Button>
-                              <p className="text-xs text-gray-500">PNG, JPG up to 2MB</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label>Secondary Logo (Optional)</Label>
-                      <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        {brandingConfig.logo.secondaryLogo ? (
-                          <div className="space-y-2">
-                            <img src={brandingConfig.logo.secondaryLogo} alt="Secondary Logo" className="mx-auto h-16 w-auto" />
-                            <Button variant="outline" size="sm" onClick={() => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, secondaryLogo: null } }))}>
-                              Remove
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                            <div>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                id="secondary-logo-upload"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    try {
-                                      const url = await handleImageUpload('secondary-logo', file);
-                                      setBrandingConfig(prev => ({ 
-                                        ...prev, 
-                                        logo: { ...prev.logo, secondaryLogo: url } 
-                                      }));
-                                    } catch (error) {
-                                      alert('Failed to upload logo');
-                                    }
-                                  }
-                                }}
-                              />
-                              <Button 
-                                variant="outline" 
-                                className="mb-2"
-                                onClick={() => document.getElementById('secondary-logo-upload')?.click()}
-                              >
-                                <Upload className="mr-2 h-4 w-4" />
-                                Upload Logo
-                              </Button>
-                              <p className="text-xs text-gray-500">For dark backgrounds</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="logo-width">Logo Width (px)</Label>
-                      <Input
-                        id="logo-width"
-                        type="number"
-                        value={brandingConfig.logo.logoWidth}
-                        onChange={(e) => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, logoWidth: parseInt(e.target.value) || 40 } }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="logo-height">Logo Height (px)</Label>
-                      <Input
-                        id="logo-height"
-                        type="number"
-                        value={brandingConfig.logo.logoHeight}
-                        onChange={(e) => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, logoHeight: parseInt(e.target.value) || 40 } }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="text-position">Text Position</Label>
-                      <Select
-                        value={brandingConfig.logo.textPosition}
-                        onValueChange={(value) => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, textPosition: value } }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="right">Right of Logo</SelectItem>
-                          <SelectItem value="bottom">Below Logo</SelectItem>
-                          <SelectItem value="none">Logo Only</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-medium">Show Company Name</Label>
-                      <p className="text-xs text-gray-600">Display company name next to logo</p>
-                    </div>
-                    <Switch
-                      checked={brandingConfig.logo.showText}
-                      onCheckedChange={(checked) => setBrandingConfig(prev => ({ ...prev, logo: { ...prev.logo, showText: checked } }))}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Favicon & App Icons */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Smartphone className="h-5 w-5" />
-                    Favicon & App Icons
-                  </CardTitle>
-                  <CardDescription>Configure browser and mobile app icons</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <Label>Favicon (16x16)</Label>
-                      <div className="mt-2 border rounded-lg p-4 text-center">
-                        {brandingConfig.favicon.png16 ? (
-                          <div className="space-y-2">
-                            <img src={brandingConfig.favicon.png16} alt="Favicon 16x16" className="mx-auto h-4 w-4" />
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => document.getElementById('favicon-16-upload')?.click()}
-                            >
-                              Replace
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => document.getElementById('favicon-16-upload')?.click()}
-                          >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload 16x16
-                          </Button>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          id="favicon-16-upload"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              try {
-                                const url = await handleImageUpload('favicon-16', file);
-                                setBrandingConfig(prev => ({ 
-                                  ...prev, 
-                                  favicon: { ...prev.favicon, png16: url } 
-                                }));
-                              } catch (error) {
-                                alert('Failed to upload favicon');
-                              }
-                            }
+              {/* Screenshot Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {formData.dashboardScreenshots.map((screenshot, index) => (
+                  <Card key={index} className="relative">
+                    <CardContent className="p-4">
+                      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden mb-3">
+                        <img 
+                          src={screenshot.startsWith('/') ? `/public-objects${screenshot}` : screenshot}
+                          alt={`Dashboard Screenshot ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDNINUM0LjQ0NzcyIDMgNCAzLjQ0NzcyIDQgNFYyMEM0IDIwLjU1MjMgNC40NDc3MiAyMSA1IDIxSDIxQzIxLjU1MjMgMjEgMjIgMjAuNTUyMyAyMiAyMFY0QzIyIDMuNDQ3NzIgMjEuNTUyMyAzIDIxIDNaIiBzdHJva2U9IiNBNUE1QTUiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNOSA5SDlWOUgxNVY5SDlWOVoiIGZpbGw9IiNBNUE1QTUiLz4KPC9zdmc+Cg==';
                           }}
                         />
                       </div>
-                    </div>
-                    
-                    <div>
-                      <Label>Favicon (32x32)</Label>
-                      <div className="mt-2 border rounded-lg p-4 text-center">
-                        {brandingConfig.favicon.png32 ? (
-                          <div className="space-y-2">
-                            <img src={brandingConfig.favicon.png32} alt="Favicon 32x32" className="mx-auto h-8 w-8" />
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => document.getElementById('favicon-32-upload')?.click()}
-                            >
-                              Replace
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => document.getElementById('favicon-32-upload')?.click()}
-                          >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload 32x32
-                          </Button>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          id="favicon-32-upload"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              try {
-                                const url = await handleImageUpload('favicon-32', file);
-                                setBrandingConfig(prev => ({ 
-                                  ...prev, 
-                                  favicon: { ...prev.favicon, png32: url } 
-                                }));
-                              } catch (error) {
-                                alert('Failed to upload favicon');
-                              }
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label>Apple Touch Icon</Label>
-                      <div className="mt-2 border rounded-lg p-4 text-center">
-                        {brandingConfig.favicon.appleTouchIcon ? (
-                          <div className="space-y-2">
-                            <img src={brandingConfig.favicon.appleTouchIcon} alt="Apple Touch Icon" className="mx-auto h-12 w-12 rounded-lg" />
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => document.getElementById('apple-touch-icon-upload')?.click()}
-                            >
-                              Replace
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => document.getElementById('apple-touch-icon-upload')?.click()}
-                          >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload 180x180
-                          </Button>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          id="apple-touch-icon-upload"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              try {
-                                const url = await handleImageUpload('apple-touch-icon', file);
-                                setBrandingConfig(prev => ({ 
-                                  ...prev, 
-                                  favicon: { ...prev.favicon, appleTouchIcon: url } 
-                                }));
-                              } catch (error) {
-                                alert('Failed to upload Apple Touch Icon');
-                              }
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h4 className="font-medium mb-4">Progressive Web App Icons</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>App Icon (192x192)</Label>
-                        <div className="mt-2 border rounded-lg p-4 text-center">
-                          {brandingConfig.appIcons.webAppIcon192 ? (
-                            <div className="space-y-2">
-                              <img src={brandingConfig.appIcons.webAppIcon192} alt="App Icon 192" className="mx-auto h-16 w-16 rounded-lg" />
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => document.getElementById('app-icon-192-upload')?.click()}
-                              >
-                                Replace
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => document.getElementById('app-icon-192-upload')?.click()}
-                            >
-                              <Upload className="mr-2 h-4 w-4" />
-                              Upload 192x192
-                            </Button>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            id="app-icon-192-upload"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                try {
-                                  const url = await handleImageUpload('app-icon-192', file);
-                                  setBrandingConfig(prev => ({ 
-                                    ...prev, 
-                                    appIcons: { ...prev.appIcons, webAppIcon192: url } 
-                                  }));
-                                } catch (error) {
-                                  alert('Failed to upload app icon');
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label>App Icon (512x512)</Label>
-                        <div className="mt-2 border rounded-lg p-4 text-center">
-                          {brandingConfig.appIcons.webAppIcon512 ? (
-                            <div className="space-y-2">
-                              <img src={brandingConfig.appIcons.webAppIcon512} alt="App Icon 512" className="mx-auto h-16 w-16 rounded-lg" />
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => document.getElementById('app-icon-512-upload')?.click()}
-                              >
-                                Replace
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => document.getElementById('app-icon-512-upload')?.click()}
-                            >
-                              <Upload className="mr-2 h-4 w-4" />
-                              Upload 512x512
-                            </Button>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            id="app-icon-512-upload"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                try {
-                                  const url = await handleImageUpload('app-icon-512', file);
-                                  setBrandingConfig(prev => ({ 
-                                    ...prev, 
-                                    appIcons: { ...prev.appIcons, webAppIcon512: url } 
-                                  }));
-                                } catch (error) {
-                                  alert('Failed to upload app icon');
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={downloadManifest}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download Manifest.json
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Brand Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Globe className="h-5 w-5" />
-                    Brand Information
-                  </CardTitle>
-                  <CardDescription>Configure your brand identity and messaging</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="company-name">Company Name</Label>
-                      <Input
-                        id="company-name"
-                        value={brandingConfig.brand.companyName}
-                        onChange={(e) => setBrandingConfig(prev => ({ ...prev, brand: { ...prev.brand, companyName: e.target.value } }))}
-                        placeholder="Your Company Name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="domain">Domain</Label>
-                      <Input
-                        id="domain"
-                        value={brandingConfig.brand.domain}
-                        onChange={(e) => setBrandingConfig(prev => ({ ...prev, brand: { ...prev.brand, domain: e.target.value } }))}
-                        placeholder="yourcompany.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="tagline">Tagline</Label>
-                    <Input
-                      id="tagline"
-                      value={brandingConfig.brand.tagline}
-                      onChange={(e) => setBrandingConfig(prev => ({ ...prev, brand: { ...prev.brand, tagline: e.target.value } }))}
-                      placeholder="Your brand tagline"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description">Brand Description</Label>
-                    <Textarea
-                      id="description"
-                      value={brandingConfig.brand.description}
-                      onChange={(e) => setBrandingConfig(prev => ({ ...prev, brand: { ...prev.brand, description: e.target.value } }))}
-                      placeholder="Describe your brand and what you do"
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Color Scheme */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Palette className="h-5 w-5" />
-                    Color Scheme
-                  </CardTitle>
-                  <CardDescription>Configure your brand colors and theme</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <div>
-                      <Label htmlFor="primary-color">Primary Color</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          id="primary-color"
-                          type="color"
-                          value={brandingConfig.colors.primary}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, primary: e.target.value } }))}
-                          className="w-12 h-10 p-1 border rounded"
-                        />
-                        <Input
-                          value={brandingConfig.colors.primary}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, primary: e.target.value } }))}
-                          placeholder="#3b82f6"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="secondary-color">Secondary Color</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          id="secondary-color"
-                          type="color"
-                          value={brandingConfig.colors.secondary}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, secondary: e.target.value } }))}
-                          className="w-12 h-10 p-1 border rounded"
-                        />
-                        <Input
-                          value={brandingConfig.colors.secondary}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, secondary: e.target.value } }))}
-                          placeholder="#64748b"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="accent-color">Accent Color</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          id="accent-color"
-                          type="color"
-                          value={brandingConfig.colors.accent}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, accent: e.target.value } }))}
-                          className="w-12 h-10 p-1 border rounded"
-                        />
-                        <Input
-                          value={brandingConfig.colors.accent}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, accent: e.target.value } }))}
-                          placeholder="#f59e0b"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="success-color">Success Color</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          id="success-color"
-                          type="color"
-                          value={brandingConfig.colors.success}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, success: e.target.value } }))}
-                          className="w-12 h-10 p-1 border rounded"
-                        />
-                        <Input
-                          value={brandingConfig.colors.success}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, colors: { ...prev.colors, success: e.target.value } }))}
-                          placeholder="#10b981"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h4 className="font-medium mb-4">Typography</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="font-family">Primary Font</Label>
-                        <Select
-                          value={brandingConfig.typography.fontFamily}
-                          onValueChange={(value) => setBrandingConfig(prev => ({ ...prev, typography: { ...prev.typography, fontFamily: value } }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Inter">Inter</SelectItem>
-                            <SelectItem value="Roboto">Roboto</SelectItem>
-                            <SelectItem value="Open Sans">Open Sans</SelectItem>
-                            <SelectItem value="Lato">Lato</SelectItem>
-                            <SelectItem value="Poppins">Poppins</SelectItem>
-                            <SelectItem value="Nunito">Nunito</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="heading-font">Heading Font</Label>
-                        <Select
-                          value={brandingConfig.typography.headingFont}
-                          onValueChange={(value) => setBrandingConfig(prev => ({ ...prev, typography: { ...prev.typography, headingFont: value } }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Inter">Inter</SelectItem>
-                            <SelectItem value="Roboto">Roboto</SelectItem>
-                            <SelectItem value="Playfair Display">Playfair Display</SelectItem>
-                            <SelectItem value="Merriweather">Merriweather</SelectItem>
-                            <SelectItem value="Source Serif Pro">Source Serif Pro</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="font-scale">Font Scale</Label>
-                        <Input
-                          id="font-scale"
-                          type="number"
-                          step="0.1"
-                          min="0.8"
-                          max="1.5"
-                          value={brandingConfig.typography.fontScale}
-                          onChange={(e) => setBrandingConfig(prev => ({ ...prev, typography: { ...prev.typography, fontScale: parseFloat(e.target.value) || 1.0 } }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h4 className="font-medium mb-4">Social Media Links</h4>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label htmlFor="twitter">Twitter/X</Label>
-                            <Switch
-                              checked={brandingConfig.social.socialToggles?.twitter !== false}
-                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
-                                ...prev, 
-                                social: { 
-                                  ...prev.social, 
-                                  socialToggles: { 
-                                    ...prev.social.socialToggles, 
-                                    twitter: checked 
-                                  } 
-                                } 
-                              }))}
-                            />
-                          </div>
-                          <Input
-                            id="twitter"
-                            value={brandingConfig.social.twitter}
-                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, twitter: e.target.value } }))}
-                            placeholder="https://twitter.com/yourcompany"
-                          />
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label htmlFor="linkedin">LinkedIn</Label>
-                            <Switch
-                              checked={brandingConfig.social.socialToggles?.linkedin !== false}
-                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
-                                ...prev, 
-                                social: { 
-                                  ...prev.social, 
-                                  socialToggles: { 
-                                    ...prev.social.socialToggles, 
-                                    linkedin: checked 
-                                  } 
-                                } 
-                              }))}
-                            />
-                          </div>
-                          <Input
-                            id="linkedin"
-                            value={brandingConfig.social.linkedin}
-                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, linkedin: e.target.value } }))}
-                            placeholder="https://linkedin.com/company/yourcompany"
-                          />
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label htmlFor="facebook">Facebook</Label>
-                            <Switch
-                              checked={brandingConfig.social.socialToggles?.facebook !== false}
-                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
-                                ...prev, 
-                                social: { 
-                                  ...prev.social, 
-                                  socialToggles: { 
-                                    ...prev.social.socialToggles, 
-                                    facebook: checked 
-                                  } 
-                                } 
-                              }))}
-                            />
-                          </div>
-                          <Input
-                            id="facebook"
-                            value={brandingConfig.social.facebook}
-                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, facebook: e.target.value } }))}
-                            placeholder="https://facebook.com/yourcompany"
-                          />
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label htmlFor="instagram">Instagram</Label>
-                            <Switch
-                              checked={brandingConfig.social.socialToggles?.instagram !== false}
-                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
-                                ...prev, 
-                                social: { 
-                                  ...prev.social, 
-                                  socialToggles: { 
-                                    ...prev.social.socialToggles, 
-                                    instagram: checked 
-                                  } 
-                                } 
-                              }))}
-                            />
-                          </div>
-                          <Input
-                            id="instagram"
-                            value={brandingConfig.social.instagram}
-                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, instagram: e.target.value } }))}
-                            placeholder="https://instagram.com/yourcompany"
-                          />
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label htmlFor="youtube">YouTube</Label>
-                            <Switch
-                              checked={brandingConfig.social.socialToggles?.youtube !== false}
-                              onCheckedChange={(checked) => setBrandingConfig(prev => ({ 
-                                ...prev, 
-                                social: { 
-                                  ...prev.social, 
-                                  socialToggles: { 
-                                    ...prev.social.socialToggles, 
-                                    youtube: checked 
-                                  } 
-                                } 
-                              }))}
-                            />
-                          </div>
-                          <Input
-                            id="youtube"
-                            value={brandingConfig.social.youtube}
-                            onChange={(e) => setBrandingConfig(prev => ({ ...prev, social: { ...prev.social, youtube: e.target.value } }))}
-                            placeholder="https://youtube.com/@yourcompany"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => generateCSSVariables().then(css => {
-                      const blob = new Blob([css], { type: 'text/css' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = 'brand-variables.css';
-                      a.click();
-                      URL.revokeObjectURL(url);
-                    })}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download CSS Variables
-                    </Button>
-                    <Button onClick={applyBrandingGlobally} className="bg-blue-600 hover:bg-blue-700">
-                      <Globe className="mr-2 h-4 w-4" />
-                      Apply Branding Globally
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Testimonials Section */}
-          <TabsContent value="testimonials">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Customer Testimonials</CardTitle>
-                  <CardDescription>Manage customer testimonials and reviews</CardDescription>
-                </div>
-                <Button onClick={addTestimonial}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Testimonial
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {config.testimonials.map((testimonial, index) => (
-                    <Card key={testimonial.id} className="p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <Switch
-                            checked={testimonial.enabled}
-                            onCheckedChange={(checked) => {
-                              const newTestimonials = [...config.testimonials];
-                              newTestimonials[index].enabled = checked;
-                              setConfig(prev => ({ ...prev, testimonials: newTestimonials }));
-                            }}
-                          />
-                          <span className="font-medium">Testimonial {index + 1}</span>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeTestimonial(testimonial.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Customer Name</Label>
-                          <Input
-                            value={testimonial.name}
-                            onChange={(e) => {
-                              const newTestimonials = [...config.testimonials];
-                              newTestimonials[index].name = e.target.value;
-                              setConfig(prev => ({ ...prev, testimonials: newTestimonials }));
-                            }}
-                            placeholder="Customer name"
-                          />
-                        </div>
-                        <div>
-                          <Label>Role/Title</Label>
-                          <Input
-                            value={testimonial.role}
-                            onChange={(e) => {
-                              const newTestimonials = [...config.testimonials];
-                              newTestimonials[index].role = e.target.value;
-                              setConfig(prev => ({ ...prev, testimonials: newTestimonials }));
-                            }}
-                            placeholder="Job title"
-                          />
-                        </div>
-                        <div>
-                          <Label>Company</Label>
-                          <Input
-                            value={testimonial.company}
-                            onChange={(e) => {
-                              const newTestimonials = [...config.testimonials];
-                              newTestimonials[index].company = e.target.value;
-                              setConfig(prev => ({ ...prev, testimonials: newTestimonials }));
-                            }}
-                            placeholder="Company name"
-                          />
-                        </div>
-                        <div>
-                          <Label>Rating</Label>
-                          <Select
-                            value={testimonial.rating.toString()}
-                            onValueChange={(value) => {
-                              const newTestimonials = [...config.testimonials];
-                              newTestimonials[index].rating = parseInt(value);
-                              setConfig(prev => ({ ...prev, testimonials: newTestimonials }));
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="5">5 Stars</SelectItem>
-                              <SelectItem value="4">4 Stars</SelectItem>
-                              <SelectItem value="3">3 Stars</SelectItem>
-                              <SelectItem value="2">2 Stars</SelectItem>
-                              <SelectItem value="1">1 Star</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <Label>Testimonial Content</Label>
-                        <Textarea
-                          value={testimonial.content}
-                          onChange={(e) => {
-                            const newTestimonials = [...config.testimonials];
-                            newTestimonials[index].content = e.target.value;
-                            setConfig(prev => ({ ...prev, testimonials: newTestimonials }));
-                          }}
-                          placeholder="Customer testimonial..."
-                          rows={3}
-                        />
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Features Section */}
-          <TabsContent value="features">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Features</CardTitle>
-                  <CardDescription>Manage the features section</CardDescription>
-                </div>
-                <Button onClick={addFeature}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Feature
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {config.features.map((feature, index) => (
-                    <Card key={feature.id} className="p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <Switch
-                            checked={feature.enabled}
-                            onCheckedChange={(checked) => {
-                              const newFeatures = [...config.features];
-                              newFeatures[index].enabled = checked;
-                              setConfig(prev => ({ ...prev, features: newFeatures }));
-                            }}
-                          />
-                          <span className="font-medium">Feature {index + 1}</span>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeFeature(feature.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <Label>Icon</Label>
-                          <Select
-                            value={feature.icon}
-                            onValueChange={(value) => {
-                              const newFeatures = [...config.features];
-                              newFeatures[index].icon = value;
-                              setConfig(prev => ({ ...prev, features: newFeatures }));
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Scale">Scale</SelectItem>
-                              <SelectItem value="FileText">FileText</SelectItem>
-                              <SelectItem value="Gavel">Gavel</SelectItem>
-                              <SelectItem value="Users">Users</SelectItem>
-                              <SelectItem value="Shield">Shield</SelectItem>
-                              <SelectItem value="Clock">Clock</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Title</Label>
-                          <Input
-                            value={feature.title}
-                            onChange={(e) => {
-                              const newFeatures = [...config.features];
-                              newFeatures[index].title = e.target.value;
-                              setConfig(prev => ({ ...prev, features: newFeatures }));
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <Label>Description</Label>
-                          <Textarea
-                            value={feature.description}
-                            onChange={(e) => {
-                              const newFeatures = [...config.features];
-                              newFeatures[index].description = e.target.value;
-                              setConfig(prev => ({ ...prev, features: newFeatures }));
-                            }}
-                            rows={2}
-                          />
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Contact Section */}
-          <TabsContent value="contact">
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-                <CardDescription>Configure contact details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="contact-phone">Phone Number</Label>
-                  <Input
-                    id="contact-phone"
-                    value={config.contact.phone}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      contact: { ...prev.contact, phone: e.target.value }
-                    }))}
-                    placeholder="Enter phone number"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact-email">Email Address</Label>
-                  <Input
-                    id="contact-email"
-                    type="email"
-                    value={config.contact.email}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      contact: { ...prev.contact, email: e.target.value }
-                    }))}
-                    placeholder="Enter email address"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact-address">Physical Address</Label>
-                  <Textarea
-                    id="contact-address"
-                    value={config.contact.address}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      contact: { ...prev.contact, address: e.target.value }
-                    }))}
-                    placeholder="Enter physical address"
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* HTML/Chat Section */}
-          <TabsContent value="html">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Chat Widget Configuration</CardTitle>
-                  <CardDescription>Configure live chat for your website</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-medium">Enable Chat Widget</Label>
-                      <p className="text-xs text-gray-600">Show live chat on your website</p>
-                    </div>
-                    <Switch
-                      checked={config.htmlCustomizations.chatWidget.enabled}
-                      onCheckedChange={(checked) => setConfig(prev => ({
-                        ...prev,
-                        htmlCustomizations: {
-                          ...prev.htmlCustomizations,
-                          chatWidget: { ...prev.htmlCustomizations.chatWidget, enabled: checked }
-                        }
-                      }))}
-                    />
-                  </div>
-
-                  {config.htmlCustomizations.chatWidget.enabled && (
-                    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="chat-provider">Chat Provider</Label>
-                          <Select
-                            value={config.htmlCustomizations.chatWidget.provider}
-                            onValueChange={(value) => setConfig(prev => ({
-                              ...prev,
-                              htmlCustomizations: {
-                                ...prev.htmlCustomizations,
-                                chatWidget: { ...prev.htmlCustomizations.chatWidget, provider: value }
-                              }
-                            }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="crisp">Crisp</SelectItem>
-                              <SelectItem value="intercom">Intercom</SelectItem>
-                              <SelectItem value="zendesk">Zendesk Chat</SelectItem>
-                              <SelectItem value="freshchat">Freshchat</SelectItem>
-                              <SelectItem value="tawk">Tawk.to</SelectItem>
-                              <SelectItem value="custom">Custom HTML</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <Label htmlFor="chat-position">Position</Label>
-                          <Select
-                            value={config.htmlCustomizations.chatWidget.position}
-                            onValueChange={(value) => setConfig(prev => ({
-                              ...prev,
-                              htmlCustomizations: {
-                                ...prev.htmlCustomizations,
-                                chatWidget: { ...prev.htmlCustomizations.chatWidget, position: value }
-                              }
-                            }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="bottom-right">Bottom Right</SelectItem>
-                              <SelectItem value="bottom-left">Bottom Left</SelectItem>
-                              <SelectItem value="top-right">Top Right</SelectItem>
-                              <SelectItem value="top-left">Top Left</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="chat-api-key">API Key / Website ID</Label>
-                        <Input
-                          id="chat-api-key"
-                          value={config.htmlCustomizations.chatWidget.apiKey}
-                          onChange={(e) => setConfig(prev => ({
-                            ...prev,
-                            htmlCustomizations: {
-                              ...prev.htmlCustomizations,
-                              chatWidget: { ...prev.htmlCustomizations.chatWidget, apiKey: e.target.value }
-                            }
-                          }))}
-                          placeholder="Enter your chat provider API key or website ID"
-                        />
-                      </div>
-
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm font-medium">Show on Dashboard</Label>
-                          <p className="text-xs text-gray-600">Display chat widget on user dashboard</p>
+                          <p className="text-sm font-medium">Screenshot {index + 1}</p>
+                          <p className="text-xs text-gray-500">Uploaded to landing page</p>
                         </div>
-                        <Switch
-                          checked={config.htmlCustomizations.chatWidget.showOnDashboard}
-                          onCheckedChange={(checked) => setConfig(prev => ({
-                            ...prev,
-                            htmlCustomizations: {
-                              ...prev.htmlCustomizations,
-                              chatWidget: { ...prev.htmlCustomizations.chatWidget, showOnDashboard: checked }
-                            }
-                          }))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeScreenshot(index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {formData.dashboardScreenshots.length === 0 && (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Screenshots Yet</h3>
+                  <p className="text-gray-600 mb-4">
+                    Upload dashboard screenshots to showcase your platform's features on the landing page.
+                  </p>
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={5 * 1024 * 1024}
+                    onGetUploadParameters={handleGetUploadParameters}
+                    onComplete={handleUploadComplete}
+                    buttonClassName="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload First Screenshot
+                  </ObjectUploader>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Features Configuration */}
+        <TabsContent value="features" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Feature Showcase</CardTitle>
+              <p className="text-sm text-gray-600">
+                Configure the features displayed on your landing page based on actual dashboard capabilities.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Feature Title</label>
+                        <Input
+                          value={feature.title}
+                          onChange={(e) => {
+                            const newFeatures = [...formData.features];
+                            newFeatures[index].title = e.target.value;
+                            setFormData({...formData, features: newFeatures});
+                          }}
                         />
                       </div>
-
                       <div>
-                        <Label htmlFor="chat-pages">Allowed Pages (comma-separated)</Label>
+                        <label className="block text-sm font-medium mb-2">Icon Type</label>
                         <Input
-                          id="chat-pages"
-                          value={config.htmlCustomizations.chatWidget.allowedPages.join(", ")}
-                          onChange={(e) => setConfig(prev => ({
-                            ...prev,
-                            htmlCustomizations: {
-                              ...prev.htmlCustomizations,
-                              chatWidget: { 
-                                ...prev.htmlCustomizations.chatWidget, 
-                                allowedPages: e.target.value.split(", ").filter(p => p.trim())
-                              }
-                            }
-                          }))}
-                          placeholder="landing, pricing, contact, dashboard"
+                          value={feature.icon}
+                          onChange={(e) => {
+                            const newFeatures = [...formData.features];
+                            newFeatures[index].icon = e.target.value;
+                            setFormData({...formData, features: newFeatures});
+                          }}
+                          placeholder="brain, file-text, shield, etc."
                         />
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Custom HTML & Scripts</CardTitle>
-                  <CardDescription>Add custom HTML, CSS, and JavaScript to your site</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <Label htmlFor="header-scripts">Header Scripts</Label>
-                    <p className="text-xs text-gray-600 mb-2">Scripts to include in the &lt;head&gt; section</p>
-                    <Textarea
-                      id="header-scripts"
-                      value={config.htmlCustomizations.headerScripts}
-                      onChange={(e) => setConfig(prev => ({
-                        ...prev,
-                        htmlCustomizations: { ...prev.htmlCustomizations, headerScripts: e.target.value }
-                      }))}
-                      placeholder="<script>...</script> or <link rel='stylesheet'...>"
-                      rows={4}
-                      className="font-mono text-sm"
-                    />
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium mb-2">Description</label>
+                      <Textarea
+                        value={feature.description}
+                        onChange={(e) => {
+                          const newFeatures = [...formData.features];
+                          newFeatures[index].description = e.target.value;
+                          setFormData({...formData, features: newFeatures});
+                        }}
+                        rows={2}
+                      />
+                    </div>
                   </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                  <div>
-                    <Label htmlFor="custom-css">Custom CSS</Label>
-                    <p className="text-xs text-gray-600 mb-2">Additional CSS styles for your site</p>
-                    <Textarea
-                      id="custom-css"
-                      value={config.htmlCustomizations.customCSS}
-                      onChange={(e) => setConfig(prev => ({
-                        ...prev,
-                        htmlCustomizations: { ...prev.htmlCustomizations, customCSS: e.target.value }
-                      }))}
-                      placeholder=".custom-class { color: #333; }"
-                      rows={6}
-                      className="font-mono text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="footer-scripts">Footer Scripts</Label>
-                    <p className="text-xs text-gray-600 mb-2">Scripts to include before &lt;/body&gt;</p>
-                    <Textarea
-                      id="footer-scripts"
-                      value={config.htmlCustomizations.footerScripts}
-                      onChange={(e) => setConfig(prev => ({
-                        ...prev,
-                        htmlCustomizations: { ...prev.htmlCustomizations, footerScripts: e.target.value }
-                      }))}
-                      placeholder="<script>...</script>"
-                      rows={4}
-                      className="font-mono text-sm"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Analytics & Tracking</CardTitle>
-                  <CardDescription>Configure tracking codes and analytics</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="google-analytics">Google Analytics Tracking ID</Label>
-                    <Input
-                      id="google-analytics"
-                      value={config.htmlCustomizations.analytics.googleAnalytics}
-                      onChange={(e) => setConfig(prev => ({
-                        ...prev,
-                        htmlCustomizations: {
-                          ...prev.htmlCustomizations,
-                          analytics: { ...prev.htmlCustomizations.analytics, googleAnalytics: e.target.value }
-                        }
-                      }))}
-                      placeholder="G-XXXXXXXXXX or UA-XXXXXXXXX-X"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="facebook-pixel">Facebook Pixel ID</Label>
-                    <Input
-                      id="facebook-pixel"
-                      value={config.htmlCustomizations.analytics.facebookPixel}
-                      onChange={(e) => setConfig(prev => ({
-                        ...prev,
-                        htmlCustomizations: {
-                          ...prev.htmlCustomizations,
-                          analytics: { ...prev.htmlCustomizations.analytics, facebookPixel: e.target.value }
-                        }
-                      }))}
-                      placeholder="1234567890123456"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="custom-tracking">Custom Tracking Code</Label>
-                    <Textarea
-                      id="custom-tracking"
-                      value={config.htmlCustomizations.analytics.customTracking}
-                      onChange={(e) => setConfig(prev => ({
-                        ...prev,
-                        htmlCustomizations: {
-                          ...prev.htmlCustomizations,
-                          analytics: { ...prev.htmlCustomizations.analytics, customTracking: e.target.value }
-                        }
-                      }))}
-                      placeholder="Additional tracking scripts..."
-                      rows={3}
-                      className="font-mono text-sm"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Pricing Section */}
-          <TabsContent value="pricing">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Pricing Plans</CardTitle>
-                  <CardDescription>Manage subscription pricing plans</CardDescription>
-                </div>
-                <Button onClick={addPricingPlan}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Plan
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {config.pricing.map((plan, index) => (
-                    <Card key={plan.id} className={`p-4 ${plan.popular ? 'border-blue-500 bg-blue-50' : ''}`}>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <Switch
-                            checked={plan.enabled}
-                            onCheckedChange={(checked) => {
-                              const newPricing = [...config.pricing];
-                              newPricing[index].enabled = checked;
-                              setConfig(prev => ({ ...prev, pricing: newPricing }));
-                            }}
-                          />
-                          <span className="font-medium">Plan {index + 1}</span>
-                          {plan.popular && (
-                            <Badge className="bg-blue-100 text-blue-800">Popular</Badge>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const newPricing = [...config.pricing];
-                              newPricing[index].popular = !newPricing[index].popular;
-                              setConfig(prev => ({ ...prev, pricing: newPricing }));
-                            }}
-                          >
-                            {plan.popular ? "Remove Popular" : "Mark Popular"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removePricingPlan(plan.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <Label>Plan Name</Label>
-                          <Input
-                            value={plan.name}
-                            onChange={(e) => {
-                              const newPricing = [...config.pricing];
-                              newPricing[index].name = e.target.value;
-                              setConfig(prev => ({ ...prev, pricing: newPricing }));
-                            }}
-                            placeholder="Plan name"
-                          />
-                        </div>
-                        <div>
-                          <Label>Price</Label>
-                          <Input
-                            value={plan.price}
-                            onChange={(e) => {
-                              const newPricing = [...config.pricing];
-                              newPricing[index].price = e.target.value;
-                              setConfig(prev => ({ ...prev, pricing: newPricing }));
-                            }}
-                            placeholder="$99"
-                          />
-                        </div>
-                        <div>
-                          <Label>Period</Label>
-                          <Select
-                            value={plan.period}
-                            onValueChange={(value) => {
-                              const newPricing = [...config.pricing];
-                              newPricing[index].period = value;
-                              setConfig(prev => ({ ...prev, pricing: newPricing }));
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="month">Month</SelectItem>
-                              <SelectItem value="year">Year</SelectItem>
-                              <SelectItem value="week">Week</SelectItem>
-                              <SelectItem value="one-time">One-time</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <Label>Features (one per line)</Label>
-                        <Textarea
-                          value={plan.features.join('\n')}
+        {/* Testimonials Configuration */}
+        <TabsContent value="testimonials" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Testimonials</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {formData.testimonials.map((testimonial, index) => (
+                  <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Name</label>
+                        <Input
+                          value={testimonial.name}
                           onChange={(e) => {
-                            const newPricing = [...config.pricing];
-                            newPricing[index].features = e.target.value.split('\n').filter(f => f.trim());
-                            setConfig(prev => ({ ...prev, pricing: newPricing }));
+                            const newTestimonials = [...formData.testimonials];
+                            newTestimonials[index].name = e.target.value;
+                            setFormData({...formData, testimonials: newTestimonials});
                           }}
-                          placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                          rows={4}
                         />
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Role</label>
+                        <Input
+                          value={testimonial.role}
+                          onChange={(e) => {
+                            const newTestimonials = [...formData.testimonials];
+                            newTestimonials[index].role = e.target.value;
+                            setFormData({...formData, testimonials: newTestimonials});
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Company</label>
+                        <Input
+                          value={testimonial.company}
+                          onChange={(e) => {
+                            const newTestimonials = [...formData.testimonials];
+                            newTestimonials[index].company = e.target.value;
+                            setFormData({...formData, testimonials: newTestimonials});
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium mb-2">Testimonial Content</label>
+                      <Textarea
+                        value={testimonial.content}
+                        onChange={(e) => {
+                          const newTestimonials = [...formData.testimonials];
+                          newTestimonials[index].content = e.target.value;
+                          setFormData({...formData, testimonials: newTestimonials});
+                        }}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* SEO Section */}
-          <TabsContent value="seo">
-            <Card>
-              <CardHeader>
-                <CardTitle>SEO Configuration</CardTitle>
-                <CardDescription>Configure search engine optimization settings</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="seo-title">Page Title</Label>
-                  <Input
-                    id="seo-title"
-                    value={config.seo.title}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      seo: { ...prev.seo, title: e.target.value }
-                    }))}
-                    placeholder="Enter page title"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="seo-description">Meta Description</Label>
-                  <Textarea
-                    id="seo-description"
-                    value={config.seo.description}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      seo: { ...prev.seo, description: e.target.value }
-                    }))}
-                    placeholder="Enter meta description"
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="seo-keywords">Keywords (comma-separated)</Label>
-                  <Input
-                    id="seo-keywords"
-                    value={config.seo.keywords.join(", ")}
-                    onChange={(e) => setConfig(prev => ({
-                      ...prev,
-                      seo: { ...prev.seo, keywords: e.target.value.split(", ") }
-                    }))}
-                    placeholder="Enter keywords separated by commas"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+        {/* Pricing Configuration */}
+        <TabsContent value="pricing" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pricing Plans</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {formData.pricingPlans.map((plan, index) => (
+                  <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Plan Name</label>
+                        <Input
+                          value={plan.name}
+                          onChange={(e) => {
+                            const newPlans = [...formData.pricingPlans];
+                            newPlans[index].name = e.target.value;
+                            setFormData({...formData, pricingPlans: newPlans});
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Price</label>
+                        <Input
+                          value={plan.price}
+                          onChange={(e) => {
+                            const newPlans = [...formData.pricingPlans];
+                            newPlans[index].price = e.target.value;
+                            setFormData({...formData, pricingPlans: newPlans});
+                          }}
+                        />
+                      </div>
+                      {plan.popular && (
+                        <Badge className="bg-blue-600">Most Popular</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
