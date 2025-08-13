@@ -2056,6 +2056,16 @@ User Experience Focus:
             title: "Enterprise Security",
             description: "Bank-grade encryption, HIPAA compliance, and secure client data handling with complete privacy protection.",
             icon: "shield"
+          },
+          {
+            title: "Court Preparation & Deposition Tools",
+            description: "Interactive document canvas, case timeline visualization, witness prep assistance, and real-time collaboration for trial readiness.",
+            icon: "scale"
+          },
+          {
+            title: "Legal Research Assistant",
+            description: "AI-powered case law research, statute analysis, precedent identification, and comprehensive legal citation management.",
+            icon: "search"
           }
         ],
         testimonials: [
@@ -2078,20 +2088,29 @@ User Experience Focus:
           {
             name: "Pro Se",
             price: "$29",
-            features: ["Basic AI assistance", "Document templates", "Case tracking", "Email support"],
-            popular: false
+            period: "/month",
+            tokenLimit: "10,000 tokens/month",
+            features: ["Basic AI assistance", "Document templates", "Case tracking", "Email support", "Basic legal research"],
+            popular: false,
+            ctaText: "Start Free Trial"
           },
           {
             name: "Professional",
             price: "$99",
-            features: ["Full AI analysis", "Unlimited documents", "Advanced case management", "Priority support", "Court preparation tools"],
-            popular: true
+            period: "/month",
+            tokenLimit: "100,000 tokens/month",
+            features: ["Full AI analysis", "Unlimited documents", "Advanced case management", "Priority support", "Court preparation tools", "Deposition prep assistance", "Advanced legal research"],
+            popular: true,
+            ctaText: "Get Started"
           },
           {
             name: "Enterprise",
             price: "$299",
-            features: ["Custom AI training", "API access", "White-label solution", "Dedicated support", "Advanced analytics", "Custom integrations"],
-            popular: false
+            period: "/month",
+            tokenLimit: "Unlimited tokens",
+            features: ["Custom AI training", "API access", "White-label solution", "Dedicated support", "Advanced analytics", "Custom integrations", "Bulk document processing", "Team collaboration tools"],
+            popular: false,
+            ctaText: "Contact Sales"
           }
         ]
       };

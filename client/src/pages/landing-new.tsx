@@ -51,8 +51,11 @@ interface LandingConfig {
   pricingPlans?: Array<{
     name: string;
     price: string;
+    period: string;
+    tokenLimit: string;
     features: string[];
     popular?: boolean;
+    ctaText: string;
   }>;
 }
 
@@ -377,6 +380,8 @@ export default function NewLanding() {
                     {feature.icon === 'wand' && <BookOpen className="w-6 h-6 text-blue-600" />}
                     {feature.icon === 'search' && <BarChart3 className="w-6 h-6 text-blue-600" />}
                     {feature.icon === 'shield' && <Shield className="w-6 h-6 text-blue-600" />}
+                    {feature.icon === 'scale' && <Award className="w-6 h-6 text-blue-600" />}
+                    {feature.icon === 'search' && <BarChart3 className="w-6 h-6 text-blue-600" />}
                     {feature.icon === 'zap' && <Calendar className="w-6 h-6 text-blue-600" />}
                     {feature.icon === 'message-square' && <MessageSquare className="w-6 h-6 text-blue-600" />}
                   </div>
@@ -449,8 +454,15 @@ export default function NewLanding() {
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <div className="mt-4">
                     <span className="text-4xl font-bold">{plan.price}</span>
-                    {plan.price !== "Custom" && <span className="text-gray-600">/month</span>}
+                    {plan.period && <span className="text-gray-600">{plan.period}</span>}
                   </div>
+                  {plan.tokenLimit && (
+                    <div className="mt-2">
+                      <Badge variant="secondary" className="text-sm">
+                        {plan.tokenLimit}
+                      </Badge>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3 mb-8">
@@ -462,7 +474,7 @@ export default function NewLanding() {
                     ))}
                   </ul>
                   <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
-                    {plan.price === "Custom" ? "Contact Sales" : "Start Free Trial"}
+                    {plan.ctaText || "Get Started"}
                   </Button>
                 </CardContent>
               </Card>

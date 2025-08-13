@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,8 +42,11 @@ interface LandingConfig {
   pricingPlans: Array<{
     name: string;
     price: string;
+    period: string;
+    tokenLimit: string;
     features: string[];
     popular?: boolean;
+    ctaText: string;
   }>;
 }
 
@@ -84,13 +87,16 @@ export default function AdminLandingConfig() {
       {
         name: "Professional",
         price: "$49",
-        features: ["AI Legal Analysis", "Document Generation", "Case Management", "5 Cases / Month", "Email Support"]
+        period: "/month",
+        tokenLimit: "50,000 tokens/month",
+        features: ["AI Legal Analysis", "Document Generation", "Case Management", "5 Cases / Month", "Email Support"],
+        ctaText: "Get Started"
       }
     ]
   });
 
   // Update form data when config loads
-  useState(() => {
+  useEffect(() => {
     if (config) {
       setFormData(config);
     }
@@ -142,7 +148,7 @@ export default function AdminLandingConfig() {
   };
 
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful.length > 0) {
+    if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
       const uploadURL = uploadedFile.uploadURL;
       
@@ -522,6 +528,40 @@ export default function AdminLandingConfig() {
                           onChange={(e) => {
                             const newPlans = [...formData.pricingPlans];
                             newPlans[index].price = e.target.value;
+                            setFormData({...formData, pricingPlans: newPlans});
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Period</label>
+                        <Input
+                          value={plan.period || "/month"}
+                          onChange={(e) => {
+                            const newPlans = [...formData.pricingPlans];
+                            newPlans[index].period = e.target.value;
+                            setFormData({...formData, pricingPlans: newPlans});
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Token Limit</label>
+                        <Input
+                          value={plan.tokenLimit || ""}
+                          onChange={(e) => {
+                            const newPlans = [...formData.pricingPlans];
+                            newPlans[index].tokenLimit = e.target.value;
+                            setFormData({...formData, pricingPlans: newPlans});
+                          }}
+                          placeholder="10,000 tokens/month"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">CTA Button Text</label>
+                        <Input
+                          value={plan.ctaText || "Get Started"}
+                          onChange={(e) => {
+                            const newPlans = [...formData.pricingPlans];
+                            newPlans[index].ctaText = e.target.value;
                             setFormData({...formData, pricingPlans: newPlans});
                           }}
                         />
