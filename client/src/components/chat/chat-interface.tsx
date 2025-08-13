@@ -36,7 +36,7 @@ export default function ChatInterface({
     messagesRef.current = messages;
   }, [messages]);
 
-  const { data: currentCase, refetch: refetchCase } = useQuery({
+  const { data: currentCase, refetch: refetchCase } = useQuery<any>({
     queryKey: [`/api/cases/${caseId}`],
     enabled: !!caseId,
   });
@@ -47,7 +47,7 @@ export default function ChatInterface({
     }
   }, [currentCase]);
 
-  const { data: chatMessages = [], refetch: refetchChatMessages } = useQuery({
+  const { data: chatMessages = [], refetch: refetchChatMessages } = useQuery<any[]>({
     queryKey: [`/api/cases/${caseId}/messages`],
     enabled: !!caseId,
   });
@@ -253,7 +253,7 @@ export default function ChatInterface({
   useEffect(() => {
     if (messages.length === 0 && chatMessages.length === 0 && caseId) {
       setMessages([{
-        id: '1',
+        id: 1,
         content: 'Hello! I\'m your AI legal assistant. How can I help you today?',
         role: 'assistant',
         timestamp: new Date(),

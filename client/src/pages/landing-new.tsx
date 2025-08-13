@@ -1,677 +1,963 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ArrowRight, 
-  Play,
-  Check,
-  Star,
-  Shield,
-  Zap,
-  FileText,
-  MessageSquare,
-  BarChart3,
-  Users,
-  Calendar,
-  BookOpen,
-  Lock,
-  Award,
-  Globe,
-  Download,
-  Eye,
-  ChevronRight,
-  Mail,
-  Phone,
-  MapPin
-} from "lucide-react";
+  Scale, FileText, Users, ArrowRight, Check, Shield, Clock, Brain, Star, 
+  Zap, Building, MessageSquare, Phone, Mail, MapPin, ChevronRight, Globe, 
+  Award, Target, Cpu, BookOpen, Gavel, Search, Lock, TrendingUp, BarChart3,
+  Sparkles, Shield as ShieldCheck, Layers, Rocket, Play, X, Menu, ChevronDown,
+  UserCheck, FileCheck, Timer, DollarSign, Users as HeartHandshake, BookOpen as BookMarked
+} from "@/lib/icons";
+import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Logo } from "@/components/ui/logo";
+import { ContactSalesModal } from "@/components/modals/contact-sales-modal";
+import { DemoRequestModal } from "@/components/modals/demo-request-modal";
+import { motion } from "framer-motion";
 
-interface LandingConfig {
-  heroTitle?: string;
-  heroSubtitle?: string;
-  ctaButtonText?: string;
-  dashboardScreenshots?: string[];
-  features?: Array<{
-    title: string;
-    description: string;
-    icon: string;
-  }>;
-  testimonials?: Array<{
-    name: string;
-    role: string;
-    company: string;
-    content: string;
-    rating: number;
-  }>;
-  pricingPlans?: Array<{
-    name: string;
-    price: string;
-    period: string;
-    tokenLimit: string;
-    features: string[];
-    popular?: boolean;
-    ctaText: string;
-  }>;
-}
-
-export default function NewLanding() {
-  const [email, setEmail] = useState("");
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const [selectedFeature, setSelectedFeature] = useState(0);
-  const [signupStep, setSignupStep] = useState(1);
-  const [signupData, setSignupData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    company: "",
-    role: "",
-    teamSize: "",
-    useCase: ""
-  });
-
-  // Fetch landing page configuration from public endpoint
-  const { data: config, error, isLoading } = useQuery<LandingConfig>({
-    queryKey: ['/api/landing-config'],
-    queryFn: async () => {
-      const res = await fetch('/api/landing-config');
-      if (!res.ok) {
-        throw new Error(`${res.status}: ${res.statusText}`);
+// Animated Stats Counter
+const AnimatedCounter = ({ value, suffix = "" }: { value: number; suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  
+  useEffect(() => {
+    const duration = 2000;
+    const steps = 60;
+    const increment = value / steps;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= value) {
+        setCount(value);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(current));
       }
-      return res.json();
-    },
-    retry: false,
-    refetchOnMount: true,
-    staleTime: 0,
-  });
+    }, duration / steps);
+    
+    return () => clearInterval(timer);
+  }, [value]);
   
-  if (error) {
-    console.error('Landing config query error:', error);
-    console.error('Error details:', error?.message, error?.status);
-  }
+  return <span>{count.toLocaleString()}{suffix}</span>;
+};
 
-  // Default comprehensive features based on dashboard analysis
-  const defaultFeatures = [
+// Video Demo Modal
+const VideoDemoModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="relative bg-white rounded-xl max-w-4xl w-full aspect-video" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+        >
+          <X className="h-8 w-8" />
+        </button>
+        <div className="w-full h-full rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+          <div className="text-center text-white">
+            <Play className="h-20 w-20 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold mb-2">Product Demo Video</h3>
+            <p className="text-lg opacity-90">See Wizzered in action</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Navigation with Mobile Menu
+const Navigation = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  return (
+    <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${
+      isScrolled ? 'bg-white/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
+    }`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          <div className="flex items-center">
+            <Logo size="md" />
+          </div>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-8">
+            <a href="#features" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Features</a>
+            <a href="#solutions" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Solutions</a>
+            <a href="#pricing" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Pricing</a>
+            <a href="#testimonials" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Testimonials</a>
+            <a href="#resources" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Resources</a>
+          </div>
+          
+          <div className="hidden lg:flex items-center space-x-4">
+            <Link href="/login">
+              <Button variant="ghost" size="lg" className="font-medium">Sign In</Button>
+            </Link>
+            <Link href="/register">
+              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg">
+                Start Free Trial
+              </Button>
+            </Link>
+          </div>
+          
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-2"
+          >
+            <Menu className="h-6 w-6 text-gray-700" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden bg-white border-t">
+          <div className="px-4 py-6 space-y-4">
+            <a href="#features" className="block text-gray-700 hover:text-blue-600 font-medium py-2">Features</a>
+            <a href="#solutions" className="block text-gray-700 hover:text-blue-600 font-medium py-2">Solutions</a>
+            <a href="#pricing" className="block text-gray-700 hover:text-blue-600 font-medium py-2">Pricing</a>
+            <a href="#testimonials" className="block text-gray-700 hover:text-blue-600 font-medium py-2">Testimonials</a>
+            <div className="pt-4 space-y-3">
+              <Link href="/login">
+                <Button variant="outline" size="lg" className="w-full">Sign In</Button>
+              </Link>
+              <Link href="/register">
+                <Button size="lg" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600">
+                  Start Free Trial
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+};
+
+// Hero Section with Animation
+const HeroSection = ({ onDemoClick }: { onDemoClick: () => void }) => {
+  return (
+    <section className="relative pt-32 pb-20 overflow-hidden bg-gradient-to-b from-blue-50 via-white to-white">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-1/2 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+      </div>
+      
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          {/* Trust Badge */}
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-8">
+            <Sparkles className="h-4 w-4" />
+            <span>Trusted by 10,000+ Legal Professionals</span>
+            <ChevronRight className="h-4 w-4" />
+          </div>
+          
+          {/* Main Headline */}
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              AI-Powered Legal
+            </span>
+            <br />
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Excellence
+            </span>
+          </h1>
+          
+          {/* Subheadline */}
+          <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+            Transform your legal practice with intelligent document automation, 
+            comprehensive case management, and advanced AI analytics that deliver 
+            results in minutes, not hours.
+          </p>
+          
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Link href="/register">
+              <Button size="lg" className="px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl">
+                Start 14-Day Free Trial
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={onDemoClick}
+              className="px-8 py-6 text-lg border-2 hover:bg-gray-50"
+            >
+              <Play className="mr-2 h-5 w-5" />
+              Watch 3-Min Demo
+            </Button>
+          </div>
+          
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-green-500" />
+              <span>No Credit Card Required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-blue-500" />
+              <span>Enterprise Security</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Timer className="h-5 w-5 text-purple-500" />
+              <span>Setup in 60 Seconds</span>
+            </div>
+          </div>
+        </motion.div>
+        
+        {/* Dashboard Preview */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mt-16 relative"
+        >
+          <div className="relative mx-auto max-w-6xl">
+            <div className="relative rounded-xl shadow-2xl overflow-hidden border border-gray-200">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-indigo-600/10"></div>
+              <div className="bg-white p-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card className="border-blue-200 bg-blue-50/50">
+                    <CardHeader>
+                      <FileText className="h-8 w-8 text-blue-600 mb-2" />
+                      <CardTitle>Smart Documents</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600">Generate court-ready documents in seconds with AI assistance</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-indigo-200 bg-indigo-50/50">
+                    <CardHeader>
+                      <Brain className="h-8 w-8 text-indigo-600 mb-2" />
+                      <CardTitle>AI Analysis</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600">Get strategic insights and recommendations for your cases</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-purple-200 bg-purple-50/50">
+                    <CardHeader>
+                      <Shield className="h-8 w-8 text-purple-600 mb-2" />
+                      <CardTitle>Secure Platform</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600">Bank-grade encryption and compliance with legal standards</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+// Stats Section
+const StatsSection = () => {
+  const stats = [
+    { value: 10000, suffix: "+", label: "Legal Professionals", icon: Users },
+    { value: 500000, suffix: "+", label: "Documents Generated", icon: FileText },
+    { value: 98, suffix: "%", label: "Client Satisfaction", icon: Star },
+    { value: 15, suffix: "hrs", label: "Saved Weekly", icon: Clock }
+  ];
+  
+  return (
+    <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              className="text-center text-white"
+            >
+              <stat.icon className="h-8 w-8 mx-auto mb-4 opacity-80" />
+              <div className="text-4xl font-bold mb-2">
+                <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+              </div>
+              <div className="text-sm opacity-90">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Features Grid with Icons
+const FeaturesGrid = () => {
+  const features = [
     {
-      title: "AI-Powered Legal Analysis",
-      description: "Senior-level legal reasoning with 20+ years of experience. Strategic case analysis, risk assessment, and proactive recommendations.",
-      icon: "brain",
-      details: "Our AI attorney thinks strategically about legal outcomes, identifies potential issues before they become problems, and provides specific actionable advice with clear timelines."
+      icon: Brain,
+      title: "Advanced AI Analysis",
+      description: "Leverage cutting-edge AI to analyze cases, identify patterns, and predict outcomes with unprecedented accuracy.",
+      benefits: ["Strategic recommendations", "Risk assessment", "Case outcome prediction"]
     },
     {
-      title: "Interactive Document Canvas",
-      description: "Dynamic document editor with court-compatible fonts, dual download formats, and real-time AI assistance.",
-      icon: "file-text",
-      details: "Professional document creation with Times New Roman, Century Schoolbook, and Garamond fonts. 1-inch margins, multi-page support, and instant PDF/Word downloads."
+      icon: FileText,
+      title: "Intelligent Document Generation",
+      description: "Create professional legal documents in minutes with AI-powered templates and automated formatting.",
+      benefits: ["Court-compliant formatting", "Custom templates", "Multi-jurisdiction support"]
     },
     {
+      icon: Scale,
       title: "Comprehensive Case Management",
-      description: "Organize cases, track deadlines, manage client information, and collaborate within a secure platform.",
-      icon: "folder",
-      details: "Case sidebar with recent cases, client tracking, case types, timeline management, and integrated chat history for complete case context."
+      description: "Track every aspect of your cases from intake to resolution with our intuitive management system.",
+      benefits: ["Timeline tracking", "Client communication", "Deadline management"]
     },
     {
-      title: "Automated Document Generation",
-      description: "AI-powered drafting for contracts, briefs, motions, pleadings, and discovery documents with customizable templates.",
-      icon: "wand",
-      details: "Generate contracts, legal briefs, strategy memos, discovery requests, and deposition outlines with AI assistance and professional formatting."
-    },
-    {
+      icon: Search,
       title: "Legal Research Assistant",
-      description: "Quick access to legal precedents, case law research, and jurisdiction-specific analysis.",
-      icon: "search",
-      details: "Evidence analysis, case analytics, precedent research, and jurisdiction-aware legal standards with real-time updates."
+      description: "Access millions of legal precedents and statutes with AI-powered research capabilities.",
+      benefits: ["Case law analysis", "Statute interpretation", "Citation checking"]
     },
     {
-      title: "Enterprise-Grade Security",
-      description: "AES-256-GCM encryption, GDPR/CCPA compliance, audit logging, and comprehensive data protection.",
-      icon: "shield",
-      details: "JWT authentication, bcrypt hashing, TLS 1.3, CSP headers, rate limiting, PII protection, and full audit trails for enterprise compliance."
+      icon: Shield,
+      title: "Enterprise Security",
+      description: "Bank-grade encryption and compliance with the highest legal industry standards.",
+      benefits: ["AES-256 encryption", "GDPR/CCPA compliant", "SOC 2 certified"]
     },
     {
-      title: "Case Action Buttons",
-      description: "Streamlined workflow with upload documents, calendar integration, timeline tracking, and court preparation tools.",
-      icon: "zap",
-      details: "Upload documents, manage calendar, track case history, evidence analysis, next best action recommendations, deposition prep, and court preparation."
-    },
-    {
-      title: "Real-time Chat Interface",
-      description: "ChatGPT-like interaction with your AI legal assistant, integrated with case context and document generation.",
-      icon: "message-square",
-      details: "Natural language interaction with AI attorney, case-aware responses, function calling, and seamless document generation from chat."
+      icon: Users,
+      title: "Team Collaboration",
+      description: "Work seamlessly with colleagues and clients through secure collaboration tools.",
+      benefits: ["Real-time updates", "Role-based access", "Client portals"]
     }
   ];
-
-  const features = config?.features?.length ? config.features : defaultFeatures;
   
-  console.log('Landing page config:', config);
-  console.log('Features being displayed:', features);
-  console.log('Config loaded:', !!config, 'Feature count:', features?.length);
-  console.log('Query loading:', isLoading, 'Query error:', error);
-  const dashboardScreenshots = config?.dashboardScreenshots || [];
+  return (
+    <section id="features" className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge className="mb-4 px-4 py-2 bg-blue-100 text-blue-800">
+            <Layers className="h-4 w-4 mr-2" />
+            Comprehensive Features
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            Everything You Need to Excel
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Our platform combines powerful AI technology with intuitive design to deliver 
+            a complete legal practice management solution.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+            >
+              <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 bg-white">
+                <CardHeader>
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-4">
+                    <feature.icon className="h-7 w-7 text-white" />
+                  </div>
+                  <CardTitle className="text-xl mb-2">{feature.title}</CardTitle>
+                  <CardDescription className="text-gray-600">
+                    {feature.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {feature.benefits.map((benefit, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-gray-600">{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
-  // Default testimonials showcasing real legal use cases
-  const defaultTestimonials = [
+// Solutions Section
+const SolutionsSection = () => {
+  const solutions = [
     {
-      name: "Sarah Martinez",
-      role: "Managing Partner",
-      company: "Martinez & Associates",
-      content: "The AI legal analysis is phenomenal. It's like having a senior partner review every case with 20+ years of experience. The document generation saves us 15+ hours per week.",
-      rating: 5
+      title: "For Solo Practitioners",
+      icon: UserCheck,
+      description: "Streamline your practice with AI-powered tools designed for efficiency",
+      features: ["Client intake automation", "Document templates", "Time tracking", "Invoice generation"],
+      color: "blue"
     },
     {
-      name: "Michael Chen",
-      role: "Solo Practitioner",
-      company: "Chen Law Firm",
-      content: "As a solo practitioner, this platform levels the playing field. The case management and AI assistance help me compete with larger firms while maintaining quality.",
-      rating: 5
+      title: "For Law Firms",
+      icon: Building,
+      description: "Scale your firm with enterprise features and team collaboration",
+      features: ["Multi-user access", "Case assignment", "Performance analytics", "Custom workflows"],
+      color: "indigo"
     },
     {
-      name: "Jennifer Lopez",
-      role: "Corporate Counsel",
-      company: "TechCorp Industries",
-      content: "The enterprise security features and compliance tools are exactly what we needed. GDPR compliance built-in, audit trails, and professional document generation.",
-      rating: 5
+      title: "For Corporate Legal",
+      icon: Gavel,
+      description: "Manage corporate legal matters with precision and compliance",
+      features: ["Contract management", "Compliance tracking", "Risk assessment", "Board reporting"],
+      color: "purple"
+    },
+    {
+      title: "For Pro Se Litigants",
+      icon: HeartHandshake,
+      description: "Navigate legal proceedings with confidence and expert guidance",
+      features: ["Step-by-step guidance", "Form assistance", "Legal terminology help", "Court preparation"],
+      color: "green"
     }
   ];
+  
+  return (
+    <section id="solutions" className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge className="mb-4 px-4 py-2 bg-indigo-100 text-indigo-800">
+            <Target className="h-4 w-4 mr-2" />
+            Tailored Solutions
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Built for Every Legal Professional
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Whether you're a solo practitioner or managing a large firm, our platform adapts to your needs
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {solutions.map((solution, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+            >
+              <Card className={`h-full hover:shadow-xl transition-all duration-300 border-2 border-${solution.color}-100`}>
+                <CardHeader>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className={`w-12 h-12 rounded-lg bg-${solution.color}-100 flex items-center justify-center`}>
+                      <solution.icon className={`h-6 w-6 text-${solution.color}-600`} />
+                    </div>
+                    <h3 className="text-2xl font-bold">{solution.title}</h3>
+                  </div>
+                  <p className="text-gray-600">{solution.description}</p>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {solution.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full bg-${solution.color}-500`}></div>
+                        <span className="text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
-  const testimonials = config?.testimonials?.length ? config.testimonials : defaultTestimonials;
-
-  // Pricing plans with enterprise features
-  const pricingPlans = config?.pricingPlans?.length ? config.pricingPlans : [
+// Pricing Section
+const PricingSection = () => {
+  const plans = [
+    {
+      name: "Starter",
+      price: 49,
+      description: "Perfect for individuals and small practices",
+      features: [
+        "Up to 10 active cases",
+        "Basic document templates",
+        "AI legal assistant",
+        "Email support",
+        "Mobile app access",
+        "256-bit encryption"
+      ],
+      cta: "Start Free Trial",
+      popular: false
+    },
     {
       name: "Professional",
-      price: "$49",
+      price: 149,
+      description: "Comprehensive tools for growing practices",
       features: [
-        "AI Legal Analysis",
-        "Document Generation",
-        "Case Management",
-        "5 Cases / Month",
-        "Email Support"
-      ]
-    },
-    {
-      name: "Business",
-      price: "$149",
-      features: [
-        "Everything in Professional",
-        "Unlimited Cases",
-        "Team Collaboration",
-        "Advanced Analytics",
-        "Priority Support",
-        "Custom Templates"
+        "Unlimited active cases",
+        "Advanced document automation",
+        "Priority AI processing",
+        "Phone & chat support",
+        "Team collaboration (5 users)",
+        "API access",
+        "Custom templates",
+        "Advanced analytics"
       ],
+      cta: "Start Free Trial",
       popular: true
     },
     {
       name: "Enterprise",
       price: "Custom",
+      description: "Tailored solutions for large organizations",
       features: [
-        "Everything in Business",
-        "GDPR/CCPA Compliance",
-        "SSO Integration",
-        "Audit Logging",
-        "Dedicated Account Manager",
-        "Custom Integrations",
-        "SLA Agreement"
-      ]
+        "Everything in Professional",
+        "Unlimited team members",
+        "Custom AI training",
+        "Dedicated account manager",
+        "On-premise deployment option",
+        "Custom integrations",
+        "SLA guarantee",
+        "White-label options"
+      ],
+      cta: "Contact Sales",
+      popular: false
     }
   ];
-
-  const handleSignupNext = () => {
-    if (signupStep < 3) {
-      setSignupStep(signupStep + 1);
-    }
-  };
-
-  const handleSignupSubmit = () => {
-    // Handle final signup submission
-    console.log("Signup data:", signupData);
-    // Redirect to dashboard or show success message
-  };
-
-  // Auto-rotate featured screenshots
-  useEffect(() => {
-    if (dashboardScreenshots.length > 1) {
-      const interval = setInterval(() => {
-        setSelectedFeature((prev) => (prev + 1) % dashboardScreenshots.length);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [dashboardScreenshots.length]);
-
+  
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">W</span>
-              </div>
-              <span className="text-2xl font-bold text-gray-900">Wizzered</span>
-            </div>
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-              <a href="#testimonials" className="text-gray-600 hover:text-gray-900 transition-colors">Reviews</a>
-              <Link href="/login">
-                <Button variant="outline">Login</Button>
-              </Link>
-              <Button>Get Started</Button>
-            </nav>
-          </div>
+    <section id="pricing" className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge className="mb-4 px-4 py-2 bg-green-100 text-green-800">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Transparent Pricing
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Choose Your Perfect Plan
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            All plans include a 14-day free trial. No credit card required.
+          </p>
         </div>
-      </header>
-
-      {/* Hero Section with Dashboard Screenshots */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <Badge className="mb-4" variant="secondary">
-                <Award className="w-4 h-4 mr-2" />
-                AI-Powered Legal Technology
-              </Badge>
-              <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                {config?.heroTitle || "Transform Your Legal Practice with AI"}
-              </h1>
-              <p className="text-xl text-gray-600 mb-8">
-                {config?.heroSubtitle || "Advanced AI assistant with 20+ years of legal experience. Strategic analysis, automated document generation, and comprehensive case management in one platform."}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                      <Play className="w-5 h-5 mr-2" />
-                      Watch Demo
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>Platform Demo</DialogTitle>
-                      <DialogDescription>
-                        See how Wizzered transforms legal workflows
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <Play className="w-16 h-16 text-gray-400 mb-4 mx-auto" />
-                        <p className="text-gray-500">Demo video coming soon</p>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button size="lg" variant="outline">
-                  <Download className="w-5 h-5 mr-2" />
-                  Free Trial
-                </Button>
-              </div>
-              <div className="flex items-center space-x-6 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <Check className="w-5 h-5 text-green-600 mr-2" />
-                  14-day free trial
-                </div>
-                <div className="flex items-center">
-                  <Check className="w-5 h-5 text-green-600 mr-2" />
-                  No credit card required
-                </div>
-              </div>
-            </div>
-            
-            {/* Dashboard Screenshots Carousel */}
-            <div className="relative">
-              {dashboardScreenshots.length > 0 ? (
-                <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden">
-                  <div className="bg-gray-100 px-6 py-4 flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <span className="ml-4 text-sm text-gray-600">Wizzered Dashboard</span>
-                  </div>
-                  <img 
-                    src={dashboardScreenshots[selectedFeature]} 
-                    alt="Dashboard Screenshot"
-                    className="w-full h-auto"
-                  />
-                  {dashboardScreenshots.length > 1 && (
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                      {dashboardScreenshots.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setSelectedFeature(index)}
-                          className={`w-2 h-2 rounded-full ${
-                            index === selectedFeature ? 'bg-white' : 'bg-white/50'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-                  <div className="bg-gray-100 px-6 py-4 flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <span className="ml-4 text-sm text-gray-600">Wizzered Dashboard</span>
-                  </div>
-                  <div className="p-12 text-center">
-                    <div className="w-24 h-24 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <FileText className="w-12 h-12 text-blue-600" />
-                    </div>
-                    <p className="text-gray-600">Dashboard screenshots will appear here when uploaded by admin</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <Badge className="mb-4" variant="secondary">Features</Badge>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Comprehensive Legal AI Platform
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Everything you need to transform your legal practice with advanced AI assistance, 
-              professional document generation, and enterprise-grade security.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                    {feature.icon === 'brain' && <Zap className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'file-text' && <FileText className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'folder' && <Users className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'wand' && <BookOpen className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'search' && <BarChart3 className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'shield' && <Shield className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'scale' && <Award className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'zap' && <Calendar className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'message-square' && <MessageSquare className="w-6 h-6 text-blue-600" />}
-                  </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section id="testimonials" className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <Badge className="mb-4" variant="secondary">Testimonials</Badge>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Trusted by Legal Professionals
-            </h2>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-gray-600 mb-6">"{testimonial.content}"</p>
-                  <div>
-                    <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                    <p className="text-sm text-gray-600">{testimonial.role}, {testimonial.company}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <Badge className="mb-4" variant="secondary">Pricing</Badge>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Choose Your Plan
-            </h2>
-            <p className="text-xl text-gray-600">
-              Professional legal AI for every practice size
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <Card key={index} className={`relative border-0 shadow-lg ${plan.popular ? 'ring-2 ring-blue-600' : ''}`}>
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600">
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {plans.map((plan, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              className={plan.popular ? 'relative' : ''}
+            >
+              {plan.popular && (
+                <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 z-10">
+                  <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2">
+                    <Star className="h-4 w-4 mr-2" />
                     Most Popular
                   </Badge>
-                )}
-                <CardHeader className="text-center pb-6">
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    {plan.period && <span className="text-gray-600">{plan.period}</span>}
+                </div>
+              )}
+              <Card className={`h-full ${plan.popular ? 'border-2 border-blue-500 shadow-xl' : 'border-gray-200'}`}>
+                <CardHeader className="text-center pb-8">
+                  <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
+                  <div className="mb-4">
+                    {typeof plan.price === 'number' ? (
+                      <>
+                        <span className="text-5xl font-bold">${plan.price}</span>
+                        <span className="text-gray-600">/month</span>
+                      </>
+                    ) : (
+                      <span className="text-4xl font-bold">{plan.price}</span>
+                    )}
                   </div>
-                  {plan.tokenLimit && (
-                    <div className="mt-2">
-                      <Badge variant="secondary" className="text-sm">
-                        {plan.tokenLimit}
-                      </Badge>
-                    </div>
-                  )}
+                  <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, fIndex) => (
-                      <li key={fIndex} className="flex items-center">
-                        <Check className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
+                <CardContent className="space-y-4">
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                         <span className="text-gray-700">{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
-                    {plan.ctaText || "Get Started"}
-                  </Button>
+                  <div className="pt-6">
+                    {plan.cta === "Contact Sales" ? (
+                      <Button className="w-full" size="lg" variant="outline">
+                        {plan.cta}
+                      </Button>
+                    ) : (
+                      <Link href="/register">
+                        <Button 
+                          className={`w-full ${plan.popular ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : ''}`}
+                          size="lg"
+                        >
+                          {plan.cta}
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+};
 
-      {/* Multi-Step Signup CTA */}
-      <section className="py-20 bg-blue-600">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to Transform Your Practice?
+// Testimonials with Real Content
+const TestimonialsSection = () => {
+  const testimonials = [
+    {
+      name: "Jennifer Martinez",
+      role: "Managing Partner, Martinez & Associates",
+      content: "Wizzered transformed our document workflow. What used to take hours now takes minutes. The AI suggestions are remarkably accurate and have improved our brief quality significantly.",
+      rating: 5,
+      image: "JM"
+    },
+    {
+      name: "David Thompson",
+      role: "Solo Practitioner",
+      content: "As a solo attorney, Wizzered is like having a full support team. The case management features keep me organized, and the document automation has doubled my capacity to take on new clients.",
+      rating: 5,
+      image: "DT"
+    },
+    {
+      name: "Sarah Chen",
+      role: "Corporate Legal Counsel",
+      content: "The contract analysis features have been game-changing for our legal department. We've reduced contract review time by 70% while improving accuracy. Highly recommended for in-house teams.",
+      rating: 5,
+      image: "SC"
+    },
+    {
+      name: "Robert Williams",
+      role: "Pro Se Litigant",
+      content: "I was overwhelmed representing myself until I found Wizzered. The step-by-step guidance and document templates gave me confidence in court. It's like having a lawyer in your pocket.",
+      rating: 5,
+      image: "RW"
+    },
+    {
+      name: "Lisa Anderson",
+      role: "Family Law Attorney",
+      content: "The client communication features have improved my practice immensely. Clients love the portal access, and I love the automated updates. It's reduced client calls by 60%.",
+      rating: 5,
+      image: "LA"
+    },
+    {
+      name: "Michael Foster",
+      role: "Criminal Defense Attorney",
+      content: "The case timeline and evidence management features are exceptional. I can build stronger defenses with the AI-powered case analysis. It's become an essential tool in my practice.",
+      rating: 5,
+      image: "MF"
+    }
+  ];
+  
+  return (
+    <section id="testimonials" className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge className="mb-4 px-4 py-2 bg-yellow-100 text-yellow-800">
+            <Star className="h-4 w-4 mr-2" />
+            Client Success Stories
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Trusted by Legal Professionals
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of legal professionals using AI to streamline their workflows
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Join thousands who have transformed their legal practice with Wizzered
           </p>
-          
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-50">
-                Start Free Trial
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Get Started - Step {signupStep} of 3</DialogTitle>
-                <DialogDescription>
-                  Create your account to begin your free trial
-                </DialogDescription>
-              </DialogHeader>
-              
-              <Tabs value={signupStep.toString()} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="1">Basic</TabsTrigger>
-                  <TabsTrigger value="2">Details</TabsTrigger>
-                  <TabsTrigger value="3">Complete</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="1" className="space-y-4">
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="First Name"
-                      value={signupData.firstName}
-                      onChange={(e) => setSignupData({...signupData, firstName: e.target.value})}
-                    />
-                    <Input
-                      placeholder="Last Name"
-                      value={signupData.lastName}
-                      onChange={(e) => setSignupData({...signupData, lastName: e.target.value})}
-                    />
-                    <Input
-                      type="email"
-                      placeholder="Email Address"
-                      value={signupData.email}
-                      onChange={(e) => setSignupData({...signupData, email: e.target.value})}
-                    />
-                  </div>
-                  <Button onClick={handleSignupNext} className="w-full">
-                    Continue
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </TabsContent>
-                
-                <TabsContent value="2" className="space-y-4">
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="Law Firm / Company"
-                      value={signupData.company}
-                      onChange={(e) => setSignupData({...signupData, company: e.target.value})}
-                    />
-                    <Input
-                      placeholder="Your Role"
-                      value={signupData.role}
-                      onChange={(e) => setSignupData({...signupData, role: e.target.value})}
-                    />
-                    <Input
-                      placeholder="Team Size"
-                      value={signupData.teamSize}
-                      onChange={(e) => setSignupData({...signupData, teamSize: e.target.value})}
-                    />
-                  </div>
-                  <Button onClick={handleSignupNext} className="w-full">
-                    Continue
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </TabsContent>
-                
-                <TabsContent value="3" className="space-y-4">
-                  <div className="text-center space-y-4">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-8 h-8 text-green-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold">Almost Done!</h3>
-                    <p className="text-sm text-gray-600">Click below to complete your registration and start your free trial.</p>
-                  </div>
-                  <div className="space-y-3">
-                    <Button onClick={handleSignupSubmit} className="w-full">
-                      Complete Registration
-                    </Button>
-                    <div className="text-center">
-                      <p className="text-xs text-gray-500">or sign up with</p>
-                      <div className="flex gap-2 mt-2">
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <Globe className="w-4 h-4 mr-2" />
-                          Google
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <Mail className="w-4 h-4 mr-2" />
-                          Microsoft
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
         </div>
-      </section>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {testimonials.map((testimonial, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+            >
+              <Card className="h-full hover:shadow-xl transition-all duration-300">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 mb-6 italic">"{testimonial.content}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                      {testimonial.image}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                      <p className="text-sm text-gray-600">{testimonial.role}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-16">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">W</span>
-                </div>
-                <span className="text-2xl font-bold">Wizzered</span>
-              </div>
-              <p className="text-gray-400 mb-4">
-                AI-Powered Legal Technology for modern law practices.
-              </p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white">
-                  <Globe className="w-5 h-5" />
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white">
-                  <Mail className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#features" className="hover:text-white">Features</a></li>
-                <li><a href="#pricing" className="hover:text-white">Pricing</a></li>
-                <li><a href="/documentation" className="hover:text-white">Documentation</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="/about" className="hover:text-white">About</a></li>
-                <li><a href="/contact" className="hover:text-white">Contact</a></li>
-                <li><a href="/help-center" className="hover:text-white">Help Center</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="/privacy" className="hover:text-white">Privacy Policy</a></li>
-                <li><a href="/terms" className="hover:text-white">Terms of Service</a></li>
-                <li><a href="/cookie-policy" className="hover:text-white">Cookie Policy</a></li>
-              </ul>
+// Resources Section
+const ResourcesSection = () => {
+  const resources = [
+    {
+      title: "Legal AI Guide",
+      description: "Learn how AI is transforming legal practice",
+      icon: BookOpen,
+      link: "/documentation"
+    },
+    {
+      title: "Best Practices",
+      description: "Tips for maximizing your Wizzered experience",
+      icon: BookMarked,
+      link: "/documentation"
+    },
+    {
+      title: "API Documentation",
+      description: "Integrate Wizzered with your existing tools",
+      icon: Cpu,
+      link: "/documentation"
+    },
+    {
+      title: "Video Tutorials",
+      description: "Step-by-step guides for all features",
+      icon: Play,
+      link: "/documentation"
+    }
+  ];
+  
+  return (
+    <section id="resources" className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <Badge className="mb-4 px-4 py-2 bg-purple-100 text-purple-800">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Learning Center
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Resources to Help You Succeed
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Access guides, tutorials, and best practices to get the most out of Wizzered
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {resources.map((resource, index) => (
+            <Link key={index} href={resource.link}>
+              <Card className="h-full hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                <CardHeader>
+                  <resource.icon className="h-10 w-10 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+                  <CardTitle className="text-lg">{resource.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 text-sm">{resource.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// CTA Section
+const CTASection = () => {
+  return (
+    <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Ready to Transform Your Legal Practice?
+          </h2>
+          <p className="text-xl text-blue-100 mb-10">
+            Join thousands of legal professionals already using Wizzered to work smarter, not harder.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/register">
+              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold">
+                Start Your Free Trial
+                <Rocket className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="border-white text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold"
+            >
+              Schedule a Demo
+              <Phone className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+          <p className="text-sm text-blue-100 mt-8">
+            No credit card required • 14-day free trial • Cancel anytime
+          </p>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+// Footer
+const Footer = () => {
+  return (
+    <footer className="bg-gray-900 text-gray-300 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+          <div>
+            <Logo size="md" className="mb-4" />
+            <p className="text-gray-400">
+              AI-powered legal technology for modern legal professionals.
+            </p>
+            <div className="flex gap-4 mt-6">
+              <Badge variant="outline" className="text-gray-400 border-gray-700">
+                <ShieldCheck className="h-3 w-3 mr-1" />
+                SOC 2
+              </Badge>
+              <Badge variant="outline" className="text-gray-400 border-gray-700">
+                <Lock className="h-3 w-3 mr-1" />
+                GDPR
+              </Badge>
             </div>
           </div>
           
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Wizzered. All rights reserved.</p>
+          <div>
+            <h3 className="font-semibold text-white mb-4">Product</h3>
+            <ul className="space-y-2">
+              <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link href="/documentation" className="hover:text-white transition-colors">Documentation</Link></li>
+              <li><Link href="/api" className="hover:text-white transition-colors">API</Link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold text-white mb-4">Company</h3>
+            <ul className="space-y-2">
+              <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+              <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
+              <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold text-white mb-4">Legal</h3>
+            <ul className="space-y-2">
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="/cookie-policy" className="hover:text-white transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/compliance" className="hover:text-white transition-colors">Compliance</Link></li>
+            </ul>
           </div>
         </div>
-      </footer>
+        
+        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-400">
+            © 2025 Wizzered. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6 mt-4 md:mt-0">
+            <a href="mailto:support@wizzered.com" className="hover:text-white transition-colors">
+              <Mail className="h-5 w-5" />
+            </a>
+            <a href="tel:1-800-WIZZERED" className="hover:text-white transition-colors">
+              <Phone className="h-5 w-5" />
+            </a>
+            <a href="#" className="hover:text-white transition-colors">
+              <Globe className="h-5 w-5" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+// Main Component
+export default function LandingNew() {
+  const [isContactSalesOpen, setIsContactSalesOpen] = useState(false);
+  const [isDemoRequestOpen, setIsDemoRequestOpen] = useState(false);
+  const [isVideoDemoOpen, setIsVideoDemoOpen] = useState(false);
+  
+  return (
+    <div className="min-h-screen">
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
+      
+      <Navigation />
+      <HeroSection onDemoClick={() => setIsVideoDemoOpen(true)} />
+      <StatsSection />
+      <FeaturesGrid />
+      <SolutionsSection />
+      <PricingSection />
+      <TestimonialsSection />
+      <ResourcesSection />
+      <CTASection />
+      <Footer />
+      
+      {/* Modals */}
+      <ContactSalesModal 
+        isOpen={isContactSalesOpen} 
+        onClose={() => setIsContactSalesOpen(false)} 
+      />
+      <DemoRequestModal 
+        isOpen={isDemoRequestOpen}
+        onClose={() => setIsDemoRequestOpen(false)}
+      />
+      <VideoDemoModal
+        isOpen={isVideoDemoOpen}
+        onClose={() => setIsVideoDemoOpen(false)}
+      />
     </div>
   );
 }

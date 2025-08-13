@@ -8,8 +8,8 @@ import AdminLayout from "@/components/layout/admin-layout";
 import { lazy, useEffect, Suspense } from 'react';
 
 // Import pages
-import LandingPage from "@/pages/landing";
-import NewLanding from "@/pages/landing-new";
+import LandingPage from "@/pages/landing-new";
+import OldLanding from "@/pages/landing";
 import LegalAssistant from "@/pages/legal-assistant";
 import NewCase from "@/pages/new-case";
 import SearchCases from "@/pages/search-cases";
@@ -125,7 +125,7 @@ function App() {
           <Router>
             <Switch>
               {/* Landing pages */}
-              <Route path="/" component={NewLanding} />
+              <Route path="/" component={LandingPage} />
               <Route path="/landing-old" component={LandingPage} />
 
               {/* Auth routes */}
