@@ -1557,5 +1557,35 @@ router.put("/plans/primary/:planId", authenticateToken, async (req: Request, res
 // Landing page configuration routes
 router.use("/landing-config", landingConfigRouter);
 
+// Import route modules
+import promptsRouter from "./prompts";
+import analyticsRouter from "./analytics";  
+import paymentGatewaysRouter from "./payment-gateways";
+import aiProvidersRouter from "./ai-providers";
+import webhooksRouter from "./webhooks";
+
+// Prompts management routes  
+router.use("/prompts", promptsRouter);
+
+// Analytics routes
+router.use("/analytics", analyticsRouter);
+
+// Payment gateways routes
+router.use("/payment-gateways", paymentGatewaysRouter);
+
+// AI providers routes
+router.use("/ai-providers", aiProvidersRouter);
+
+// Webhooks routes
+router.use("/webhooks", webhooksRouter);
+
+// App APIs routes
+import appApisRouter from "./app-apis";
+router.use("/app-apis", appApisRouter);
+
+// Brand configuration routes
+import brandConfigRouter from "./brand-config";
+router.use("/brand-config", brandConfigRouter);
+
 export default router;
 

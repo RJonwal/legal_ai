@@ -1,5 +1,5 @@
 import { 
-  users, cases, chatMessages, documents, caseTimeline, adminConfig, adminPages, adminPrompts,
+  users, cases, chatMessages, documents, caseTimeline, adminConfig, adminPages, prompts,
   type User, type InsertUser,
   type Case, type InsertCase,
   type ChatMessage, type InsertChatMessage,
@@ -7,7 +7,7 @@ import {
   type TimelineEvent, type InsertTimelineEvent,
   type AdminConfig, type InsertAdminConfig,
   type AdminPage, type InsertAdminPage,
-  type AdminPrompt, type InsertAdminPrompt
+  type Prompt, type InsertPrompt
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, like, or, and } from "drizzle-orm";
@@ -517,7 +517,7 @@ export class DatabaseStorage implements IStorage {
 
   async createDefaultPrompts(): Promise<void> {
     try {
-      const existingPrompts = await db.select().from(adminPrompts).limit(1);
+      const existingPrompts = await db.select().from(prompts).limit(1);
       if (existingPrompts.length === 0) {
         console.log("Creating default admin prompts...");
         
@@ -526,27 +526,51 @@ export class DatabaseStorage implements IStorage {
             name: "Senior Legal AI Attorney System",
             description: "Primary system prompt for legal AI assistance",
             promptContent: "You are a Senior Legal AI Attorney with extensive experience in legal research, case analysis, and document preparation. You provide comprehensive legal assistance while maintaining the highest standards of professional ethics.",
-            category: "system" as const,
-            isActive: true
+            category: "chat",
+            isActive: true,
+            version: "v1.0",
+            usageCount: 0
           },
           {
             name: "Document Generation Assistant", 
             description: "Specialized prompt for legal document creation",
             promptContent: "You are an expert legal document drafting assistant. You help create precise, legally sound documents tailored to specific jurisdictions and case requirements.",
-            category: "document" as const,
-            isActive: true
+            category: "document",
+            isActive: true,
+            version: "v1.0",
+            usageCount: 0
           },
           {
             name: "Case Analysis Expert",
             description: "Focused on case law research and analysis",
             promptContent: "You are a legal case analysis expert specializing in case law research, precedent analysis, and legal strategy development.",
-            category: "analysis" as const,
-            isActive: true
+            category: "analysis",
+            isActive: true,
+            version: "v1.0", 
+            usageCount: 0
+          },
+          {
+            name: "Strategy Planning Assistant",
+            description: "Legal strategy and planning expert",
+            promptContent: "You are a legal strategy planning expert who helps develop comprehensive litigation strategies and case management plans.",
+            category: "strategy",
+            isActive: true,
+            version: "v1.0",
+            usageCount: 0
+          },
+          {
+            name: "General Legal Assistant",
+            description: "Multi-purpose legal AI assistant",
+            promptContent: "You are a versatile legal assistant capable of handling various legal tasks with professionalism and accuracy.",
+            category: "general",
+            isActive: true,
+            version: "v1.0",
+            usageCount: 0
           }
         ];
 
         for (const prompt of defaultPrompts) {
-          await db.insert(adminPrompts).values({
+          await db.insert(prompts).values({
             ...prompt,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -567,16 +591,18 @@ export class DatabaseStorage implements IStorage {
       // Ensure default prompts exist
       await this.createDefaultPrompts();
       
-      const prompts = await db.select().from(adminPrompts).orderBy(desc(adminPrompts.createdAt));
-      console.log("Database returned prompts:", prompts?.length || 0);
+      const promptsData = await db.select().from(prompts).orderBy(desc(prompts.createdAt));
+      console.log("Database returned prompts:", promptsData?.length || 0);
       
-      const mappedPrompts = prompts.map(prompt => ({
+      const mappedPrompts = promptsData.map(prompt => ({
         id: prompt.id.toString(),
         name: prompt.name,
         description: prompt.description,
         promptContent: prompt.promptContent,
         isActive: prompt.isActive,
         category: prompt.category,
+        version: prompt.version,
+        usageCount: prompt.usageCount,
         createdAt: prompt.createdAt?.toISOString(),
         updatedAt: prompt.updatedAt?.toISOString()
       }));
@@ -607,16 +633,17 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Updating admin prompt:", id, updates);
       
-      const [updatedPrompt] = await db.update(adminPrompts)
+      const [updatedPrompt] = await db.update(prompts)
         .set({
           name: updates.name,
           description: updates.description,
           promptContent: updates.promptContent || updates.content,
           isActive: updates.isActive,
           category: updates.category,
+          version: updates.version,
           updatedAt: new Date()
         })
-        .where(eq(adminPrompts.id, parseInt(id)))
+        .where(eq(prompts.id, parseInt(id)))
         .returning();
 
       if (!updatedPrompt) {
@@ -630,6 +657,8 @@ export class DatabaseStorage implements IStorage {
         promptContent: updatedPrompt.promptContent,
         isActive: updatedPrompt.isActive,
         category: updatedPrompt.category,
+        version: updatedPrompt.version,
+        usageCount: updatedPrompt.usageCount,
         createdAt: updatedPrompt.createdAt?.toISOString(),
         updatedAt: updatedPrompt.updatedAt?.toISOString()
       };
@@ -643,13 +672,15 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Creating admin prompt:", promptData);
       
-      const [newPrompt] = await db.insert(adminPrompts)
+      const [newPrompt] = await db.insert(prompts)
         .values({
           name: promptData.name,
           description: promptData.description,
           promptContent: promptData.promptContent || promptData.content,
           isActive: promptData.isActive !== undefined ? promptData.isActive : true,
           category: promptData.category || 'general',
+          version: promptData.version || 'v1.0',
+          usageCount: 0,
           createdAt: new Date(),
           updatedAt: new Date()
         })
@@ -662,6 +693,8 @@ export class DatabaseStorage implements IStorage {
         promptContent: newPrompt.promptContent,
         isActive: newPrompt.isActive,
         category: newPrompt.category,
+        version: newPrompt.version,
+        usageCount: newPrompt.usageCount,
         createdAt: newPrompt.createdAt?.toISOString(),
         updatedAt: newPrompt.updatedAt?.toISOString()
       };
@@ -674,7 +707,7 @@ export class DatabaseStorage implements IStorage {
   async deleteAdminPrompt(id: string): Promise<void> {
     try {
       console.log("Deleting admin prompt:", id);
-      await db.delete(adminPrompts).where(eq(adminPrompts.id, parseInt(id)));
+      await db.delete(prompts).where(eq(prompts.id, parseInt(id)));
     } catch (error) {
       console.error("Error deleting admin prompt:", error);
       throw error;

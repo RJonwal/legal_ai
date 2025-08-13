@@ -1,7 +1,40 @@
 import { Router } from "express";
 import { z } from "zod";
+import { db } from "../db";
+import { landingConfig } from "../../shared/schema";
+import type { LandingConfig, InsertLandingConfig } from "../../shared/schema";
+import { eq } from "drizzle-orm";
+import { authenticateToken, type AuthRequest } from "../services/auth";
 
 const router = Router();
+
+// Landing page configuration schema
+const LandingConfigSchema = z.object({
+  configData: z.object({
+    sections: z.array(z.object({
+      id: z.string(),
+      type: z.enum(['hero', 'features', 'testimonials', 'pricing', 'cta', 'footer']),
+      enabled: z.boolean(),
+      order: z.number(),
+      config: z.record(z.any())
+    })),
+    globalSettings: z.object({
+      showNavigation: z.boolean(),
+      stickyHeader: z.boolean(),
+      enableAnimations: z.boolean(),
+      mobileOptimized: z.boolean(),
+      seoSettings: z.object({
+        metaTitle: z.string(),
+        metaDescription: z.string(),
+        keywords: z.array(z.string()),
+        ogImage: z.string().optional()
+      })
+    }),
+    customCSS: z.string().optional()
+  }),
+  isActive: z.boolean().default(true),
+  version: z.string().default("v1.0")
+});
 
 // Default landing page configuration
 const defaultLandingConfig = {
@@ -202,52 +235,7 @@ const defaultLandingConfig = {
   }
 };
 
-// Landing page configuration schema
-const LandingConfigSchema = z.object({
-  sections: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    enabled: z.boolean(),
-    order: z.number(),
-    content: z.any(),
-    styles: z.object({
-      background: z.string().optional(),
-      textColor: z.string().optional(),
-      padding: z.string().optional(),
-      margin: z.string().optional(),
-      borderRadius: z.string().optional(),
-      boxShadow: z.string().optional(),
-      customCSS: z.string().optional()
-    }),
-    responsive: z.object({
-      mobile: z.any().optional(),
-      tablet: z.any().optional(), 
-      desktop: z.any().optional()
-    })
-  })),
-  globalStyles: z.object({
-    primaryColor: z.string(),
-    secondaryColor: z.string(),
-    accentColor: z.string(),
-    fontFamily: z.string(),
-    fontSize: z.string(),
-    lineHeight: z.string(),
-    containerMaxWidth: z.string(),
-    customGlobalCSS: z.string().optional()
-  }),
-  seo: z.object({
-    title: z.string(),
-    description: z.string(),
-    keywords: z.array(z.string()),
-    ogImage: z.string().optional()
-  }),
-  features: z.object({
-    liveChat: z.boolean(),
-    cookieBanner: z.boolean(),
-    analytics: z.boolean(),
-    newsletter: z.boolean()
-  })
-});
+
 
 // Get landing page configuration
 router.get("/", async (req, res) => {
