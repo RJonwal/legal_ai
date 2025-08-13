@@ -2027,7 +2027,102 @@ User Experience Focus:
     }
   });
 
-  // Landing page configuration endpoint
+  // Public landing page configuration endpoint
+  app.get("/api/landing-config", async (req, res) => {
+    try {
+      const config = await storage.getAdminConfig('landing-config');
+      const defaultConfig = {
+        heroTitle: "Transform Your Legal Practice with AI",
+        heroSubtitle: "Advanced AI assistant with 20+ years of legal experience. Strategic analysis, automated document generation, and comprehensive case management in one platform.",
+        ctaButtonText: "Get Started",
+        dashboardScreenshots: [],
+        features: [
+          {
+            title: "AI-Powered Legal Analysis",
+            description: "Senior-level legal reasoning with 20+ years of experience. Strategic case analysis, risk assessment, and proactive recommendations.",
+            icon: "brain"
+          },
+          {
+            title: "Automated Document Generation",
+            description: "Create motions, briefs, contracts, and pleadings with intelligent templates and case-specific customization.",
+            icon: "file-text"
+          },
+          {
+            title: "Comprehensive Case Management",
+            description: "Track deadlines, manage documents, monitor case progress, and collaborate with team members in one unified platform.",
+            icon: "folder"
+          },
+          {
+            title: "Enterprise Security",
+            description: "Bank-grade encryption, HIPAA compliance, and secure client data handling with complete privacy protection.",
+            icon: "shield"
+          },
+          {
+            title: "Court Preparation & Deposition Tools",
+            description: "Interactive document canvas, case timeline visualization, witness prep assistance, and real-time collaboration for trial readiness.",
+            icon: "scale"
+          },
+          {
+            title: "Legal Research Assistant",
+            description: "AI-powered case law research, statute analysis, precedent identification, and comprehensive legal citation management.",
+            icon: "search"
+          }
+        ],
+        testimonials: [
+          {
+            name: "Sarah Martinez",
+            role: "Managing Partner", 
+            company: "Martinez & Associates",
+            content: "The AI legal analysis is phenomenal. It's like having a senior partner review every case with 20+ years of experience.",
+            rating: 5
+          },
+          {
+            name: "David Chen",
+            role: "Solo Practitioner",
+            company: "Chen Law Office",
+            content: "Document generation saves me 15+ hours per week. The AI understands legal context better than any tool I've used.",
+            rating: 5
+          }
+        ],
+        pricingPlans: [
+          {
+            name: "Pro Se",
+            price: "$29",
+            period: "/month",
+            tokenLimit: "10,000 tokens/month",
+            features: ["Basic AI assistance", "Document templates", "Case tracking", "Email support", "Basic legal research"],
+            popular: false,
+            ctaText: "Start Free Trial"
+          },
+          {
+            name: "Professional",
+            price: "$99",
+            period: "/month",
+            tokenLimit: "100,000 tokens/month",
+            features: ["Full AI analysis", "Unlimited documents", "Advanced case management", "Priority support", "Court preparation tools", "Deposition prep assistance", "Advanced legal research"],
+            popular: true,
+            ctaText: "Get Started"
+          },
+          {
+            name: "Enterprise",
+            price: "$299",
+            period: "/month",
+            tokenLimit: "Unlimited tokens",
+            features: ["Custom AI training", "API access", "White-label solution", "Dedicated support", "Advanced analytics", "Custom integrations", "Bulk document processing", "Team collaboration tools"],
+            popular: false,
+            ctaText: "Contact Sales"
+          }
+        ]
+      };
+      
+      res.json(config || defaultConfig);
+    } catch (error) {
+      console.error('Error fetching landing config:', error);
+      res.status(500).json({ error: 'Failed to fetch landing configuration' });
+    }
+  });
+
+  // Admin landing page configuration endpoint
   app.get("/api/admin/landing-config", async (req, res) => {
     try {
       const config = await storage.getAdminConfig('landing-config');

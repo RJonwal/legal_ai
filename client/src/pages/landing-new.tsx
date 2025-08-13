@@ -74,11 +74,25 @@ export default function NewLanding() {
     useCase: ""
   });
 
-  // Fetch landing page configuration from admin
-  const { data: config } = useQuery<LandingConfig>({
-    queryKey: ['/api/admin/landing-config'],
+  // Fetch landing page configuration from public endpoint
+  const { data: config, error, isLoading } = useQuery<LandingConfig>({
+    queryKey: ['/api/landing-config'],
+    queryFn: async () => {
+      const res = await fetch('/api/landing-config');
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      return res.json();
+    },
     retry: false,
+    refetchOnMount: true,
+    staleTime: 0,
   });
+  
+  if (error) {
+    console.error('Landing config query error:', error);
+    console.error('Error details:', error?.message, error?.status);
+  }
 
   // Default comprehensive features based on dashboard analysis
   const defaultFeatures = [
@@ -133,6 +147,11 @@ export default function NewLanding() {
   ];
 
   const features = config?.features?.length ? config.features : defaultFeatures;
+  
+  console.log('Landing page config:', config);
+  console.log('Features being displayed:', features);
+  console.log('Config loaded:', !!config, 'Feature count:', features?.length);
+  console.log('Query loading:', isLoading, 'Query error:', error);
   const dashboardScreenshots = config?.dashboardScreenshots || [];
 
   // Default testimonials showcasing real legal use cases

@@ -62,6 +62,7 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      queryFn: getQueryFn({ on401: "returnNull" }),
       retry: (failureCount, error: any) => {
         // Don't retry for 4xx errors (client errors)
         if (error?.status >= 400 && error?.status < 500) {
