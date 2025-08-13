@@ -8,6 +8,8 @@ import { useQuery } from "@tanstack/react-query";
 import { BrandingProvider, useBranding } from "@/components/ui/branding-provider";
 import { Logo } from "@/components/ui/logo";
 import USCookieBanner from "@/components/compliance/us-cookie-banner";
+import { ContactSalesModal } from "@/components/modals/contact-sales-modal";
+import { DemoRequestModal } from "@/components/modals/demo-request-modal";
 
 
 // Live Chat Widget Component
@@ -398,12 +400,28 @@ const Footer = () => {
   );
 };
 
+// Landing config type definition
+interface LandingConfig {
+  hero?: {
+    title?: string;
+    subtitle?: string;
+    ctaText?: string;
+    badge?: string;
+    features?: string[];
+  };
+  navigation?: {
+    links?: Array<{ text: string; href: string }>;
+  };
+}
+
 // Main Landing Page Component
 const LandingContent = () => {
   const { brandingConfig } = useBranding();
+  const [isContactSalesOpen, setIsContactSalesOpen] = useState(false);
+  const [isDemoRequestOpen, setIsDemoRequestOpen] = useState(false);
   
   // Fetch admin landing configuration
-  const { data: landingConfig } = useQuery({
+  const { data: landingConfig } = useQuery<LandingConfig>({
     queryKey: ['/api/admin/landing-config'],
   });
 
@@ -464,7 +482,12 @@ const LandingContent = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="px-8 py-4 text-lg font-semibold">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="px-8 py-4 text-lg font-semibold"
+                onClick={() => setIsDemoRequestOpen(true)}
+              >
                 <MessageSquare className="mr-2 h-5 w-5" />
                 Live Demo
               </Button>
@@ -550,7 +573,12 @@ const LandingContent = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold"
+              onClick={() => setIsContactSalesOpen(true)}
+            >
               <MessageSquare className="mr-2 h-5 w-5" />
               Contact Sales
             </Button>
@@ -561,6 +589,16 @@ const LandingContent = () => {
       <Footer />
       <LiveChatWidget />
       <USCookieBanner />
+      
+      {/* Modals */}
+      <ContactSalesModal 
+        open={isContactSalesOpen} 
+        onOpenChange={setIsContactSalesOpen} 
+      />
+      <DemoRequestModal 
+        open={isDemoRequestOpen} 
+        onOpenChange={setIsDemoRequestOpen} 
+      />
     </div>
   );
 };

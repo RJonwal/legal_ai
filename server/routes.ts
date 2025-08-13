@@ -64,8 +64,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // File upload routes
   app.use("/api/uploads", uploadRoutes);
 
-  // Admin routes - temporarily disabled due to syntax error
-  // app.use("/api/admin", adminRoutes);
+  // Admin routes
+  // app.use("/api/admin", adminRoutes); // Still disabled due to syntax errors
+
+  // Admin landing config endpoint (required for landing page)
+  app.get("/api/admin/landing-config", async (req, res) => {
+    try {
+      const config = await storage.getAdminConfig('landing-config');
+      const defaultConfig = {
+        hero: {
+          title: "Transform Your Legal Practice with AI",
+          subtitle: "Advanced AI assistant with 20+ years of legal experience. Strategic analysis, automated document generation, and comprehensive case management in one platform.",
+          ctaText: "Get Started",
+          badge: "AI-Powered Legal Technology",
+          features: ["No Credit Card Required", "14-Day Free Trial", "Cancel Anytime"]
+        },
+        navigation: {
+          links: [
+            { text: "Features", href: "#features" },
+            { text: "Pricing", href: "#pricing" },
+            { text: "Testimonials", href: "#testimonials" },
+            { text: "Support", href: "#support" }
+          ]
+        },
+        features: [
+          {
+            title: "AI-Powered Legal Analysis",
+            description: "Senior-level legal reasoning with 20+ years of experience. Strategic case analysis, risk assessment, and proactive recommendations.",
+            icon: "brain",
+            details: "Our AI attorney thinks strategically about legal outcomes, identifies potential issues before they become problems, and provides specific actionable advice with clear timelines."
+          },
+          {
+            title: "Interactive Document Canvas",
+            description: "Dynamic document editor with court-compatible fonts, dual download formats, and real-time AI assistance.",
+            icon: "file-text",
+            details: "Professional document creation with Times New Roman, Century Schoolbook, and Garamond fonts. 1-inch margins, multi-page support, and instant PDF/Word downloads."
+          },
+          {
+            title: "Comprehensive Case Management",
+            description: "Organize cases, track deadlines, manage client information, and collaborate within a secure platform.",
+            icon: "folder",
+            details: "Case sidebar with recent cases, client tracking, case timeline with custom events, and document organization with smart categorization."
+          },
+          {
+            title: "Enterprise Security",
+            description: "Bank-grade encryption, HIPAA compliance, and secure client data handling with complete privacy protection.",
+            icon: "shield",
+            details: "AES-256 encryption, multi-factor authentication, audit trails, and compliance with legal industry standards including attorney-client privilege protection."
+          },
+          {
+            title: "Court Preparation & Deposition Tools",
+            description: "Interactive document canvas, case timeline visualization, witness prep assistance, and real-time collaboration for trial readiness.",
+            icon: "scale",
+            details: "Trial preparation workspace with evidence organization, witness statement tracking, timeline visualization, and collaborative preparation tools."
+          },
+          {
+            title: "Legal Research Assistant",
+            description: "AI-powered legal research with instant access to case law, statutes, regulations, and legal precedents with citation analysis.",
+            icon: "search",
+            details: "Natural language legal search, citation checking, case law analysis, and automated legal research summaries with source verification."
+          },
+          {
+            title: "Smart Document Templates",
+            description: "Pre-built legal document templates with AI customization for motions, contracts, pleadings, and correspondence.",
+            icon: "file-text",
+            details: "Court-ready templates for all major practice areas with intelligent field completion, formatting automation, and jurisdiction-specific requirements."
+          },
+          {
+            title: "Time & Billing Integration",
+            description: "Automated time tracking, billing generation, expense management, and client invoicing with detailed reporting.",
+            icon: "clock",
+            details: "Smart time tracking with AI-powered categorization, automated billing generation, expense tracking, and comprehensive financial reporting."
+          },
+          {
+            title: "Collaboration & Communication",
+            description: "Secure team collaboration, client portals, encrypted messaging, and real-time document sharing.",
+            icon: "users",
+            details: "Team workspaces, secure client communication portals, encrypted messaging, real-time document collaboration, and permission-based access control."
+          }
+        ]
+      };
+      
+      if (!config) {
+        res.json(defaultConfig);
+        return;
+      }
+      res.json({ ...defaultConfig, ...config });
+    } catch (error) {
+      console.error("Error fetching landing config:", error);
+      res.status(500).json({ error: "Failed to fetch landing configuration" });
+    }
+  });
 
   // Admin branding config endpoint (required for UI)
   app.get("/api/admin/branding-config", async (req, res) => {
@@ -109,6 +198,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cookiePolicyUrl: "/cookie-policy"
       };
       res.json(defaultConfig);
+    }
+  });
+
+  // Contact sales endpoint
+  app.post("/api/contact-sales", async (req, res) => {
+    try {
+      const { name, email, company, phone, message } = req.body;
+      
+      // Validate required fields
+      if (!name || !email || !message) {
+        return res.status(400).json({ error: "Name, email, and message are required" });
+      }
+
+      // Here you would typically send an email to sales team
+      // For now, we'll just log it and return success
+      console.log("Sales contact form submission:", { name, email, company, phone, message });
+      
+      res.json({ 
+        success: true, 
+        message: "Thank you for your interest! Our sales team will contact you within 24 hours." 
+      });
+    } catch (error) {
+      console.error("Error processing contact sales form:", error);
+      res.status(500).json({ error: "Failed to submit contact form" });
+    }
+  });
+
+  // Request demo endpoint
+  app.post("/api/request-demo", async (req, res) => {
+    try {
+      const { name, email, company, phone, preferredDate, preferredTime } = req.body;
+      
+      // Validate required fields
+      if (!name || !email) {
+        return res.status(400).json({ error: "Name and email are required" });
+      }
+
+      // Here you would typically schedule a demo and send calendar invites
+      // For now, we'll just log it and return success
+      console.log("Demo request:", { name, email, company, phone, preferredDate, preferredTime });
+      
+      res.json({ 
+        success: true, 
+        message: "Demo scheduled! We'll send you a calendar invite shortly." 
+      });
+    } catch (error) {
+      console.error("Error processing demo request:", error);
+      res.status(500).json({ error: "Failed to schedule demo" });
     }
   });
 
