@@ -381,7 +381,6 @@ export default function NewLanding() {
                     {feature.icon === 'search' && <BarChart3 className="w-6 h-6 text-blue-600" />}
                     {feature.icon === 'shield' && <Shield className="w-6 h-6 text-blue-600" />}
                     {feature.icon === 'scale' && <Award className="w-6 h-6 text-blue-600" />}
-                    {feature.icon === 'search' && <BarChart3 className="w-6 h-6 text-blue-600" />}
                     {feature.icon === 'zap' && <Calendar className="w-6 h-6 text-blue-600" />}
                     {feature.icon === 'message-square' && <MessageSquare className="w-6 h-6 text-blue-600" />}
                   </div>
