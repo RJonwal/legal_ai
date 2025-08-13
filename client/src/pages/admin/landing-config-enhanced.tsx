@@ -13,7 +13,7 @@ import {
   Save, Plus, Trash2, Eye, EyeOff, Settings, 
   Palette, Type, Layout, Image, Code, ChevronUp, 
   ChevronDown, Copy, Monitor, Smartphone, Tablet,
-  Sparkles, Globe, Lock, Shield, Zap, Users
+  Sparkles, Globe, Lock, Shield, Zap, Users, X
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
