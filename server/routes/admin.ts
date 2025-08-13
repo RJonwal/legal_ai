@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { storage } from "../storage";
 import { authenticateToken, type AuthRequest } from "../services/auth";
+import landingConfigRouter from "./landing-config";
 
 const router = express.Router();
 
@@ -1367,11 +1368,11 @@ router.get("/ai-providers/:providerId/models", async (req: Request, res: Respons
       ];
     } else if (providerId === 'anthropic') {
       models = [
-        { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable Claude model' },
+        { id: 'claude-3.5-sonnet-20241022', name: 'Claude 3.5 Sonnet (Latest)', description: 'Latest and most capable Claude model with improved reasoning' },
+        { id: 'claude-3.5-sonnet-20240620', name: 'Claude 3.5 Sonnet', description: 'Advanced reasoning and coding capabilities' },
+        { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable Claude 3 model' },
         { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanced performance and speed' },
-        { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Fast and efficient' },
-        { id: 'claude-2.1', name: 'Claude 2.1', description: 'Previous generation model' },
-        { id: 'claude-2.0', name: 'Claude 2.0', description: 'Previous generation model' }
+        { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Fast and efficient' }
       ];
     } else if (providerId === 'google') {
       models = [
@@ -1394,12 +1395,12 @@ router.get("/ai-providers/:providerId/models", async (req: Request, res: Respons
         { id: 'mistral-small', name: 'Mistral Small', description: 'Fast and efficient' },
         { id: 'mistral-tiny', name: 'Mistral Tiny', description: 'Lightweight model' }
       ];
-    } else if (providerId === 'perplexity') {
+    } else if (providerId === 'deepseek') {
       models = [
-        { id: 'pplx-70b-online', name: 'Perplexity 70B Online', description: 'Large model with internet access' },
-        { id: 'pplx-7b-online', name: 'Perplexity 7B Online', description: 'Efficient model with internet access' },
-        { id: 'pplx-70b-chat', name: 'Perplexity 70B Chat', description: 'Conversational model' },
-        { id: 'pplx-7b-chat', name: 'Perplexity 7B Chat', description: 'Efficient conversational model' }
+        { id: 'deepseek-chat', name: 'DeepSeek Chat (Latest)', description: 'Advanced reasoning and coding model' },
+        { id: 'deepseek-coder', name: 'DeepSeek Coder', description: 'Specialized code generation model' },
+        { id: 'deepseek-math', name: 'DeepSeek Math', description: 'Mathematical reasoning model' },
+        { id: 'deepseek-reasoning', name: 'DeepSeek Reasoning', description: 'Enhanced logical reasoning capabilities' }
       ];
     }
     
@@ -1552,6 +1553,9 @@ router.put("/plans/primary/:planId", authenticateToken, async (req: Request, res
     res.status(500).json({ error: "Failed to set primary plan" });
   }
 });
+
+// Landing page configuration routes
+router.use("/landing-config", landingConfigRouter);
 
 export default router;
 

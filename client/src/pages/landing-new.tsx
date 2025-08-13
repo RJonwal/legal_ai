@@ -947,12 +947,12 @@ export default function LandingNew() {
       
       {/* Modals */}
       <ContactSalesModal 
-        isOpen={isContactSalesOpen} 
-        onClose={() => setIsContactSalesOpen(false)} 
+        open={isContactSalesOpen} 
+        onOpenChange={setIsContactSalesOpen} 
       />
       <DemoRequestModal 
-        isOpen={isDemoRequestOpen}
-        onClose={() => setIsDemoRequestOpen(false)}
+        open={isDemoRequestOpen}
+        onOpenChange={setIsDemoRequestOpen}
       />
       <VideoDemoModal
         isOpen={isVideoDemoOpen}

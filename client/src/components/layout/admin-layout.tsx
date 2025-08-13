@@ -33,7 +33,8 @@ import {
   FileText,
   Scale,
   LogOut,
-  Brain
+  Brain,
+  Palette
 } from "@/lib/icons";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Link, useLocation } from "wouter";
@@ -51,7 +52,6 @@ interface NavigationItem {
   url: string;
   icon: any;
   isActive: boolean;
-  hidden?: boolean;
   hidden?: boolean;
 }
 
@@ -268,6 +268,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: Globe,
       isActive: location === "/admin/landing-config"
     },
+    {
+      title: "Brand Management",
+      url: "/admin/brand-management",
+      icon: Palette,
+      isActive: location === "/admin/brand-management"
+    },
+    {
+      title: "Prompt Management",
+      url: "/admin/prompt-management",
+      icon: MessageSquare,
+      isActive: location === "/admin/prompt-management"
+    },
   ];
 
   // Fetch feature flags
@@ -322,7 +334,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {navigationItems.filter(item => !item.hidden).map((item) => (
+                {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild 

@@ -1,9 +1,15 @@
 import OpenAI from "openai";
+import { aiServiceProvider } from "./ai-service-provider";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const MODEL = "gpt-4o";
 
-// Initialize OpenAI client
+// Initialize OpenAI client with fallback provider support
+const getAIClient = () => {
+  return aiServiceProvider.getPrimaryClient();
+};
+
+// Fallback to direct OpenAI client for now until all services are migrated
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
 });

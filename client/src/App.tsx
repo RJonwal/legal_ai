@@ -40,6 +40,8 @@ import AdminAPIManagement from "@/pages/admin/api-management";
 
 import PageManagement from "@/pages/admin/page-management";
 import GlobalPromptManagement from "@/pages/admin/global-prompt-management";
+import BrandManagement from "@/pages/admin/brand-management";
+import PromptManagement from "@/pages/admin/prompt-management";
 import HelpCenter from "@/pages/help-center";
 import Contact from "@/pages/contact";
 import Documentation from "@/pages/documentation";
@@ -204,6 +206,18 @@ function App() {
               <Route path="/admin/landing-config">
                 <AdminLayout>
                   <AdminLandingConfig />
+                </AdminLayout>
+              </Route>
+
+              <Route path="/admin/brand-management">
+                <AdminLayout>
+                  <BrandManagement />
+                </AdminLayout>
+              </Route>
+
+              <Route path="/admin/prompt-management">
+                <AdminLayout>
+                  <PromptManagement />
                 </AdminLayout>
               </Route>
 
