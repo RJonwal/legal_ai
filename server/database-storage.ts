@@ -714,57 +714,5 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createAdminPrompt(prompt: any): Promise<any> {
-    const [newPrompt] = await db.insert(adminPrompts)
-      .values({
-        name: prompt.name,
-        description: prompt.description,
-        promptContent: prompt.promptContent,
-        isActive: prompt.isActive,
-        category: prompt.category,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
-      .returning();
-    
-    return {
-      id: newPrompt.id.toString(),
-      name: newPrompt.name,
-      description: newPrompt.description,
-      promptContent: newPrompt.promptContent,
-      isActive: newPrompt.isActive,
-      category: newPrompt.category,
-      createdAt: newPrompt.createdAt?.toISOString(),
-      updatedAt: newPrompt.updatedAt?.toISOString()
-    };
-  }
 
-  async updateAdminPrompt(id: string, updates: any): Promise<any> {
-    const [prompt] = await db.update(adminPrompts)
-      .set({
-        name: updates.name,
-        description: updates.description,
-        promptContent: updates.promptContent,
-        isActive: updates.isActive,
-        category: updates.category,
-        updatedAt: new Date()
-      })
-      .where(eq(adminPrompts.id, parseInt(id)))
-      .returning();
-    
-    return {
-      id: prompt.id.toString(),
-      name: prompt.name,
-      description: prompt.description,
-      promptContent: prompt.promptContent,
-      isActive: prompt.isActive,
-      category: prompt.category,
-      createdAt: prompt.createdAt?.toISOString(),
-      updatedAt: prompt.updatedAt?.toISOString()
-    };
-  }
-
-  async deleteAdminPrompt(id: string): Promise<void> {
-    await db.delete(adminPrompts).where(eq(adminPrompts.id, parseInt(id)));
-  }
 }
