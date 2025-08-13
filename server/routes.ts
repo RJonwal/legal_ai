@@ -13,6 +13,7 @@ import adminRoutes from "./routes/admin";
 import authRoutes from "./routes/auth";
 import paymentRoutes from "./routes/payment";
 import uploadRoutes from "./routes/uploads";
+import aiRoutes from "./routes/ai";
 import { authenticateToken, type AuthRequest } from "./services/auth";
 import { Request, Response } from "express";
 import rateLimit from "express-rate-limit";
@@ -55,6 +56,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin routes
   app.use("/api/admin", adminRoutes);
+
+  // AI routes
+  app.use("/api/ai", aiRoutes);
 
   // Admin landing config endpoint (required for landing page)
   app.get("/api/admin/landing-config", async (req, res) => {

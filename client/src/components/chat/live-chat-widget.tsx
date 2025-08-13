@@ -55,43 +55,51 @@ export default function LiveChatWidget({ isOpen, onToggle, className }: LiveChat
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: getAIResponse(content),
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, 1000 + Math.random() * 2000);
+    // Get AI response
+    setTimeout(async () => {
+      try {
+        const responseContent = await getAIResponse(content);
+        const aiResponse: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: responseContent,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      } catch (error) {
+        console.error('Chat error:', error);
+        const errorResponse: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: 'I apologize for the technical difficulty. Please try again or contact support.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorResponse]);
+      } finally {
+        setIsTyping(false);
+      }
+    }, 500);
   };
 
-  const getAIResponse = (userMessage: string): string => {
-    const message = userMessage.toLowerCase();
-    
-    if (message.includes('pricing') || message.includes('cost') || message.includes('price')) {
-      return 'Our pricing starts at $29/month for Pro Se users and $99/month for Professional users. Both plans include AI-powered legal assistance, document generation, and case management tools.';
+  const getAIResponse = async (userMessage: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/ai/chat/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+
+      const data = await response.json();
+      return data.response || 'I apologize for the inconvenience. Please try again or contact our support team.';
+    } catch (error) {
+      console.error('AI chat error:', error);
+      // Fallback to basic response if AI fails
+      return 'I apologize for the technical difficulty. Our team will get back to you shortly. In the meantime, you can reach us at support@wizzered.com or explore our help center.';
     }
-    
-    if (message.includes('features') || message.includes('what can') || message.includes('capabilities')) {
-      return 'Wizzered offers AI-powered legal analysis, automated document generation, case management, legal research assistance, and strategic case planning. Our AI thinks like a senior attorney with 20+ years of experience.';
-    }
-    
-    if (message.includes('security') || message.includes('safe') || message.includes('privacy')) {
-      return 'We use enterprise-grade security with AES-256 encryption, SOC 2 compliance, and GDPR/CCPA compliance. Your legal data is never shared with third parties or used to train AI models.';
-    }
-    
-    if (message.includes('help') || message.includes('support') || message.includes('how')) {
-      return 'I can help you with account questions, feature explanations, billing inquiries, and general platform guidance. For technical issues, our support team is available 24/7.';
-    }
-    
-    if (message.includes('demo') || message.includes('trial') || message.includes('try')) {
-      return 'You can start with our free trial that includes access to basic AI features and document templates. Would you like me to help you get started?';
-    }
-    
-    return 'Thank you for your question! Our team will get back to you shortly with a detailed response. In the meantime, feel free to explore our knowledge base or ask me anything else.';
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

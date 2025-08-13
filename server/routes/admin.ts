@@ -1056,7 +1056,8 @@ router.post("/users/:userId/stop-impersonation", authenticateToken, async (req: 
 // 2. Role management endpoints
 router.get("/roles", authenticateToken, async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.userType !== 'admin') {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -1157,7 +1158,8 @@ router.put("/users/:userId/role", authenticateToken, async (req: Request, res: R
 
 router.put("/users/:userId/status", authenticateToken, async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.userType !== 'admin') {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -1174,7 +1176,8 @@ router.put("/users/:userId/status", authenticateToken, async (req: Request, res:
 
 router.delete("/users/:userId", authenticateToken, async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.userType !== 'admin') {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -1337,6 +1340,212 @@ router.put("/plans/primary/:planId", authenticateToken, async (req: Request, res
     
     const { planId } = req.params;
     await storage.setPrimaryPlan(planId);
+    res.json({ success: true, message: "Primary plan updated" });
+  } catch (error) {
+    console.error("Error setting primary plan:", error);
+    res.status(500).json({ error: "Failed to set primary plan" });
+  }
+});
+
+// AI Providers and Models endpoints
+router.get("/ai-providers/:providerId/models", async (req: Request, res: Response) => {
+  try {
+    const { providerId } = req.params;
+    const { apiKey, refresh } = req.query;
+    
+    // Return available models for each provider
+    let models: any[] = [];
+    
+    if (providerId === 'openai') {
+      models = [
+        { id: 'gpt-4o', name: 'GPT-4o', description: 'Latest GPT-4 Omni model with vision capabilities' },
+        { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'Smaller, faster version of GPT-4o' },
+        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'GPT-4 Turbo with 128K context' },
+        { id: 'gpt-4', name: 'GPT-4', description: 'Most capable GPT-4 model' },
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast and efficient model' },
+        { id: 'gpt-3.5-turbo-16k', name: 'GPT-3.5 Turbo 16K', description: 'Extended context window' }
+      ];
+    } else if (providerId === 'anthropic') {
+      models = [
+        { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable Claude model' },
+        { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanced performance and speed' },
+        { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Fast and efficient' },
+        { id: 'claude-2.1', name: 'Claude 2.1', description: 'Previous generation model' },
+        { id: 'claude-2.0', name: 'Claude 2.0', description: 'Previous generation model' }
+      ];
+    } else if (providerId === 'google') {
+      models = [
+        { id: 'gemini-pro', name: 'Gemini Pro', description: 'Google\'s advanced model' },
+        { id: 'gemini-pro-vision', name: 'Gemini Pro Vision', description: 'Multimodal capabilities' },
+        { id: 'gemini-ultra', name: 'Gemini Ultra', description: 'Most capable Gemini model' },
+        { id: 'gemini-nano', name: 'Gemini Nano', description: 'Lightweight model' }
+      ];
+    } else if (providerId === 'cohere') {
+      models = [
+        { id: 'command', name: 'Command', description: 'Text generation model' },
+        { id: 'command-nightly', name: 'Command Nightly', description: 'Latest experimental version' },
+        { id: 'command-light', name: 'Command Light', description: 'Faster, lighter version' },
+        { id: 'coral', name: 'Coral', description: 'Conversational model' }
+      ];
+    } else if (providerId === 'mistral') {
+      models = [
+        { id: 'mistral-large', name: 'Mistral Large', description: 'Most capable Mistral model' },
+        { id: 'mistral-medium', name: 'Mistral Medium', description: 'Balanced performance' },
+        { id: 'mistral-small', name: 'Mistral Small', description: 'Fast and efficient' },
+        { id: 'mistral-tiny', name: 'Mistral Tiny', description: 'Lightweight model' }
+      ];
+    } else if (providerId === 'perplexity') {
+      models = [
+        { id: 'pplx-70b-online', name: 'Perplexity 70B Online', description: 'Large model with internet access' },
+        { id: 'pplx-7b-online', name: 'Perplexity 7B Online', description: 'Efficient model with internet access' },
+        { id: 'pplx-70b-chat', name: 'Perplexity 70B Chat', description: 'Conversational model' },
+        { id: 'pplx-7b-chat', name: 'Perplexity 7B Chat', description: 'Efficient conversational model' }
+      ];
+    }
+    
+    res.json({ models });
+  } catch (error) {
+    console.error('Error fetching models:', error);
+    res.status(500).json({ error: 'Failed to fetch models' });
+  }
+});
+
+router.get("/billing/metrics", authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    // Mock billing metrics for now - would come from Stripe in production
+    const metrics = {
+      totalRevenue: 45678,
+      monthlyRecurring: 12345,
+      activeSubscriptions: 234,
+      churnRate: 2.3,
+      averageRevenue: 52.5,
+      growth: 15.2
+    };
+    
+    res.json(metrics);
+  } catch (error) {
+    console.error("Error fetching billing metrics:", error);
+    res.status(500).json({ error: "Failed to fetch billing metrics" });
+  }
+});
+
+router.get("/billing/customers", authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    // Mock customer data for now
+    const customers = [
+      {
+        id: "cus_1",
+        name: "John Doe",
+        email: "john@example.com",
+        plan: "Professional",
+        status: "active",
+        amount: 49.99,
+        nextBilling: "2025-02-13"
+      }
+    ];
+    
+    res.json(customers);
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+    res.status(500).json({ error: "Failed to fetch customers" });
+  }
+});
+
+router.get("/billing/transactions", authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    // Mock transaction data for now
+    const transactions = [
+      {
+        id: "txn_1",
+        date: "2025-01-13",
+        customer: "John Doe",
+        amount: 49.99,
+        status: "succeeded",
+        description: "Monthly subscription"
+      }
+    ];
+    
+    res.json(transactions);
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    res.status(500).json({ error: "Failed to fetch transactions" });
+  }
+});
+
+router.get("/plans", authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    // Mock plans data for now
+    const plans = [
+      {
+        id: "plan_pro",
+        name: "Professional",
+        price: 49.99,
+        interval: "month",
+        features: ["Unlimited cases", "Advanced AI", "Priority support"],
+        isActive: true,
+        isPrimary: true
+      },
+      {
+        id: "plan_free",
+        name: "Free",
+        price: 0,
+        interval: "month",
+        features: ["3 cases", "Basic AI", "Email support"],
+        isActive: true,
+        isPrimary: false
+      }
+    ];
+    
+    res.json(plans);
+  } catch (error) {
+    console.error("Error fetching plans:", error);
+    res.status(500).json({ error: "Failed to fetch plans" });
+  }
+});
+
+router.put("/plans/:planId/toggle", authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { planId } = req.params;
+    res.json({ success: true, message: `Plan ${planId} status toggled` });
+  } catch (error) {
+    console.error("Error toggling plan status:", error);
+    res.status(500).json({ error: "Failed to toggle plan status" });
+  }
+});
+
+router.put("/plans/primary/:planId", authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    const { planId } = req.params;
     res.json({ success: true, message: "Primary plan updated" });
   } catch (error) {
     console.error("Error setting primary plan:", error);
