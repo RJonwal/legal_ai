@@ -14,6 +14,11 @@ import authRoutes from "./routes/auth";
 import paymentRoutes from "./routes/payment";
 import uploadRoutes from "./routes/uploads";
 import aiRoutes from "./routes/ai";
+import demoRequestsRoutes from "./routes/demo-requests";
+import adminDashboardRoutes from "./routes/admin-dashboard";
+import aiProvidersRoutes from "./routes/ai-providers";
+import adminPricingRoutes from "./routes/admin-pricing";
+import adminLearningRoutes from "./routes/admin-learning";
 import { authenticateToken, type AuthRequest } from "./services/auth";
 import { Request, Response } from "express";
 import rateLimit from "express-rate-limit";
@@ -59,6 +64,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // AI routes
   app.use("/api/ai", aiRoutes);
+
+  // Demo requests routes
+  app.use("/api/demo-requests", demoRequestsRoutes);
+
+  // Admin dashboard routes  
+  app.use("/api/admin/dashboard", adminDashboardRoutes);
+
+  // AI providers admin routes
+  app.use("/api/admin/ai-providers", aiProvidersRoutes);
+
+  // Admin pricing routes
+  app.use("/api/admin", adminPricingRoutes);
+
+  // Admin learning center routes
+  app.use("/api/admin", adminLearningRoutes);
 
   // Admin landing config endpoint (required for landing page)
   app.get("/api/admin/landing-config", async (req, res) => {
@@ -124,16 +144,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             details: "Court-ready templates for all major practice areas with intelligent field completion, formatting automation, and jurisdiction-specific requirements."
           },
           {
-            title: "Time & Billing Integration",
-            description: "Automated time tracking, billing generation, expense management, and client invoicing with detailed reporting.",
-            icon: "clock",
-            details: "Smart time tracking with AI-powered categorization, automated billing generation, expense tracking, and comprehensive financial reporting."
+            title: "AI Document Analysis & Review",
+            description: "Intelligent contract review, document comparison, risk assessment, and automated legal document analysis.",
+            icon: "file-search",
+            details: "Contract analysis with risk identification, document comparison tools, legal compliance checking, and automated review summaries."
           },
           {
-            title: "Collaboration & Communication",
-            description: "Secure team collaboration, client portals, encrypted messaging, and real-time document sharing.",
-            icon: "users",
-            details: "Team workspaces, secure client communication portals, encrypted messaging, real-time document collaboration, and permission-based access control."
+            title: "AI Next Best Action Analysis",
+            description: "Proactive AI recommendations for optimal case strategies, deadline tracking, and workflow optimization.",
+            icon: "zap",
+            details: "Strategic next-step recommendations, deadline alerts, workflow optimization, case priority scoring, and proactive legal guidance to keep your practice ahead of the curve."
           }
         ]
       };

@@ -250,12 +250,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: FileText,
       isActive: location === "/admin/page-management"
     },
-    {
-      title: "Global Prompt Management",
-      url: "/admin/global-prompt-management",
-      icon: Brain,
-      isActive: location === "/admin/global-prompt-management"
-    },
+
     {
       title: "System",
       url: "/admin/system",

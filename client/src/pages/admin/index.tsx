@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Users, 
   FileText, 
@@ -16,22 +17,40 @@ import { useLocation } from "wouter";
 export default function AdminDashboard() {
   const [, navigate] = useLocation();
 
-  // Mock data for dashboard
-  const stats = {
-    totalUsers: 1247,
-    activeUsers: 892,
-    totalCases: 3456,
-    activeCases: 1234,
-    monthlyRevenue: 45678,
-    systemHealth: 99.9
-  };
+  // Live dashboard data with real API calls
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/admin/dashboard/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/dashboard/stats');
+      if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+      return response.json();
+    },
+    refetchInterval: 30000 // Refresh every 30 seconds
+  });
 
-  const recentActivity = [
-    { id: 1, type: "user_signup", user: "john.doe@example.com", time: "2 minutes ago" },
-    { id: 2, type: "case_created", user: "sarah.smith@law.com", time: "5 minutes ago" },
-    { id: 3, type: "subscription", user: "mike.johnson@legal.com", time: "12 minutes ago" },
-    { id: 4, type: "document_generated", user: "anna.wilson@firm.com", time: "18 minutes ago" }
-  ];
+  const { data: recentActivity, isLoading: activityLoading } = useQuery({
+    queryKey: ['/api/admin/dashboard/activity'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/dashboard/activity');
+      if (!response.ok) throw new Error('Failed to fetch recent activity');
+      return response.json();
+    },
+    refetchInterval: 10000 // Refresh every 10 seconds
+  });
+
+  const { data: systemHealth } = useQuery({
+    queryKey: ['/api/admin/dashboard/health'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/dashboard/health');
+      if (!response.ok) throw new Error('Failed to fetch system health');
+      return response.json();
+    },
+    refetchInterval: 15000 // Refresh every 15 seconds
+  });
+
+  if (statsLoading || activityLoading) {
+    return <div className="flex justify-center items-center h-64">Loading dashboard...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -48,7 +67,7 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{stats?.totalUsers?.toLocaleString() || '0'}</div>
             <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
@@ -59,7 +78,7 @@ export default function AdminDashboard() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeUsers.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{stats?.activeUsers?.toLocaleString() || '0'}</div>
             <p className="text-xs text-muted-foreground">+8% from last month</p>
           </CardContent>
         </Card>
@@ -70,7 +89,7 @@ export default function AdminDashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCases.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{stats?.totalCases?.toLocaleString() || '0'}</div>
             <p className="text-xs text-muted-foreground">+23% from last month</p>
           </CardContent>
         </Card>
@@ -81,7 +100,7 @@ export default function AdminDashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.monthlyRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${stats?.monthlyRevenue?.toLocaleString() || '0'}</div>
             <p className="text-xs text-muted-foreground">+15% from last month</p>
           </CardContent>
         </Card>
@@ -96,7 +115,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity) => (
+              {recentActivity?.map((activity: any) => (
                 <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -123,25 +142,25 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Uptime</span>
                 <Badge variant="outline" className="text-green-600">
-                  {stats.systemHealth}%
+                  {systemHealth?.uptime || '99.9'}%
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">API Response Time</span>
                 <Badge variant="outline" className="text-green-600">
-                  120ms
+                  {systemHealth?.apiResponseTime || '120'}ms
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Database</span>
                 <Badge variant="outline" className="text-green-600">
-                  Healthy
+                  {systemHealth?.database || 'Healthy'}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Storage</span>
                 <Badge variant="outline" className="text-yellow-600">
-                  85% Used
+                  {systemHealth?.storage || '85% Used'}
                 </Badge>
               </div>
             </div>

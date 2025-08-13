@@ -319,6 +319,25 @@ export const landingConfig = pgTable("landing_config", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Demo requests table
+export const demoRequests = pgTable("demo_requests", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  company: text("company"),
+  phone: text("phone"),
+  practiceArea: text("practice_area"),
+  firmSize: text("firm_size"),
+  currentSoftware: text("current_software"),
+  specificNeeds: text("specific_needs"),
+  preferredTime: text("preferred_time"),
+  source: text("source").default("landing-page").notNull(),
+  status: text("status").default("pending").notNull(),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Brand configuration
 export const brandConfig = pgTable("brand_config", {
   id: serial("id").primaryKey(),

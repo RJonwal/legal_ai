@@ -22,7 +22,7 @@ interface Prompt {
   name: string;
   description: string;
   promptContent: string;
-  category: 'chat' | 'document' | 'analysis' | 'strategy' | 'general';
+  category: 'chat' | 'document' | 'analysis' | 'strategy' | 'contract-analysis' | 'case-insights' | 'next-best-action' | 'general';
   isActive: boolean;
   lastModified: string;
   usageCount: number;
