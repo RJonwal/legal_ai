@@ -2066,6 +2066,21 @@ User Experience Focus:
             title: "Legal Research Assistant",
             description: "AI-powered case law research, statute analysis, precedent identification, and comprehensive legal citation management.",
             icon: "search"
+          },
+          {
+            title: "Interactive Document Canvas",
+            description: "Dynamic document editor with court-compatible fonts, dual download formats, and real-time AI assistance.",
+            icon: "wand"
+          },
+          {
+            title: "Live Chat Support",
+            description: "24/7 AI-powered legal assistant for immediate answers, case strategy discussions, and professional guidance.",
+            icon: "message-square"
+          },
+          {
+            title: "Smart Case Analytics",
+            description: "Advanced data visualization, case outcome predictions, and performance tracking for strategic decision making.",
+            icon: "zap"
           }
         ],
         testimonials: [
@@ -2081,6 +2096,13 @@ User Experience Focus:
             role: "Solo Practitioner",
             company: "Chen Law Office",
             content: "Document generation saves me 15+ hours per week. The AI understands legal context better than any tool I've used.",
+            rating: 5
+          },
+          {
+            name: "Jessica Thompson",
+            role: "Legal Director",
+            company: "Thompson Legal Group", 
+            content: "The court preparation tools are exceptional. We've reduced case prep time by 40% and our trial readiness has never been better.",
             rating: 5
           }
         ],
