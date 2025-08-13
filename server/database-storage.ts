@@ -276,6 +276,105 @@ export class DatabaseStorage implements IStorage {
     return allCases;
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, parseInt(id)));
+    return user;
+  }
+
+  async logAdminAction(action: {
+    adminId: number;
+    action: string;
+    targetUserId?: string;
+    reason?: string;
+    timestamp: Date;
+  }): Promise<void> {
+    // Log admin action - can be stored in a separate admin_logs table in the future
+    console.log(`[Admin Action] ${new Date().toISOString()} - Admin ${action.adminId} performed ${action.action} on user ${action.targetUserId || 'N/A'} - Reason: ${action.reason || 'N/A'}`);
+    // In a production environment, this would be stored in an admin_logs table
+  }
+
+  // Role and user management methods
+  async updateRolePermissions(roleId: string, permissions: string[]): Promise<void> {
+    // In production, this would update a roles table
+    console.log(`Updating role ${roleId} with permissions:`, permissions);
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ userType: role as any, updatedAt: new Date() })
+      .where(eq(users.id, parseInt(userId)))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserStatus(userId: string, status: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        isVerified: status === 'active',
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, parseInt(userId)))
+      .returning();
+    return updatedUser;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, parseInt(userId)));
+  }
+
+  async setPrimaryPlan(planId: string): Promise<void> {
+    // In production, this would update a plans table
+    console.log(`Setting primary plan to: ${planId}`);
+  }
+
+  async updatePlan(planId: string, plan: any): Promise<void> {
+    // In production, this would update a plans table
+    console.log(`Updating plan ${planId}:`, plan);
+  }
+
+  async deletePlan(planId: string): Promise<void> {
+    // In production, this would delete from a plans table
+    console.log(`Deleting plan: ${planId}`);
+  }
+
+  async toggleFeature(featureId: string): Promise<void> {
+    // In production, this would toggle a feature flag
+    console.log(`Toggling feature: ${featureId}`);
+  }
+
+  async addUser(userData: any): Promise<User> {
+    const hashedPassword = await bcrypt.hash(userData.password || 'temp123', 12);
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        username: userData.username || userData.email.split('@')[0],
+        email: userData.email,
+        password: hashedPassword,
+        fullName: userData.fullName || userData.name,
+        userType: userData.userType || 'pro_se',
+        isVerified: userData.isVerified || false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return newUser;
+  }
+
+  async resetUserPassword(userId: string, newPassword: string): Promise<void> {
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await db
+      .update(users)
+      .set({ 
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, parseInt(userId)));
+  }
+
   async getUserStats(): Promise<{
     totalUsers: number;
     activeUsers: number;

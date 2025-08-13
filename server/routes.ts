@@ -9,23 +9,12 @@ import {
 import { ObjectPermission } from "./objectAcl";
 import { insertChatMessageSchema, insertDocumentSchema, insertTimelineSchema } from "@shared/schema";
 import { z } from "zod";
-// import adminRoutes from "./routes/admin"; // Temporarily disabled due to syntax error
+import adminRoutes from "./routes/admin";
 import authRoutes from "./routes/auth";
 import paymentRoutes from "./routes/payment";
 import uploadRoutes from "./routes/uploads";
 import { authenticateToken, type AuthRequest } from "./services/auth";
 import { Request, Response } from "express";
-
-// Extend Request interface to include user property
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: {
-      id: number;
-      username: string;
-      email: string;
-    };
-  }
-}
 import rateLimit from "express-rate-limit";
 import express from "express";
 
@@ -65,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/uploads", uploadRoutes);
 
   // Admin routes
-  // app.use("/api/admin", adminRoutes); // Still disabled due to syntax errors
+  app.use("/api/admin", adminRoutes);
 
   // Admin landing config endpoint (required for landing page)
   app.get("/api/admin/landing-config", async (req, res) => {
@@ -954,7 +943,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  app.get("/api/billing/invoices", async (req, res) => {
+  app.get("/api/billing/invoices", authenticateToken, async (req, res) => {
     try {
       console.log('Fetching invoice data...');
 
@@ -978,7 +967,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  app.post("/api/billing/subscription", async (req, res) => {
+  app.post("/api/billing/subscription", authenticateToken, async (req, res) => {
     try {
       const { action } = req.body;
 
@@ -1041,7 +1030,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  app.post("/api/billing/payment-method", async (req, res) => {
+  app.post("/api/billing/payment-method", authenticateToken, async (req, res) => {
     try {
       const { number, expiry, cvv, name } = req.body;
 
@@ -1089,12 +1078,12 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
 
       // Store payment method in user profile
       await storage.updateUser(user.id, {
-        paymentMethod: {
+        paymentMethod: JSON.stringify({
           last4: number.slice(-4),
           brand,
           expiry,
           name
-        }
+        })
       });
 
       res.json({ 
@@ -1116,7 +1105,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  app.post("/api/billing/tokens", async (req, res) => {
+  app.post("/api/billing/tokens", authenticateToken, async (req, res) => {
     try {
       const { plan } = req.body;
 
@@ -1192,7 +1181,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
   });
 
   // User profile routes
-  app.get("/api/user/profile", async (req, res) => {
+  app.get("/api/user/profile", authenticateToken, async (req, res) => {
     try {
       const user = await storage.getUser(req.user?.id || 1);
       if (!user) {
@@ -1204,7 +1193,7 @@ ${caseContext ? `\nADDITIONAL CONTEXT: ${JSON.stringify(caseContext)}` : ''}
     }
   });
 
-  app.put("/api/user/profile", async (req, res) => {
+  app.put("/api/user/profile", authenticateToken, async (req, res) => {
     try {
       const updates = req.body;
       const updatedUser = await storage.updateUser(req.user?.id || 1, updates);

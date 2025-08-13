@@ -54,6 +54,7 @@ export interface IStorage {
   // Admin operations
   getAllUsers(): Promise<SchemaUser[]>;
   getAllCases(): Promise<Case[]>;
+  getUserById(id: string): Promise<SchemaUser | undefined>;
   getUserStats(): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -61,6 +62,25 @@ export interface IStorage {
     growth: number;
     newThisMonth: number;
   }>;
+  logAdminAction(action: {
+    adminId: number;
+    action: string;
+    targetUserId?: string;
+    reason?: string;
+    timestamp: Date;
+  }): Promise<void>;
+  
+  // Role and user management
+  updateRolePermissions(roleId: string, permissions: string[]): Promise<void>;
+  updateUserRole(userId: string, role: string): Promise<SchemaUser>;
+  updateUserStatus(userId: string, status: string): Promise<SchemaUser>;
+  deleteUser(userId: string): Promise<void>;
+  setPrimaryPlan(planId: string): Promise<void>;
+  updatePlan(planId: string, plan: any): Promise<void>;
+  deletePlan(planId: string): Promise<void>;
+  toggleFeature(featureId: string): Promise<void>;
+  addUser(user: any): Promise<SchemaUser>;
+  resetUserPassword(userId: string, newPassword: string): Promise<void>;
 
   // Admin configuration management
   getAdminConfig(key: string): Promise<any>;

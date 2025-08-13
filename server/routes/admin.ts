@@ -16,10 +16,11 @@ router.get("/global-prompts", async (req: Request, res: Response) => {
 });
 
 // Admin Users Management  
-router.get("/users", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/users", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
     // Check if user is admin
-    if (!req.user || req.user.userType !== 'admin') {
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -42,10 +43,11 @@ router.get("/users", authenticateToken, async (req: AuthRequest, res: Response) 
   }
 });
 
-router.get("/user-analytics", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/user-analytics", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
     // Check if user is admin
-    if (!req.user || req.user.userType !== 'admin') {
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -68,10 +70,11 @@ router.get("/user-analytics", authenticateToken, async (req: AuthRequest, res: R
 });
 
 // Admin Dashboard Stats
-router.get("/dashboard-stats", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/dashboard-stats", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
     // Check if user is admin
-    if (!req.user || req.user.userType !== 'admin') {
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -200,8 +203,13 @@ router.get("/landing-config", async (req: Request, res: Response) => {
 });
 
 // Update landing page configuration
-router.put("/landing-config", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put("/landing-config", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    // Check if user is admin
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
     await storage.setAdminConfig('landing-config', req.body);
     res.json({ success: true, config: req.body });
   } catch (error) {
@@ -396,8 +404,13 @@ router.get("/branding-config", async (req: Request, res: Response) => {
 });
 
 // Update branding configuration
-router.put("/branding-config", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put("/branding-config", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    // Check if user is admin
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
     await storage.setAdminConfig('branding-config', req.body);
     res.json({ success: true, config: req.body });
   } catch (error) {
@@ -407,8 +420,13 @@ router.put("/branding-config", authenticateToken, async (req: AuthRequest, res: 
 });
 
 // Upload logo/images endpoint
-router.post("/branding/upload", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post("/branding/upload", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    // Check if user is admin
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
     const { type, imageData, filename } = req.body;
 
     // Save to uploads directory and database
@@ -862,8 +880,13 @@ router.get("/global-prompts", async (req: Request, res: Response) => {
 });
 
 // Get single global prompt
-router.get("/global-prompts/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/global-prompts/:id", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    // Check if user is admin
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
     const { id } = req.params;
     const prompt = await storage.getAdminPrompt(id);
 
@@ -879,8 +902,13 @@ router.get("/global-prompts/:id", authenticateToken, async (req: AuthRequest, re
 });
 
 // Create new global prompt
-router.post("/global-prompts", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post("/global-prompts", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    // Check if user is admin
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
     const newPrompt = await storage.createAdminPrompt({
       name: req.body.name,
       description: req.body.description,
@@ -896,8 +924,13 @@ router.post("/global-prompts", authenticateToken, async (req: AuthRequest, res: 
 });
 
 // Update global prompt
-router.put("/global-prompts/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put("/global-prompts/:id", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    // Check if user is admin
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
     const { id } = req.params;
     const updatedPrompt = await storage.updateAdminPrompt(id, {
       name: req.body.name,
@@ -914,8 +947,13 @@ router.put("/global-prompts/:id", authenticateToken, async (req: AuthRequest, re
 });
 
 // Delete global prompt
-router.delete("/global-prompts/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.delete("/global-prompts/:id", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    // Check if user is admin
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
     const { id } = req.params;
     await storage.deleteAdminPrompt(id);
     res.json({ success: true, message: "Prompt deleted successfully" });
@@ -926,8 +964,13 @@ router.delete("/global-prompts/:id", authenticateToken, async (req: AuthRequest,
 });
 
 // Toggle prompt active status
-router.patch("/global-prompts/:id/toggle", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.patch("/global-prompts/:id/toggle", authenticateToken, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    // Check if user is admin
+    if (!authReq.user || authReq.user.userType !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
     const { id } = req.params;
     const currentPrompt = await storage.getAdminPrompt(id);
 
@@ -948,9 +991,10 @@ router.patch("/global-prompts/:id/toggle", authenticateToken, async (req: AuthRe
 });
 
 // 1. User Impersonation endpoints
-router.post("/users/:userId/impersonate", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post("/users/:userId/impersonate", authenticateToken, async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.userType !== 'admin') {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -964,7 +1008,7 @@ router.post("/users/:userId/impersonate", authenticateToken, async (req: AuthReq
     
     // Log impersonation action
     await storage.logAdminAction({
-      adminId: req.user.id,
+      adminId: authReq.user.id,
       action: 'impersonate_user',
       targetUserId: userId,
       reason: reason,
@@ -986,16 +1030,17 @@ router.post("/users/:userId/impersonate", authenticateToken, async (req: AuthReq
   }
 });
 
-router.post("/users/:userId/stop-impersonation", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post("/users/:userId/stop-impersonation", authenticateToken, async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.userType !== 'admin') {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
     const { userId } = req.params;
     
     await storage.logAdminAction({
-      adminId: req.user.id,
+      adminId: authReq.user.id,
       action: 'stop_impersonation',
       targetUserId: userId,
       timestamp: new Date()
@@ -1009,7 +1054,7 @@ router.post("/users/:userId/stop-impersonation", authenticateToken, async (req: 
 });
 
 // 2. Role management endpoints
-router.get("/roles", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/roles", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1066,9 +1111,10 @@ router.get("/roles", authenticateToken, async (req: AuthRequest, res: Response) 
   }
 });
 
-router.put("/roles/:roleId", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put("/roles/:roleId", authenticateToken, async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.userType !== 'admin') {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -1091,9 +1137,10 @@ router.put("/roles/:roleId", authenticateToken, async (req: AuthRequest, res: Re
 });
 
 // 3. User management endpoints
-router.put("/users/:userId/role", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put("/users/:userId/role", authenticateToken, async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.userType !== 'admin') {
+    const authReq = req as AuthRequest;
+    if (!authReq.user || authReq.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
     
@@ -1108,7 +1155,7 @@ router.put("/users/:userId/role", authenticateToken, async (req: AuthRequest, re
   }
 });
 
-router.put("/users/:userId/status", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put("/users/:userId/status", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1125,7 +1172,7 @@ router.put("/users/:userId/status", authenticateToken, async (req: AuthRequest, 
   }
 });
 
-router.delete("/users/:userId", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.delete("/users/:userId", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1142,7 +1189,7 @@ router.delete("/users/:userId", authenticateToken, async (req: AuthRequest, res:
 });
 
 // 4. Permission groups
-router.get("/permission-groups", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/permission-groups", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1210,7 +1257,7 @@ router.get("/permission-groups", authenticateToken, async (req: AuthRequest, res
 });
 
 // 5. Comprehensive billing endpoints
-router.get("/billing/metrics", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/billing/metrics", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1224,7 +1271,7 @@ router.get("/billing/metrics", authenticateToken, async (req: AuthRequest, res: 
   }
 });
 
-router.get("/billing/customers", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/billing/customers", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1238,7 +1285,7 @@ router.get("/billing/customers", authenticateToken, async (req: AuthRequest, res
   }
 });
 
-router.get("/billing/transactions", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/billing/transactions", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1253,7 +1300,7 @@ router.get("/billing/transactions", authenticateToken, async (req: AuthRequest, 
 });
 
 // 6. Plan management endpoints
-router.get("/plans", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/plans", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1267,7 +1314,7 @@ router.get("/plans", authenticateToken, async (req: AuthRequest, res: Response) 
   }
 });
 
-router.put("/plans/:planId/toggle", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put("/plans/:planId/toggle", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
@@ -1282,7 +1329,7 @@ router.put("/plans/:planId/toggle", authenticateToken, async (req: AuthRequest, 
   }
 });
 
-router.put("/plans/primary/:planId", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put("/plans/primary/:planId", authenticateToken, async (req: Request, res: Response) => {
   try {
     if (!req.user || req.user.userType !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
