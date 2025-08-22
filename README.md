@@ -63,17 +63,22 @@ A comprehensive full-stack legal AI assistant that mimics ChatGPT behavior with 
    Configure the following in `.env`:
    ```
    DATABASE_URL=your_postgresql_connection_string - Setup it from Neon DB Dashboard
-   OPENAI_API_KEY=your_openai_api_key - - Setup it from OpenAI Dashboard
+   OPENAI_API_KEY=your_openai_api_key - Setup it from OpenAI Dashboard
    JWT_SECRET=your_jwt_secret
    SESSION_SECRET=your_session_secret
    ```
 
-4. **Set up the database**
+4. **Set up the database migrate**
+   ```bash
+   npm run db:migrate
+   ``
+
+5. **Set up the database**
    ```bash
    npm run db:push
    ```
 
-5. **Start the development server**
+6. **Start the development server**
    ```bash
    npm run dev
    ```
