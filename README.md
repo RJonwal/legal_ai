@@ -71,7 +71,7 @@ A comprehensive full-stack legal AI assistant that mimics ChatGPT behavior with 
 4. **Set up the database migrate**
    ```bash
    npm run db:migrate
-   ``
+   ```
 
 5. **Set up the database**
    ```bash
