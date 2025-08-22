@@ -57,23 +57,26 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
 
   const createCaseMutation = useMutation({
     mutationFn: async (caseData: NewCaseForm) => {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/cases', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify(caseData),
-      });
+      const token = localStorage.getItem('authToken');
+      const response = await apiRequest("POST", "/api/cases", caseData);
+      
+      // const response = await fetch('/api/cases', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': token ? `Bearer ${token}` : '',
+      //   },
+      //   body: JSON.stringify(caseData),
+      // });
       
       if (!response.ok) {
         throw new Error('Failed to create case');
       }
       
-      return response.json();
+      return (await response.json());
     },
     onSuccess: async (newCase) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
       // Upload files if any
       if (uploadedFiles.length > 0) {
         await uploadFilesToCase(newCase.id);
@@ -83,7 +86,7 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
         title: "Case Created",
         description: `Case "${newCase.title}" has been created successfully.`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/cases'] });
+      // queryClient.invalidateQueries({ queryKey: ['/api/cases'] });
       onCaseCreated(newCase.id);
       form.reset();
       setUploadedFiles([]);
@@ -213,7 +216,7 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
+        {/* <Form {...form}> */}
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Case Information */}
@@ -510,7 +513,7 @@ export function NewCaseModal({ isOpen, onClose, onCaseCreated }: NewCaseModalPro
               </Button>
             </DialogFooter>
           </form>
-        </Form>
+        {/* </Form> */}
       </DialogContent>
     </Dialog>
   );

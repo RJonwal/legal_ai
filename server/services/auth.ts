@@ -81,7 +81,10 @@ export class AuthService {
   static async verifyToken(token: string): Promise<User | null> {
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+      console.log('vkiegvuevber', decoded);
       const user = await storage.getUser(decoded.userId);
+
+      
       return user || null;
     } catch (error) {
       return null;
@@ -150,7 +153,6 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
   if (!token) {
     return res.status(401).json({ message: "Access token required" });
   }
-
   try {
     const user = await AuthService.verifyToken(token);
     if (!user) {

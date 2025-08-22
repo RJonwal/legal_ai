@@ -26,12 +26,12 @@ export default function LegalAssistant() {
   }, [location]);
 
   // Handle URL parameters for case selection
-  useEffect(() => {
-    if (caseIdFromUrl && !isNaN(caseIdFromUrl)) {
-      setCurrentCaseId(caseIdFromUrl);
-      setCurrentDocument(null); // Reset document when switching cases
-    }
-  }, [caseIdFromUrl]);
+  // useEffect(() => {
+  //   if (caseIdFromUrl && !isNaN(caseIdFromUrl)) {
+  //     setCurrentCaseId(caseIdFromUrl);
+  //     setCurrentDocument(null); // Reset document when switching cases
+  //   }
+  // }, [caseIdFromUrl]);
 
   const handleCaseSelect = useCallback(async (caseId: number) => {
     console.log('Case selected in LegalAssistant:', caseId);
@@ -65,8 +65,8 @@ export default function LegalAssistant() {
     }
 
     // Invalidate and refetch case data
-    queryClient.invalidateQueries({ queryKey: [`/api/cases/${caseId}`] });
-    queryClient.invalidateQueries({ queryKey: [`/api/cases/${caseId}/messages`] });
+    // queryClient.invalidateQueries({ queryKey: [`/api/cases/${caseId}`] });
+    // queryClient.invalidateQueries({ queryKey: [`/api/cases/${caseId}/messages`] });
 
     // Update URL to reflect current case
     const currentUrl = new URL(window.location.href);

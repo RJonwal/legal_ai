@@ -24,7 +24,7 @@ export const defaultAIConfig: AIServiceConfig = {
       id: "openai",
       name: "OpenAI",
       enabled: true,
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY!,
       priority: 1
     },
     anthropic: {
@@ -38,7 +38,7 @@ export const defaultAIConfig: AIServiceConfig = {
       id: "deepseek",
       name: "DeepSeek", 
       enabled: true,
-      apiKey: process.env.DEEPSEEK_API_KEY,
+      apiKey: process.env.DEEPSEEK_API_KEY!,
       priority: 3
     }
   }

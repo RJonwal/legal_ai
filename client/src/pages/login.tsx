@@ -19,17 +19,19 @@ export default function Login() {
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (data: { username: string; password: string }) => {
+    mutationFn: async function (data: { username: string; password: string }) {
       const response = await apiRequest("POST", "/api/auth/login", data);
-      return response;
+      return (await response.json());
     },
-    onSuccess: (data) => {
+    onSuccess: (data:any) => {
+      console.log('data======>', data);
+
       // Store token in localStorage
-      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("authToken", data?.token);
       
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${data.user.fullName}!`,
+        description: `Welcome back, ${data?.user?.fullName}!`,
       });
 
       // Redirect to dashboard

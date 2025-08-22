@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bot, User, AlertTriangle, AlertCircle, Info, Calendar, FileText, Clock, CheckCircle } from "@/lib/icons";
+import { Bot, User, AlertTriangle, AlertCircle, Info, Calendar, FileText, Clock, CheckCircle, Brain } from "@/lib/icons";
 import { ChatMessage } from "@/lib/types";
 
 interface MessageListProps {

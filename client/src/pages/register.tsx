@@ -28,13 +28,15 @@ export default function Register() {
       const response = await apiRequest("POST", "/api/auth/register", data);
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data:any) => {
+      console.log('data======>', data);
+      
       // Store token in localStorage
-      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("authToken", data?.token);
       
       toast({
         title: "Registration Successful",
-        description: `Welcome, ${data.user.fullName}! Please check your email for verification.`,
+        description: `Welcome, ${data?.user?.fullName}! Please check your email for verification.`,
       });
 
       // Redirect to dashboard
@@ -52,7 +54,7 @@ export default function Register() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.username || !formData.email || !formData.password || !formData.fullName) {
+    if (!formData.username || !formData.email || !formData.password || !formData?.fullName) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -115,7 +117,7 @@ export default function Register() {
                 name="fullName"
                 type="text"
                 placeholder="Enter your full name"
-                value={formData.fullName}
+                value={formData?.fullName}
                 onChange={handleChange}
                 required
               />

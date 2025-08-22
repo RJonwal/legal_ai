@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, ArrowRight, Calendar, User, AlertCircle, CheckCircle, Clock, XCircle } from "@/lib/icons";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Case {
   id: number;
@@ -32,18 +33,27 @@ export function SearchCasesModal({ isOpen, onClose, onCaseSelect }: SearchCasesM
   const { data: searchResults, isLoading } = useQuery({
     queryKey: [`/api/cases/search?q=${encodeURIComponent(searchQuery)}`],
     queryFn: async () => {
-      const response = await fetch(`/api/cases/search?q=${encodeURIComponent(searchQuery)}`);
+      const response = await apiRequest('GET',`/api/cases/search?q=${encodeURIComponent(searchQuery)}`);
       if (!response.ok) throw new Error('Failed to search cases');
-      return response.json();
+      return (await response.json());
     },
     enabled: searchQuery.length > 0,
   });
 
   const { data: allCases = [] } = useQuery({
     queryKey: ['/api/cases'],
+     queryFn: async () => {
+      const response = await apiRequest('GET', "/api/cases")
+      if (!response.ok) throw new Error('Failed to fetch cases list');
+
+      return (await response.json());
+    },
   });
 
   const displayCases = searchQuery.length > 0 ? (searchResults || []) : allCases;
+
+  console.log('displayCases', displayCases);
+  
 
   const getStatusColor = (status: string) => {
     if (!status) return 'bg-gray-100 text-gray-800';

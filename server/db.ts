@@ -5,15 +5,17 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+// if (!(process.env.DATABASE_URL!)) {
+//   throw new Error(
+//     "DATABASE_URL must be set. Did you forget to provision a database?",
+//   );
+// }
+
+const dbURL = process.env.DATABASE_URL!
 
 // Configure pool with error handling
 export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbURL,
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,

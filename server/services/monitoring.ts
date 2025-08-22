@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/node';
 import { logger } from './simple-logger';
 import { cacheService } from './cache';
 import { Request, Response } from 'express';
+import { Server, IncomingMessage, ServerResponse } from 'http';
 
 // Initialize Sentry for error tracking
 export function initializeSentry() {
@@ -244,7 +245,7 @@ export function startSystemMetricsCollection() {
 }
 
 // Graceful shutdown handler
-export function setupGracefulShutdown() {
+export function setupGracefulShutdown(server: Server<IncomingMessage, ServerResponse>) {
   const gracefulShutdown = (signal: string) => {
     logger.info(`Received ${signal}, starting graceful shutdown...`);
     

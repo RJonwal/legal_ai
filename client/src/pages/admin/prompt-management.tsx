@@ -16,6 +16,7 @@ import {
   MessageSquare, Plus, Edit, Trash2, Save, TestTube, Copy, 
   Brain, FileText, Scale, Gavel, Users, Clock, Target
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Prompt {
   id: string;
@@ -50,17 +51,19 @@ export default function PromptManagement() {
   // Create/Update prompt mutation
   const promptMutation = useMutation({
     mutationFn: async (promptData: Partial<Prompt>) => {
+
       const method = promptData.id ? 'PUT' : 'POST';
       const url = promptData.id ? `/api/admin/prompts/${promptData.id}` : '/api/admin/prompts';
+      const response = await apiRequest(method, url, JSON.stringify(promptData))
       
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(promptData)
-      });
+      // const response = await fetch(url, {
+      //   method,
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(promptData)
+      // });
       
       if (!response.ok) throw new Error('Failed to save prompt');
-      return response.json();
+      return (await response.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/prompts'] });
@@ -96,13 +99,18 @@ export default function PromptManagement() {
   // Test prompt mutation
   const testMutation = useMutation({
     mutationFn: async ({ promptId, input }: { promptId: string; input: string }) => {
-      const response = await fetch(`/api/admin/prompts/${promptId}/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input })
-      });
+      // const response = await fetch(`/api/admin/prompts/${promptId}/test`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ input })
+      // });
+
+      const url = `/api/admin/prompts/${promptId}/test`
+      const httpBody = {input}
+      const response = await apiRequest('POST', url, httpBody)
+
       if (!response.ok) throw new Error('Failed to test prompt');
-      return response.json();
+      return (await response.json());
     },
     onSuccess: (data) => {
       setTestResult(data.result);
@@ -244,7 +252,7 @@ Be specific and actionable in your recommendations.`,
             <CardContent>
               <ScrollArea className="h-96">
                 <div className="space-y-2">
-                  {promptsData.map((prompt) => {
+                  {promptsData.map((prompt:any) => {
                     const IconComponent = getCategoryIcon(prompt.category);
                     return (
                       <div

@@ -36,7 +36,9 @@ export default function NewCase() {
 
   const createCaseMutation = useMutation({
     mutationFn: async (caseData: NewCaseForm) => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('authToken');
+
+      // const response = await apiRequest("POST", "/api/cases", caseData);
       const response = await fetch('/api/cases', {
         method: 'POST',
         headers: {
@@ -45,14 +47,20 @@ export default function NewCase() {
         },
         body: JSON.stringify(caseData),
       });
+
+      console.log('response', await response.json());
+      
       
       if (!response.ok) {
         throw new Error('Failed to create case');
       }
       
-      return response.json();
+      return (await response.json());
     },
     onSuccess: (newCase) => {
+
+      console.log('newCase', newCase);
+      
       queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
       toast({
         title: "Success",

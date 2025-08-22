@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { securityMiddleware } from "./services/encryption";
 import { logger, httpLogStream } from "./services/simple-logger";
 import { cacheService } from "./services/cache";
+import dotenv from "dotenv"
 import { 
   initializeSentry, 
   performanceMiddleware, 
@@ -20,7 +21,7 @@ import helmet from "helmet";
 
 const PORT = process.env.PORT || 5000;
 const app = express();
-
+dotenv.config()
 // Session configuration
 // app.use(session(sessionConfig));
 
@@ -87,7 +88,7 @@ app.use(performanceMiddleware);
 async function createServer() {
   try {
     // Initialize monitoring
-    initializeSentry();
+    // initializeSentry();
 
     // Start metrics collection
     startSystemMetricsCollection();
@@ -97,6 +98,7 @@ async function createServer() {
 
     // Test database connection
     try {
+      await pool.connect()
       const result = await pool.query('SELECT 1');
       log('Database connection successful');
     } catch (dbError) {
@@ -115,17 +117,17 @@ async function createServer() {
     }
 
     // Setup graceful shutdown
-    setupGracefulShutdown(server);
+    // setupGracefulShutdown(server);
 
     // Start server
-    server.listen(PORT, '0.0.0.0', () => {
-      log(`Server running on http://0.0.0.0:${PORT}`);
+    server.listen(PORT, () => {
+      log(`Server running on http://localhost:${PORT}`);
     });
 
     return server;
   } catch (error) {
     logger.error('Failed to create server:', error);
-    Sentry.captureException(error);
+    // Sentry.captureException(error);
     process.exit(1);
   }
 }

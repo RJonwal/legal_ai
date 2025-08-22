@@ -62,7 +62,7 @@ export default function ChatInterface({
         metadata: msg.metadata,
       })));
     }
-  }, [chatMessages]);
+  }, []);
 
   // Handle case selection events and refetch data
   useEffect(() => {

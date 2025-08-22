@@ -11,7 +11,7 @@ const getAIClient = () => {
 
 // Fallback to direct OpenAI client for now until all services are migrated
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
+  apiKey: process.env.OPENAI_API_KEY!
 });
 
 // System prompts for different AI services

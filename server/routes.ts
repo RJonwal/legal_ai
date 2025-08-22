@@ -312,7 +312,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user cases
   app.get("/api/cases", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const userId = req.user!.id;
+      const userId:any = req.user?.id;
+
+      console.log('userId', req.user);
+      
       const cases = await storage.getCasesByUser(userId);
       res.json(cases);
     } catch (error) {
@@ -421,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Send chat message and get AI response
-  app.post("/api/cases/:id/messages", async (req, res) => {
+  app.post("/api/cases/:id/messages", authenticateToken, async (req: AuthRequest, res) => {
     // Set timeout for long-running AI requests
     const timeout = setTimeout(() => {
       if (!res.headersSent) {
@@ -449,6 +452,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         clearTimeout(timeout);
         return res.status(404).json({ message: "Case not found" });
       }
+
+      console.log('ucfugeveygvyuj', req.user);
+      
 
       // Save user message
       const userMessage = await storage.createChatMessage({

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
   Bell,
   LogOut
 } from "@/lib/icons";
+import { apiRequest } from "@/lib/queryClient";
 interface CaseSidebarProps {
   currentCaseId?: number;
   onCaseSelect: (caseId: number) => void;
@@ -68,6 +69,23 @@ export function CaseSidebar({ currentCaseId, onCaseSelect }: CaseSidebarProps) {
     queryKey: ['/api/user'],
   });
 
+    const handleFetch =async ()=>{  
+      const response = await apiRequest("GET", "/api/cases");
+
+   
+      // If apiRequest uses fetch:
+      // return await response.json();
+
+
+
+  console.log('chwioufveighvueddata', (await response.json()));}
+
+  useEffect(()=>{
+    handleFetch()
+  },[handleFetch])
+
+
+  
   const { data: cases = [] } = useQuery({
     queryKey: ['/api/cases'],
     refetchOnWindowFocus: false,
